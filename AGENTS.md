@@ -36,7 +36,22 @@ Invoke the matching orchestrator skill before reaching for any CLI or tool direc
 
 ### Nested sessions, stacked PRs & Entire
 
-Each layer of a feature stack is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs must be crosslinked after the session finalises — use the `session-crosslink` skill from the coordinator session before merging.
+Each layer of a feature stack is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the crosslink step from the matching worktree before merging:
+
+```powershell
+# 1. Find the runtime session ID
+#    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
+
+# 2. Attach it from inside the nested worktree
+Set-Location <path-to-nested-worktree>
+entire session attach <runtime-session-id> --agent copilot-cli --force
+
+# 3. Force-push so the trailer reaches the remote
+git push origin <branch-name> --force-with-lease
+```
+
+> [!TIP]
+> The `session-crosslink` skill automates steps 2–3 once you provide the runtime session ID. Invoke it from the coordinator session when the nested session is complete.
 
 > [!NOTE]
 > Do not modify `.github/hooks/entire.json` — it is managed by `entire agent add` and overwritten on reinstall.
