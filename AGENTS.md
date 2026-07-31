@@ -78,6 +78,4 @@ git push origin <branch-name> --force-with-lease
 ## Progressive-disclosure pointers
 
 - Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions.
-- Read `agent_docs/environments.md` before touching environment-specific config or deployment settings.
-- Read `agent_docs/pipelines.md` before modifying the deployment workflow.
 
