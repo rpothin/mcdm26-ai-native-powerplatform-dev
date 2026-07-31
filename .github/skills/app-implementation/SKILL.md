@@ -42,6 +42,33 @@ If either environment or solution is missing, ambiguous, or inferred:
 
 Do not scaffold, connect data sources, or deploy against an implicit target.
 
+## Step 2 — Design alignment with Impeccable (strongly recommended for new apps)
+
+Before scaffolding a new code app, run the `impeccable` skill's `init` flow to establish
+product context and a coherent design system. Power Apps code apps are React apps — without
+explicit design decisions upfront, UI/UX quality drifts and retroactive corrections are
+expensive.
+
+**What `impeccable init` produces:**
+- `PRODUCT.md` — register, user personas, brand personality, design principles, anti-references
+- `DESIGN.md` — full design system: palette, typography, spacing, component specs
+- `.impeccable/design.json` — live sidecar with color ramps, shadow/motion tokens, component snippets
+- A design hook that fires after every file edit and flags anti-patterns (literal colors, wrong
+  fonts, border-accent violations, color drift)
+
+**When to run:**
+- New app: run `impeccable init` before `create-code-app`. The interview takes a few minutes
+  and saves many correction cycles later.
+- Existing app without PRODUCT.md/DESIGN.md: strongly encourage running `impeccable init`
+  before any UI changes.
+- Existing app with PRODUCT.md/DESIGN.md: re-run `impeccable context` at the start of each
+  session to reload the design system before editing.
+
+**Artifacts location:** `code-apps/<app-name>/PRODUCT.md`, `DESIGN.md`, `.impeccable/`
+
+If the user explicitly skips init, proceed but record the absence of a design baseline and
+surface it as a risk at review time. Never disable or silently ignore design hook findings.
+
 ## Available sub-skills
 
 | Sub-skill | When to use |
@@ -100,11 +127,14 @@ New app
        ├─ Missing dependency? → ask to install/enable → stop until resolved
        └─ Scope gate (environment + solution explicit)
             ├─ Missing or ambiguous? → ask user → stop until resolved
-            └─ create-code-app
-                 └─ add-dataverse (default) or add-datasource (unclear source)
-                      └─ [optional] add additional sources
-                           └─ make lint && make test
-                                └─ deploy
+            └─ Design alignment (impeccable init — strongly recommended)
+                 ├─ Skipped? → note missing baseline, continue with caution
+                 └─ PRODUCT.md + DESIGN.md created → design hook active
+                      └─ create-code-app
+                           └─ add-dataverse (default) or add-datasource (unclear source)
+                                └─ [optional] add additional sources
+                                     └─ make lint && make test
+                                          └─ deploy
 ```
 
 ```
@@ -113,10 +143,11 @@ Modify existing app
        ├─ Missing dependency? → ask to install/enable → stop until resolved
        └─ Scope gate (environment + solution explicit)
             ├─ Missing or ambiguous? → ask user → stop until resolved
-            └─ Identify change type
-                 ├─ New data source → appropriate add-* sub-skill
-                 │    └─ Premium? → flag DLP + confirm → add-connector
-                 └─ No new source → edit, then make lint && make test → deploy
+            └─ Design context (impeccable context — if PRODUCT.md/DESIGN.md exist)
+                 └─ Identify change type
+                      ├─ New data source → appropriate add-* sub-skill
+                      │    └─ Premium? → flag DLP + confirm → add-connector
+                      └─ No new source → edit, then make lint && make test → deploy
 ```
 
 ## Escape hatches
@@ -125,3 +156,6 @@ Modify existing app
   the `power-automate` plugin to verify the active environment, then retry.
 - If `deploy` fails with a DLP error, surface the full error message to the user and pause
   for guidance rather than retrying automatically.
+- If the `impeccable` skill is unavailable, proceed without the design preflight but flag
+  the gap — do not silently skip and do not attempt to reproduce Impeccable's behaviour
+  manually.
