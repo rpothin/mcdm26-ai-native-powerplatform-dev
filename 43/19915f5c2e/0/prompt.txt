@@ -1,0 +1,9 @@
+I get "winget install --id Microsoft.AzureCLI --source winget --accept-package-agreements --accept-source-agreements
+Found Microsoft Azure CLI [Microsoft.AzureCLI] Version 2.88.0
+This application is licensed to you by its owner.
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Successfully verified installer hash
+Starting package install...
+Another installation is already in progress. Try again later.
+Installer failed with exit code: 1618
+Installer log is available at: C:\Users\rapha\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir\Microsoft.AzureCLI.2.88.0-26-07-30-23-16-14.log" How to investigate what is blocking and to fix the situation?
