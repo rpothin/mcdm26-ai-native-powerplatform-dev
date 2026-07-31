@@ -1,0 +1,5 @@
+Not true, here is where I was running the tests from: "pwd
+
+Path
+----
+C:\Users\rapha\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev"
