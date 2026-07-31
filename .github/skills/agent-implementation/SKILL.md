@@ -35,6 +35,19 @@ If the required plugin or sub-agent for the next step is missing or unavailable:
 Do not attempt Copilot Studio authoring or troubleshooting through generic YAML edits when the
 specialized sub-agents are unavailable.
 
+## Step 1 — Environment and solution scope gate (required)
+
+Before any Copilot Studio work starts, require explicit target scope:
+- Environment: display name and environment ID (or URL)
+- Solution: unique name and publisher prefix for the solution that owns the agent changes
+
+If either environment or solution is missing, ambiguous, or inferred:
+1. Stop execution and return a blocked status.
+2. Ask the user to explicitly provide the target environment and solution.
+3. Resume only after both are confirmed.
+
+Do not clone, describe, or author against an implicit environment/solution target.
+
 ## Installed plugins
 
 | Plugin | Sub-agents | Best for |
@@ -45,15 +58,15 @@ specialized sub-agents are unavailable.
 ## Standard lifecycle
 
 ```
-clone (manage) → describe (mcs-assistant:describer) → design (advisor)
-  → author → push (manage) → publish (manage) → test
+dependency preflight → scope gate → clone (manage) → describe (mcs-assistant:describer)
+  → design (advisor) → author → push (manage) → publish (manage) → test
 ```
 
 Never skip the describe or design steps for non-trivial changes.
 
 ## Step-by-step routing
 
-### Step 1 — Ensure a local agent exists
+### Step 2 — Ensure a local agent exists
 Check for `agents/<agent-name>/agent.mcs.yml`.
 - Found → proceed.
 - Missing **and** task is new agent → run `mcs-assistant:copilot-studio-init` to initialize,
@@ -64,7 +77,7 @@ Check for `agents/<agent-name>/agent.mcs.yml`.
 Authoring without a local `agent.mcs.yml` is not supported — never write YAML into an empty
 folder and hope to push it.
 
-### Step 2 — Identify agent type
+### Step 3 — Identify agent type
 Run `mcs-assistant:copilot-studio-describer` on the cloned agent.
 - **Classic / standard agent** → use `copilot-studio` plugin for authoring.
 - **Enhanced / new agentic loop agent** → use `mcs-assistant` plugin for authoring.
@@ -72,7 +85,7 @@ Run `mcs-assistant:copilot-studio-describer` on the cloned agent.
 This check is mandatory before first authoring in any session. Skipping it risks writing
 incompatible YAML.
 
-### Step 3 — Design before authoring
+### Step 4 — Design before authoring
 For any non-trivial change (new topic, action, knowledge source, or behavioral modification),
 run `copilot-studio:copilot-studio-advisor` first.
 The advisor surfaces relevant patterns and known pitfalls. Present its recommendations to the
@@ -80,15 +93,15 @@ user and get explicit approval before proceeding to authoring.
 
 Trivial exceptions (typo fix, description update, metadata-only change) may skip the advisor.
 
-### Step 4 — Author
-Route to the correct authoring sub-agent based on agent type (Step 2).
+### Step 5 — Author
+Route to the correct authoring sub-agent based on agent type (Step 3).
 Agent files live under `agents/<agent-name>/` — do not create or edit files outside this path.
 
-### Step 5 — Push and publish
+### Step 6 — Push and publish
 After authoring, run the manage sub-agent to push changes to the environment, then publish
 the draft. Changes are not testable until published.
 
-### Step 6 — Test
+### Step 7 — Test
 Always use `copilot-studio:copilot-studio-test`. This includes:
 - Creating test set CSVs for in-product evaluation
 - Running batch test suites via the Copilot Studio Kit
@@ -110,13 +123,15 @@ Never rely on informal manual browser testing as the sole validation.
 Task received
   └─ Dependency preflight
        ├─ Missing dependency? → ask to install/enable → stop until resolved
-       └─ Local agent.mcs.yml present?
-            ├─ No, new agent → mcs-assistant:init → manage:clone
-            └─ No, existing agent → manage:clone
-            └─ Yes → mcs-assistant:describer (identify type)
-                 └─ Design review needed? → copilot-studio:advisor
-                      └─ Author (route by type)
-                           └─ manage:push → manage:publish → copilot-studio:test
+       └─ Scope gate (environment + solution explicit)
+            ├─ Missing or ambiguous? → ask user → stop until resolved
+            └─ Local agent.mcs.yml present?
+                 ├─ No, new agent → mcs-assistant:init → manage:clone
+                 └─ No, existing agent → manage:clone
+                 └─ Yes → mcs-assistant:describer (identify type)
+                      └─ Design review needed? → copilot-studio:advisor
+                           └─ Author (route by type)
+                                └─ manage:push → manage:publish → copilot-studio:test
 ```
 
 Read `references/plugin-selection.md` when you need detailed guidance on choosing between

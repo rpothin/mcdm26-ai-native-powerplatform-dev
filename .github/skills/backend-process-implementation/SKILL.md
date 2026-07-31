@@ -30,6 +30,19 @@ If any required sub-skill is missing or unavailable:
 Do not attempt flow authoring or diagnosis through ad-hoc JSON edits when these dependencies
 are missing.
 
+## Step 1 — Environment and solution scope gate (required)
+
+Before any flow work starts, require explicit target scope:
+- Environment: display name and environment ID (or URL)
+- Solution: unique name and publisher prefix
+
+If either environment or solution is missing, ambiguous, or inferred:
+1. Stop execution and return a blocked status.
+2. Ask the user to explicitly provide the target environment and solution.
+3. Resume only after both are confirmed.
+
+Do not create, modify, diagnose, or enable flows against an implicit target.
+
 ## Available sub-skills
 
 | Sub-skill | When to use |
@@ -90,21 +103,25 @@ This applies even in autopilot mode. Do not self-approve production enables.
 New flow request
   └─ Dependency preflight
        ├─ Missing dependency? → ask to install/enable → stop until resolved
-       └─ browse-flows (check for duplicates)
-            └─ create-flow (solution-bound, MCDM_ naming)
-                 └─ build-flow (add logic)
-                      └─ manage-flows:test run
-                           └─ Production? → confirm human → manage-flows:enable
+       └─ Scope gate (environment + solution explicit)
+            ├─ Missing or ambiguous? → ask user → stop until resolved
+            └─ browse-flows (check for duplicates)
+                 └─ create-flow (solution-bound, MCDM_ naming)
+                      └─ build-flow (add logic)
+                           └─ manage-flows:test run
+                                └─ Production? → confirm human → manage-flows:enable
 ```
 
 ```
 Broken flow
   └─ Dependency preflight
        ├─ Missing dependency? → ask to install/enable → stop until resolved
-       └─ diagnose-flow (always first)
-            └─ Identify root cause
-                 └─ build-flow or manage-flows to fix
-                      └─ Re-test → manage-flows:enable (if production, confirm first)
+       └─ Scope gate (environment + solution explicit)
+            ├─ Missing or ambiguous? → ask user → stop until resolved
+            └─ diagnose-flow (always first)
+                 └─ Identify root cause
+                      └─ build-flow or manage-flows to fix
+                           └─ Re-test → manage-flows:enable (if production, confirm first)
 ```
 
 ## Escape hatches

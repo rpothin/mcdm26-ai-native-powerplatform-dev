@@ -29,6 +29,19 @@ If any required sub-skill is missing or unavailable:
 
 Do not handcraft connector scaffolding or generated bindings as a fallback for missing skills.
 
+## Step 1 — Environment and solution scope gate (required)
+
+Before any code-app work starts, require explicit target scope:
+- Environment: display name and environment ID (or URL)
+- Solution: unique name and publisher prefix for the solution that will contain app assets
+
+If either environment or solution is missing, ambiguous, or inferred:
+1. Stop execution and return a blocked status.
+2. Ask the user to explicitly provide the target environment and solution.
+3. Resume only after both are confirmed.
+
+Do not scaffold, connect data sources, or deploy against an implicit target.
+
 ## Available sub-skills
 
 | Sub-skill | When to use |
@@ -85,21 +98,25 @@ human must acknowledge before the connector is added.
 New app
   └─ Dependency preflight
        ├─ Missing dependency? → ask to install/enable → stop until resolved
-       └─ create-code-app
-            └─ add-dataverse (default) or add-datasource (unclear source)
-                 └─ [optional] add additional sources
-                      └─ make lint && make test
-                           └─ deploy
+       └─ Scope gate (environment + solution explicit)
+            ├─ Missing or ambiguous? → ask user → stop until resolved
+            └─ create-code-app
+                 └─ add-dataverse (default) or add-datasource (unclear source)
+                      └─ [optional] add additional sources
+                           └─ make lint && make test
+                                └─ deploy
 ```
 
 ```
 Modify existing app
   └─ Dependency preflight
        ├─ Missing dependency? → ask to install/enable → stop until resolved
-       └─ Identify change type
-            ├─ New data source → appropriate add-* sub-skill
-            │    └─ Premium? → flag DLP + confirm → add-connector
-            └─ No new source → edit, then make lint && make test → deploy
+       └─ Scope gate (environment + solution explicit)
+            ├─ Missing or ambiguous? → ask user → stop until resolved
+            └─ Identify change type
+                 ├─ New data source → appropriate add-* sub-skill
+                 │    └─ Premium? → flag DLP + confirm → add-connector
+                 └─ No new source → edit, then make lint && make test → deploy
 ```
 
 ## Escape hatches

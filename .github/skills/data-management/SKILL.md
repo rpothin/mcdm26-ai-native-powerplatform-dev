@@ -29,6 +29,19 @@ If any required sub-skill is missing or unavailable:
 
 Do not attempt Dataverse work through ad-hoc fallback logic when these dependencies are missing.
 
+## Step 1 — Environment and solution scope gate (required)
+
+Before any Dataverse work starts, the target scope must be explicit:
+- Environment: display name and environment ID (or URL)
+- Solution: unique name and publisher prefix
+
+If either environment or solution is missing, ambiguous, or inferred:
+1. Stop execution and return a blocked status.
+2. Ask the user to explicitly provide the target environment and solution.
+3. Resume only after both are confirmed.
+
+Do not proceed using defaults, recent-session guesses, or partial scope values.
+
 ## Sub-skill routing
 
 | Task | Sub-skill |
@@ -84,15 +97,17 @@ human can catch mis-targeting before changes land.
 Dataverse task received
   └─ Dependency preflight
        ├─ Missing dependency? → ask to install/enable → stop until resolved
-       └─ Load dv-overview (always)
-            ├─ Connection broken? → dv-connect, then retry
-            ├─ Read-only query? → dv-query
-            ├─ Record write (CRUD / import)? → dv-data
-            │    └─ Schema missing? → dv-metadata first (see §2 sequencing)
-            ├─ Schema authoring? → check managed solutions → dv-metadata
-            ├─ Solution lifecycle? → dv-solution
-            ├─ Security / roles? → dv-security
-            └─ Bulk delete / org settings? → confirm human → dv-admin
+       └─ Scope gate (environment + solution explicit)
+            ├─ Missing or ambiguous? → ask user → stop until resolved
+            └─ Load dv-overview (always)
+                 ├─ Connection broken? → dv-connect, then retry
+                 ├─ Read-only query? → dv-query
+                 ├─ Record write (CRUD / import)? → dv-data
+                 │    └─ Schema missing? → dv-metadata first (see §2 sequencing)
+                 ├─ Schema authoring? → check managed solutions → dv-metadata
+                 ├─ Solution lifecycle? → dv-solution
+                 ├─ Security / roles? → dv-security
+                 └─ Bulk delete / org settings? → confirm human → dv-admin
 ```
 
 ## Escape hatches
