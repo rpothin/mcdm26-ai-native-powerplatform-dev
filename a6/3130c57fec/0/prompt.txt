@@ -1,0 +1,1 @@
+I think they are all under '~\.copilot\repos\.agents\skills'. Do you think we should move them under 'C:\Users\rapha\.copilot\skills' and then delete ''~\.copilot\repos\.agents\' that should not be here?
