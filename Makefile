@@ -14,7 +14,7 @@ SOLUTIONS := $(shell find solutions -maxdepth 1 -mindepth 1 -type d 2>/dev/null 
 
 .PHONY: help \
 	app-lint app-test app-build app-gate \
-	solution-pack solution-check solution-validate solution-sync
+	solution-pack solution-check solution-gate solution-sync
 
 ## help: list available targets with descriptions and examples
 help:
@@ -26,7 +26,7 @@ help:
 	@echo "  app-gate          Mandatory pre-push app gate: app-lint + app-test"
 	@echo "  solution-pack     Pack all solutions (or one with SOLUTION=<name>)"
 	@echo "  solution-check    Run Solution Checker on all solutions (or one with SOLUTION=<name>)"
-	@echo "  solution-validate Run solution-pack + solution-check"
+	@echo "  solution-gate     Mandatory solution gate: solution-pack + solution-check"
 	@echo "  solution-sync     If SOLUTION exists locally: sync; otherwise: clone it"
 	@echo ""
 	@echo "Examples:"
@@ -38,7 +38,7 @@ help:
 	@echo "  SOLUTION=CorePlatform make solution-pack"
 	@echo "  SOLUTION=CorePlatform make solution-check CHECKER_GEO=Europe"
 	@echo "  SOLUTION=CorePlatform make solution-sync"
-	@echo "  make solution-validate"
+	@echo "  make solution-gate"
 	@echo ""
 
 ## app-lint: run 'npm run lint' inside each selected code app directory
@@ -152,8 +152,8 @@ solution-check:
 		done; \
 	fi
 
-## solution-validate: run solution-pack then solution-check
-solution-validate: solution-pack solution-check
+## solution-gate: mandatory gate for solutions
+solution-gate: solution-pack solution-check
 
 ## solution-sync: clone a missing solution folder or sync an existing one
 solution-sync:
