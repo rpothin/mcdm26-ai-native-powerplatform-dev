@@ -86,7 +86,31 @@ Never run data operations against schema that has not yet been promoted into a s
 before execution. Present the scope (table, filter, estimated row count) and wait for approval.
 Do not self-approve bulk deletes even when operating in autopilot mode.
 
+### 5 — Artifact persistence for data and schema operations
+
+Every artifact generated during a session that **modifies data or the data model** must be
+saved to the `data/` directory at the repo root before execution. This includes:
+- FetchXML / OData queries used to write, update, or delete records
+- CSV files for bulk import
+- Schema definition scripts (column, table, or relationship specs passed to `dv-metadata`)
+- Bulk-delete filters passed to `dv-admin`
+
+Read-only queries (exploration, filtering, reporting) do not require persistence unless the
+user explicitly requests it.
+
+**Naming convention:** `YYYYMMDD_HHMMSS_<short-description>.<ext>`
+
+Examples:
+- `20260731_142055_add-account-industry-column.json`
+- `20260731_151230_bulk-import-contacts.csv`
+- `20260731_163400_delete-orphan-activity-records.fetchxml`
+
+Write the file to `data/` **before** invoking the sub-skill. If the operation succeeds,
+leave the file as a permanent record. If it fails, append `_FAILED` to the filename so the
+failure is traceable without ambiguity.
+
 ### 4 — Environment targeting
+
 Always confirm the target environment before any write operation. Use `dv-connect` to verify
 the active connection. Surface the environment display name and URL in your response so the
 human can catch mis-targeting before changes land.
@@ -102,12 +126,15 @@ Dataverse task received
             └─ Load dv-overview (always)
                  ├─ Connection broken? → dv-connect, then retry
                  ├─ Read-only query? → dv-query
-                 ├─ Record write (CRUD / import)? → dv-data
-                 │    └─ Schema missing? → dv-metadata first (see §2 sequencing)
-                 ├─ Schema authoring? → check managed solutions → dv-metadata
+                 ├─ Record write (CRUD / import)?
+                 │    └─ Persist artifact to data/ (YYYYMMDD_HHMMSS_desc.ext) → dv-data
+                 │         └─ Schema missing? → dv-metadata first (see §2 sequencing)
+                 ├─ Schema authoring?
+                 │    └─ Check managed solutions → persist artifact → dv-metadata
                  ├─ Solution lifecycle? → dv-solution
                  ├─ Security / roles? → dv-security
-                 └─ Bulk delete / org settings? → confirm human → dv-admin
+                 └─ Bulk delete / org settings?
+                      └─ Persist artifact → confirm human → dv-admin
 ```
 
 ## Escape hatches
