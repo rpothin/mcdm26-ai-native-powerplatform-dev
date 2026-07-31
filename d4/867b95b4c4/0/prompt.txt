@@ -1,0 +1,1 @@
+Closed GitHub Copilot App, launched 'copilot plugin update power-automate@power-platform-skills' in a separated terminal and I think we are good on this side. Now, last thing I would like to check: are the considered plugins / skills leveraging dependencies (like Azure CLI or others) we should check if they are up to date?
