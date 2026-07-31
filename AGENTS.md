@@ -12,27 +12,41 @@ npm test -- <path>       # test one file inside a code app directory
 npx tsc --noEmit <path>  # typecheck one file
 ```
 
-Full suite (only when asked):
+App targets (full suite only when asked):
 
 ```sh
-make lint      # ESLint across all code-apps/*/
-make test      # unit tests across all code-apps/*/
-make build     # build all code-apps/*/
-make validate  # make lint + pac solution pack structural check for every solution under solutions/
+make app-lint                  # ESLint across all code-apps/*/
+APP=<name> make app-lint       # lint one app
+make app-test                  # unit tests across all code-apps/*/
+APP=<name> make app-test       # test one app
+make app-build                 # build all code-apps/*/
+APP=<name> make app-build      # build one app
+make app-gate                  # mandatory pre-push gate: app-lint + app-test
 ```
 
-Solution pack / unpack:
+Solution targets:
+
+```sh
+make solution-pack                                          # structural pack check for all solutions
+SOLUTION=<name> make solution-pack                         # pack one solution
+make solution-check                                         # run Solution Checker on all solutions
+SOLUTION=<name> make solution-check                        # check one solution
+SOLUTION=<name> make solution-check CHECKER_GEO=Europe     # specify checker geography
+make solution-gate                                          # mandatory solution gate: solution-pack + solution-check
+SOLUTION=<name> make solution-sync                         # clone missing or sync existing solution
+```
+
+Unpack a solution (no Makefile equivalent):
 
 ```sh
 pac solution unpack --zipfile <file>.zip --folder solutions/<name>
-pac solution pack   --folder solutions/<name> --zipfile <file>.zip --processCanvasApps
 ```
 
 Other:
 
 ```sh
 pac auth create --environment <env-url>  # authenticate PAC CLI to a target environment
-pac code push                            # deploy a code app (run make lint first)
+pac code push                            # deploy a code app (run make app-gate first)
 ```
 
 ## Stack
@@ -54,12 +68,13 @@ Always invoke the matching project-level orchestrator skill — never implement 
 | Copilot Studio agent authoring, review, testing, ALM | `agent-implementation` |
 | Power Apps code app (scaffold, connectors, lint, deploy) | `app-implementation` |
 | Power Automate cloud flows (create, debug, manage) | `backend-process-implementation` |
+| Power Platform solution lifecycle (pack, check, sync, deploy settings) | `solution-management` |
 
 ## Boundaries
 
 - ✅ Always: work on unpacked solution folders under `solutions/` — never touch packed `.zip` files directly.
 - ✅ Always: keep connection references and environment variable values in `solutions/<name>/deployment-settings.json`.
-- ✅ Always: run `make lint` before `pac code push` for code apps.
+- ✅ Always: run `make app-gate` (lint + test) before `pac code push` for code apps.
 - ✅ Always: leave generated TypeScript under `src/generated/` untouched — connector skills regenerate it.
 - ✅ Always: all changes go through PRs — never commit directly to `main`.
 - ⚠️ Ask first: adding a premium Power Platform connector (DLP policy implications).
