@@ -1,0 +1,1 @@
+In the README at the root of the repository, can you please replace the new "## Tech stack quick check / setup" by a "> [!NOTE]" ? Because we are already under "## Technology areas being explored".
