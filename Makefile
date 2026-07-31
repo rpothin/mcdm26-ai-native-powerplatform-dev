@@ -14,19 +14,25 @@ SOLUTIONS := $(shell find solutions -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
 help:
 	@echo ""
 	@echo "Available targets:"
-	@echo "  lint      Run ESLint for every code app under code-apps/"
-	@echo "  test      Run unit tests for every code app under code-apps/"
-	@echo "  build     Build every code app under code-apps/"
+	@echo "  lint      Run ESLint for every code app (or APP=<name> for one app)"
+	@echo "  test      Run unit tests for every code app (or APP=<name> for one app)"
+	@echo "  build     Build every code app (or APP=<name> for one app)"
 	@echo "  validate  Run lint + pac solution pack (structural check) for every solution"
 	@echo ""
 
 ## lint: run 'npm run lint' inside each code app directory
 lint:
-	@if [ -z "$(CODE_APPS)" ]; then \
+	@if [ -n "$(APP)" ] && [ ! -d "code-apps/$(APP)" ]; then \
+		echo "Code app '$(APP)' not found under code-apps/."; \
+		exit 1; \
+	fi
+	@APPS="$(CODE_APPS)"; \
+	if [ -n "$(APP)" ]; then APPS="code-apps/$(APP)"; fi; \
+	if [ -z "$$APPS" ]; then \
 		echo "No code apps found under code-apps/ — skipping lint."; \
 	else \
 		# Iterate; `set -e` makes the sub-shell exit on first failure, propagating to make. \
-		for app in $(CODE_APPS); do \
+		for app in $$APPS; do \
 			echo "==> Linting $$app"; \
 			(cd $$app && npm run lint); \
 		done; \
@@ -34,10 +40,16 @@ lint:
 
 ## test: run 'npm test' inside each code app directory
 test:
-	@if [ -z "$(CODE_APPS)" ]; then \
+	@if [ -n "$(APP)" ] && [ ! -d "code-apps/$(APP)" ]; then \
+		echo "Code app '$(APP)' not found under code-apps/."; \
+		exit 1; \
+	fi
+	@APPS="$(CODE_APPS)"; \
+	if [ -n "$(APP)" ]; then APPS="code-apps/$(APP)"; fi; \
+	if [ -z "$$APPS" ]; then \
 		echo "No code apps found under code-apps/ — skipping tests."; \
 	else \
-		for app in $(CODE_APPS); do \
+		for app in $$APPS; do \
 			echo "==> Testing $$app"; \
 			(cd $$app && npm test); \
 		done; \
@@ -45,10 +57,16 @@ test:
 
 ## build: run 'npm run build' inside each code app directory
 build:
-	@if [ -z "$(CODE_APPS)" ]; then \
+	@if [ -n "$(APP)" ] && [ ! -d "code-apps/$(APP)" ]; then \
+		echo "Code app '$(APP)' not found under code-apps/."; \
+		exit 1; \
+	fi
+	@APPS="$(CODE_APPS)"; \
+	if [ -n "$(APP)" ]; then APPS="code-apps/$(APP)"; fi; \
+	if [ -z "$$APPS" ]; then \
 		echo "No code apps found under code-apps/ — skipping build."; \
 	else \
-		for app in $(CODE_APPS); do \
+		for app in $$APPS; do \
 			echo "==> Building $$app"; \
 			(cd $$app && npm run build); \
 		done; \
