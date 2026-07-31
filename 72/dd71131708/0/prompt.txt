@@ -1,0 +1,1 @@
+I have re-run the 'npx skills add https://github.com/entireio/skills --all' in our current worktree but seeing both '.agents/skills' and '.claude/skills' I think I just messed up. Considering a github copilot centric setup, under which folder skills should be?
