@@ -1,0 +1,1 @@
+Is it just me or Entire was not setup into our repository part of this work? Please create a sub session to check this point and based on the result eventually take action following https://docs.entire.io/quickstart#windows-scoop.
