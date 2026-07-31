@@ -14,8 +14,7 @@ SOLUTIONS := $(shell find solutions -maxdepth 1 -mindepth 1 -type d 2>/dev/null 
 
 .PHONY: help \
 	app-lint app-test app-build app-gate \
-	solution-pack solution-check solution-validate solution-sync \
-	lint test build validate
+	solution-pack solution-check solution-validate solution-sync
 
 ## help: list available targets with descriptions and examples
 help:
@@ -29,9 +28,6 @@ help:
 	@echo "  solution-check    Run Solution Checker on all solutions (or one with SOLUTION=<name>)"
 	@echo "  solution-validate Run solution-pack + solution-check"
 	@echo "  solution-sync     If SOLUTION exists locally: sync; otherwise: clone it"
-	@echo ""
-	@echo "Compatibility aliases:"
-	@echo "  lint -> app-lint, test -> app-test, build -> app-build, validate -> app-lint + solution-pack"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make app-lint"
@@ -183,9 +179,3 @@ solution-sync:
 			pac solution sync --solution-folder "$$sol"; \
 		done; \
 	fi
-
-# Backward-compatible aliases from the initial contract.
-lint: app-lint
-test: app-test
-build: app-build
-validate: app-lint solution-pack
