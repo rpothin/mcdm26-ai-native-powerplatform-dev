@@ -1,0 +1,1 @@
+Let's copy-paste entire skills at the right place for our setup then and after that clean the multiple duplication of skills in our worktree.
