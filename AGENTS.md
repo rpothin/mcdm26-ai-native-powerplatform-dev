@@ -6,10 +6,12 @@ Demo companion repo for "AI-Native Power Platform Development: Building from the
 
 Run `make help` to discover all available targets and usage examples.
 
-Authentication — when PAC CLI has no active auth context, trigger device-code auth and surface the URL and code to the user so they can complete sign-in:
+Authentication — when a CLI has no active auth context, trigger device-code auth and surface the URL and code to the user so they can complete sign-in:
 
 ```sh
-pac auth create --deviceCode
+pac auth create --deviceCode   # Power Platform / Dataverse
+az login --use-device-code     # Azure CLI (az, azd)
+gh auth login                  # GitHub CLI — follow the prompts
 ```
 
 ## Stack
