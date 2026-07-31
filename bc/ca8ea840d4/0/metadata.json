@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "bcca8ea840d4",
+  "session_id": "b7ee2846-6e3e-4964-a84a-20dfa8207e33",
+  "strategy": "import",
+  "created_at": "2026-07-31T03:24:39.687Z",
+  "commit_sha": "4d76fcc03b670e5475e4e44a15be1d44d83638cb",
+  "checkpoints_count": 1,
+  "files_touched": null,
+  "agent": "Copilot CLI",
+  "model": "gpt-5.3-codex",
+  "checkpoint_transcript_start": 1166,
+  "transcript_lines_at_start": 1166,
+  "compact_transcript_start": 94,
+  "token_usage": {
+    "input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 0,
+    "output_tokens": 1298,
+    "api_call_count": 3
+  },
+  "kind": "imported"
+}
