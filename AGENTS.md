@@ -4,8 +4,6 @@ Demo companion repo for "AI-Native Power Platform Development: Building from the
 
 ## Commands
 
-File-scoped (prefer for fast feedback):
-
 ```sh
 npm run lint -- <path>   # lint one file inside a code app directory
 npm test -- <path>       # test one file inside a code app directory
