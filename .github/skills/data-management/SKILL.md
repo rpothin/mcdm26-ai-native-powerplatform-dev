@@ -3,9 +3,9 @@ name: data-management
 description: >
   Orchestrates all Dataverse work in a Power Platform project by routing to the
   correct sub-skill from the installed `dataverse` plugin (microsoft/Dataverse-skills).
-  Use for any task involving Dataverse tables, records, solutions, security, or environment
-  administration: schema authoring, record CRUD, bulk imports, solution lifecycle, role
-  assignments, bulk delete, and org settings.
+  Use when working on any task involving Dataverse tables, records, solutions, security, or
+  environment administration: schema authoring, record CRUD, bulk imports, solution lifecycle,
+  role assignments, bulk delete, and org settings.
   Do NOT use for Power Apps code app wiring (use app-implementation), Power Automate flows
   (use backend-process-implementation), or Copilot Studio agents (use agent-implementation).
 ---

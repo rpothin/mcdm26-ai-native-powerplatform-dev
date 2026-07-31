@@ -2,7 +2,7 @@
 name: app-implementation
 description: >
   Orchestrates Power Apps Code App work in a Power Platform project using the
-  `code-apps-preview` plugin (microsoft/power-platform-skills). Use for any task involving
+  `code-apps-preview` plugin (microsoft/power-platform-skills).   Use when working on any task involving
   Power Apps code apps: scaffolding new apps, connecting data sources, adding connectors,
   and deploying. Triggers on: create code app, add data source, add connector, deploy app,
   connect Dataverse/SharePoint/Teams/Excel/OneDrive/Office365/Azure DevOps to app.

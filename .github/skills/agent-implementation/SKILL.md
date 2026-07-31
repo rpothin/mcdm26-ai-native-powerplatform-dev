@@ -4,7 +4,7 @@ description: >
   Orchestrates Copilot Studio agent work in a Power Platform project,
   routing across the two installed Copilot Studio plugin sets: `copilot-studio`
   (microsoft/skills-for-copilot-studio) and `mcs-assistant`
-  (microsoft/copilot-studio-plugin). Use for any task involving Copilot Studio agents:
+  (microsoft/copilot-studio-plugin).   Use when working on any task involving Copilot Studio agents:
   cloning, describing, designing topics/actions/knowledge, authoring YAML, pushing,
   publishing, and testing. Triggers on: build agent, create topic, add knowledge source,
   add action, modify agent, publish agent, test agent, troubleshoot agent behavior.

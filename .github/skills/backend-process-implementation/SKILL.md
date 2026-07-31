@@ -2,7 +2,7 @@
 name: backend-process-implementation
 description: >
   Orchestrates Power Automate Cloud Flow work in a Power Platform project
-  using the `power-automate` plugin (microsoft/power-platform-skills). Use for any task
+  using the `power-automate` plugin (microsoft/power-platform-skills).   Use when working on any task
   involving Power Automate flows: browsing existing flows, creating new flows, building
   flow logic, debugging failures, diagnosing errors, managing flow lifecycle, and routing
   across environments. Triggers on: create flow, build flow, fix flow, debug flow, enable

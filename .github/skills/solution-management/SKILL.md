@@ -4,15 +4,14 @@ description: >
   Orchestrates Power Platform solution lifecycle in the Dev environment for a Power Platform
   project. Covers solution creation, local clone and sync, deployment-settings file
   generation for connection references and environment variables, solution checker validation,
-  solution packing, and dependency hygiene. Use before starting any content work (data,
-  agents, apps, flows) and again as a pre-PR quality gate.
-  Triggers on: create solution, clone solution, sync solution, solution checker, pack solution,
-  deployment settings, generate settings, connection references config, environment variables
-  config, solution hygiene, dependency check, pre-PR validation, init solution.
-  Do NOT use for: deploying or importing solutions to staging or production (that is the
-  GitHub deployment workflow''s job), creating Dataverse tables or records (use
-  data-management), building flows (use backend-process-implementation), building apps (use
-  app-implementation), or authoring Copilot Studio agents (use agent-implementation).
+  solution packing, and dependency hygiene. Use when starting any content work session or
+  when a pre-PR quality gate is needed. Triggers on: create solution, clone solution, sync
+  solution, solution checker, pack solution, deployment settings, generate settings,
+  connection references, environment variables, solution hygiene, dependency check,
+  pre-PR validation, init solution. Do NOT use for: deploying or importing solutions to
+  staging or production (use the GitHub deployment workflow), creating Dataverse tables or
+  records (use data-management), building flows (use backend-process-implementation),
+  building apps (use app-implementation), authoring agents (use agent-implementation).
 ---
 
 # solution-management
