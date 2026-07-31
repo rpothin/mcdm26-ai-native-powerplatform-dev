@@ -1,0 +1,1 @@
+Can you please update the tech stack readiness docs and script to also cover the entire setup we missed based on everything we went through in this session?
