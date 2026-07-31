@@ -36,12 +36,6 @@ make solution-gate                                          # mandatory solution
 SOLUTION=<name> make solution-sync                         # clone missing or sync existing solution
 ```
 
-Unpack a solution (no Makefile equivalent):
-
-```sh
-pac solution unpack --zipfile <file>.zip --folder solutions/<name>
-```
-
 Other:
 
 ```sh
