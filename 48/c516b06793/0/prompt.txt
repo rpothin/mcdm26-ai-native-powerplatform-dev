@@ -1,0 +1,9 @@
+Get latest changes from remote > main, then let's double check everything we will need from a tech stack perspective is in place and ready to prepare our demonstration repository. Let's also double check all these tools are up to date.
+
+Here are the elements I want to use:
+- [**GitHub Copilot App**](https://github.com/features/ai/github-app) and [**GitHub Copilot**](https://github.com/features/copilot)
+- [**microsoft/power-platform-skills**](https://github.com/microsoft/power-platform-skills)
+- [**microsoft/Dataverse-skills**](https://github.com/microsoft/Dataverse-skills)
+- [**microsoft/skills-for-copilot-studio**](https://github.com/microsoft/skills-for-copilot-studio) and [**microsoft/copilot-studio-plugin**](https://github.com/microsoft/copilot-studio-plugin)
+- [**Entire**](https://entire.io/) + https://docs.entire.io/quickstart#windows-scoop
+- [**GitHub stacked PRs**](https://github.blog/changelog/2026-07-30-stacked-pull-requests-are-now-in-public-preview/) + https://github.com/github/gh-stack
