@@ -1,0 +1,4 @@
+Can you please complete this status checking which skills from the following list are indeed available to you and check the version we have is the last one available? - [**microsoft/power-platform-skills**](https://github.com/microsoft/power-platform-skills)
+- [**microsoft/Dataverse-skills**](https://github.com/microsoft/Dataverse-skills)
+- [**microsoft/skills-for-copilot-studio**](https://github.com/microsoft/skills-for-copilot-studio) and [**microsoft/copilot-studio-plugin**](https://github.com/microsoft/copilot-studio-plugin)
+- [**github/gh-stack**](https://github.com/github/gh-stack)
