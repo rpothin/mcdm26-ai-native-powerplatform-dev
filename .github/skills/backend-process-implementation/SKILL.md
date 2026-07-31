@@ -1,7 +1,7 @@
 ---
 name: backend-process-implementation
 description: >
-  Orchestrates Power Automate Cloud Flow work in the mcdm26 Power Platform demo project
+  Orchestrates Power Automate Cloud Flow work in a Power Platform project
   using the `power-automate` plugin (microsoft/power-platform-skills). Use for any task
   involving Power Automate flows: browsing existing flows, creating new flows, building
   flow logic, debugging failures, diagnosing errors, managing flow lifecycle, and routing
@@ -15,6 +15,20 @@ description: >
 
 Orchestration layer for all Power Automate Cloud Flow work in this project.
 The `power-automate` plugin covers the full flow lifecycle from discovery through production.
+
+## Step 0 — Dependency preflight (required)
+
+Before routing any flow task, verify `power-automate` sub-skills are available:
+`setup`, `browse-flows`, `create-flow`, `build-flow`, `debug-flow`, `diagnose-flow`,
+`manage-flows`, `manage-desktop-flows`, and `route-environments`.
+
+If any required sub-skill is missing or unavailable:
+1. Stop execution and return a blocked status.
+2. Ask the user whether they want to install or enable the missing dependency.
+3. Resume only after availability is confirmed.
+
+Do not attempt flow authoring or diagnosis through ad-hoc JSON edits when these dependencies
+are missing.
 
 ## Available sub-skills
 
@@ -74,19 +88,23 @@ This applies even in autopilot mode. Do not self-approve production enables.
 
 ```
 New flow request
-  └─ browse-flows (check for duplicates)
-       └─ create-flow (solution-bound, MCDM_ naming)
-            └─ build-flow (add logic)
-                 └─ manage-flows:test run
-                      └─ Production? → confirm human → manage-flows:enable
+  └─ Dependency preflight
+       ├─ Missing dependency? → ask to install/enable → stop until resolved
+       └─ browse-flows (check for duplicates)
+            └─ create-flow (solution-bound, MCDM_ naming)
+                 └─ build-flow (add logic)
+                      └─ manage-flows:test run
+                           └─ Production? → confirm human → manage-flows:enable
 ```
 
 ```
 Broken flow
-  └─ diagnose-flow (always first)
-       └─ Identify root cause
-            └─ build-flow or manage-flows to fix
-                 └─ Re-test → manage-flows:enable (if production, confirm first)
+  └─ Dependency preflight
+       ├─ Missing dependency? → ask to install/enable → stop until resolved
+       └─ diagnose-flow (always first)
+            └─ Identify root cause
+                 └─ build-flow or manage-flows to fix
+                      └─ Re-test → manage-flows:enable (if production, confirm first)
 ```
 
 ## Escape hatches

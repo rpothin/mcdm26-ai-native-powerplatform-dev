@@ -1,7 +1,7 @@
 ---
 name: app-implementation
 description: >
-  Orchestrates Power Apps Code App work in the mcdm26 Power Platform demo project using the
+  Orchestrates Power Apps Code App work in a Power Platform project using the
   `code-apps-preview` plugin (microsoft/power-platform-skills). Use for any task involving
   Power Apps code apps: scaffolding new apps, connecting data sources, adding connectors,
   and deploying. Triggers on: create code app, add data source, add connector, deploy app,
@@ -14,6 +14,20 @@ description: >
 
 Orchestration layer for all Power Apps Code App work in this project.
 The `code-apps-preview` plugin provides the full scaffold-to-deploy lifecycle.
+
+## Step 0 — Dependency preflight (required)
+
+Before routing any app task, verify `code-apps-preview` sub-skills are available:
+`create-code-app`, `add-dataverse`, `add-sharepoint`, `add-excel`, `add-onedrive`,
+`add-teams`, `add-office365`, `add-azuredevops`, `add-connector`, `add-datasource`,
+and `deploy`.
+
+If any required sub-skill is missing or unavailable:
+1. Stop execution and return a blocked status.
+2. Ask the user whether they want to install or enable the missing dependency.
+3. Resume only after availability is confirmed.
+
+Do not handcraft connector scaffolding or generated bindings as a fallback for missing skills.
 
 ## Available sub-skills
 
@@ -69,19 +83,23 @@ human must acknowledge before the connector is added.
 
 ```
 New app
-  └─ create-code-app
-       └─ add-dataverse (default) or add-datasource (unclear source)
-            └─ [optional] add additional sources
-                 └─ make lint && make test
-                      └─ deploy
+  └─ Dependency preflight
+       ├─ Missing dependency? → ask to install/enable → stop until resolved
+       └─ create-code-app
+            └─ add-dataverse (default) or add-datasource (unclear source)
+                 └─ [optional] add additional sources
+                      └─ make lint && make test
+                           └─ deploy
 ```
 
 ```
 Modify existing app
-  └─ Identify change type
-       ├─ New data source → appropriate add-* sub-skill
-       │    └─ Premium? → flag DLP + confirm → add-connector
-       └─ No new source → edit, then make lint && make test → deploy
+  └─ Dependency preflight
+       ├─ Missing dependency? → ask to install/enable → stop until resolved
+       └─ Identify change type
+            ├─ New data source → appropriate add-* sub-skill
+            │    └─ Premium? → flag DLP + confirm → add-connector
+            └─ No new source → edit, then make lint && make test → deploy
 ```
 
 ## Escape hatches

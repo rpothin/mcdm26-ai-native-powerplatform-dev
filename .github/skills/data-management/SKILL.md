@@ -1,7 +1,7 @@
 ---
 name: data-management
 description: >
-  Orchestrates all Dataverse work in the mcdm26 Power Platform demo project by routing to the
+  Orchestrates all Dataverse work in a Power Platform project by routing to the
   correct sub-skill from the installed `dataverse` plugin (microsoft/Dataverse-skills).
   Use for any task involving Dataverse tables, records, solutions, security, or environment
   administration: schema authoring, record CRUD, bulk imports, solution lifecycle, role
@@ -15,6 +15,19 @@ description: >
 Orchestration layer for all Dataverse operations in this project.
 Always load `dv-overview` first — it provides cross-cutting safety rules, the tool-capability
 map, and the safe-change lifecycle that every other sub-skill depends on.
+
+## Step 0 — Dependency preflight (required)
+
+Before routing any task, verify the `dataverse` plugin sub-skills are available:
+`dv-overview`, `dv-connect`, `dv-query`, `dv-data`, `dv-metadata`, `dv-solution`,
+`dv-admin`, and `dv-security`.
+
+If any required sub-skill is missing or unavailable:
+1. Stop execution and return a blocked status.
+2. Ask the user whether they want to install or enable the missing dependency.
+3. Resume only after availability is confirmed.
+
+Do not attempt Dataverse work through ad-hoc fallback logic when these dependencies are missing.
 
 ## Sub-skill routing
 
@@ -69,15 +82,17 @@ human can catch mis-targeting before changes land.
 
 ```
 Dataverse task received
-  └─ Load dv-overview (always)
-       ├─ Connection broken? → dv-connect, then retry
-       ├─ Read-only query? → dv-query
-       ├─ Record write (CRUD / import)? → dv-data
-       │    └─ Schema missing? → dv-metadata first (see §2 sequencing)
-       ├─ Schema authoring? → check managed solutions → dv-metadata
-       ├─ Solution lifecycle? → dv-solution
-       ├─ Security / roles? → dv-security
-       └─ Bulk delete / org settings? → confirm human → dv-admin
+  └─ Dependency preflight
+       ├─ Missing dependency? → ask to install/enable → stop until resolved
+       └─ Load dv-overview (always)
+            ├─ Connection broken? → dv-connect, then retry
+            ├─ Read-only query? → dv-query
+            ├─ Record write (CRUD / import)? → dv-data
+            │    └─ Schema missing? → dv-metadata first (see §2 sequencing)
+            ├─ Schema authoring? → check managed solutions → dv-metadata
+            ├─ Solution lifecycle? → dv-solution
+            ├─ Security / roles? → dv-security
+            └─ Bulk delete / org settings? → confirm human → dv-admin
 ```
 
 ## Escape hatches

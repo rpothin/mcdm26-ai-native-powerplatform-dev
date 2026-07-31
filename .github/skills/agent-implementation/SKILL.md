@@ -1,7 +1,7 @@
 ---
 name: agent-implementation
 description: >
-  Orchestrates Copilot Studio agent work in the mcdm26 Power Platform demo project,
+  Orchestrates Copilot Studio agent work in a Power Platform project,
   routing across the two installed Copilot Studio plugin sets: `copilot-studio`
   (microsoft/skills-for-copilot-studio) and `mcs-assistant`
   (microsoft/copilot-studio-plugin). Use for any task involving Copilot Studio agents:
@@ -17,6 +17,23 @@ description: >
 Orchestration layer for all Copilot Studio agent work in this project.
 Two plugin sets are installed and each covers different agent architectures — this skill
 tells you which to use and when.
+
+## Step 0 — Dependency preflight (required)
+
+Before any clone, design, authoring, publish, or test action, verify both plugin sets are
+available and callable:
+- `copilot-studio` (`copilot-studio-manage`, `copilot-studio-author`,
+  `copilot-studio-test`, `copilot-studio-advisor`)
+- `mcs-assistant` (`copilot-studio-architect`, `copilot-studio-describer`,
+  `copilot-studio-init`, `copilot-studio-manage`)
+
+If the required plugin or sub-agent for the next step is missing or unavailable:
+1. Stop execution and return a blocked status.
+2. Ask the user whether they want to install or enable the missing dependency.
+3. Resume only after availability is confirmed.
+
+Do not attempt Copilot Studio authoring or troubleshooting through generic YAML edits when the
+specialized sub-agents are unavailable.
 
 ## Installed plugins
 
@@ -91,13 +108,15 @@ Never rely on informal manual browser testing as the sole validation.
 
 ```
 Task received
-  └─ Local agent.mcs.yml present?
-       ├─ No, new agent → mcs-assistant:init → manage:clone
-       └─ No, existing agent → manage:clone
-       └─ Yes → mcs-assistant:describer (identify type)
-            └─ Design review needed? → copilot-studio:advisor
-                 └─ Author (route by type)
-                      └─ manage:push → manage:publish → copilot-studio:test
+  └─ Dependency preflight
+       ├─ Missing dependency? → ask to install/enable → stop until resolved
+       └─ Local agent.mcs.yml present?
+            ├─ No, new agent → mcs-assistant:init → manage:clone
+            └─ No, existing agent → manage:clone
+            └─ Yes → mcs-assistant:describer (identify type)
+                 └─ Design review needed? → copilot-studio:advisor
+                      └─ Author (route by type)
+                           └─ manage:push → manage:publish → copilot-studio:test
 ```
 
 Read `references/plugin-selection.md` when you need detailed guidance on choosing between
