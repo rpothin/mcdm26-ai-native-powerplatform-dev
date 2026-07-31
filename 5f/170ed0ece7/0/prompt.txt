@@ -1,0 +1,14 @@
+Tried to update github cli but the version was not bumped to the latest one, why? " rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:42:45   rpothin-tech-stack-readiness-check   
+ winget upgrade --id GitHub.cli
+Found GitHub CLI [GitHub.cli] Version 2.96.0
+This application is licensed to you by its owner.
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Downloading https://github.com/cli/cli/releases/download/v2.96.0/gh_2.96.0_windows_amd64.msi
+ ██████████████████████████████ 14.3 MB / 14.3 MB
+Successfully verified installer hash
+Starting package install...
+Successfully installed
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:44:05   rpothin-tech-stack-readiness-check   
+ gh version
+gh version 2.96.0 (2026-07-02)
+https://github.com/cli/cli/releases/tag/v2.96.0".
