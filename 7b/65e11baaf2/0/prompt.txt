@@ -1,0 +1,112 @@
+# Pull Request Creation
+
+The user wants to open a pull request for the current session. Use the context block appended
+to this prompt for the current branch, target branch, change summary, upstream status, and
+source issue metadata.
+
+Do NOT delegate this to a subagent. You must perform all steps yourself in the main conversation context because only the main agent has access to the `create_pull_request` tool.
+
+The user likes the state of the code.
+The user requested a PR.
+
+If upstream_branch is "none", there is no upstream branch yet.
+
+Follow this direct workflow:
+
+1. Use what you already learned earlier in this session and the appended prompt context as your primary source of truth for what changed and why.
+2. If has_uncommitted_changes is true, inspect only the uncommitted changes, only as much as needed to write an accurate commit message, then commit them. Follow any instructions the user gave you about commit messages.
+3. If has_unpushed_commits is true, or if you created a commit in this run, push the branch to its upstream remote. If upstream_branch is "none", create an upstream on a writable target remote for same-repository workflows; do not assume origin is writable for public fork workflows, because the create_pull_request tool can set up and push to a fork there.
+4. If you need a quick summary of the final branch diff before writing the PR, prefer `get_changes_overview`.
+5. Read targeted file diffs only when what you already know from this session, the appended prompt context, and `get_changes_overview` are still not enough. Avoid broad or redundant full-repo diff commands unless something is unclear.
+6. Check the standard PR template locations inside the `.github/` folder (for example `PULL_REQUEST_TEMPLATE.md`) and pick the appropriate template. If one applies to this change, read it and use its structure for the PR body.
+7. Call `create_pull_request` after the branch is ready:
+   - title: concise title under 80 characters
+   - body: a well-crafted description following the guidelines below
+   The tool uses session context for repo/base/head automatically.
+8. If commit, push, or pull request creation fails, ask the user for help and explain the blocker clearly.
+9. If source_issue_closing_reference is not "unknown", include it as its own line in the PR body so merging the PR closes the source issue.
+10. After `create_pull_request` succeeds, the UI already renders a confirmation widget with the PR link. Do NOT echo the PR number, URL, or a "PR opened: <url>" line in your reply. Keep the closing message minimal (or empty) so the widget stands on its own.
+
+## Writing a great PR description
+
+If you found an appropriate PR template in step 6, you **MUST** use it for the PR body. If a section is not applicable, leave it empty or write "N/A". **DO NOT** remove or skip sections from the template. Apply the writing principles below within each section.
+
+If no appropriate PR template was found, write a freeform description following these principles:
+
+1. **Lead with the "why".** Open with 1-2 sentences explaining the motivation: what problem
+   exists, what user need prompted this, or what opportunity this captures. A reviewer who
+   understands *why* a change exists can evaluate *how* it was done much faster.
+
+2. **Summarize the approach, not the file list.** Describe the key design decisions and how
+   the pieces fit together. "Adds a cache layer in front of the API client so repeated
+   fetches during render don't hit the network" is far more useful than "Modified api.ts
+   and cache.ts." Think about what a teammate would need to know in a 30-second skim.
+
+3. **Call out anything surprising or non-obvious.** Mention trade-offs, temporary workarounds,
+   migration considerations, or areas where you'd appreciate careful review. This builds
+   trust with reviewers and prevents misunderstandings.
+
+4. **Use markdown structure for readability.** For larger PRs, use short paragraphs or a
+   brief bulleted list to break up the description. Keep it scannable; dense walls of
+   text get skimmed past.
+
+5. **Keep the length proportional to the change.** A one-line fix needs one sentence.
+   A multi-file feature deserves a short paragraph or two. Never pad with filler.
+
+6. **Prefer plain ASCII punctuation in GitHub text.** Avoid em dashes, en dashes, and
+   smart quotes when simple ASCII punctuation works. This reduces the chance of mangled
+   text when content is posted through CLI flows.
+
+## Embedding visuals (optional)
+
+When visuals would genuinely help reviewers understand the changes, such as architecture diagrams,
+before/after UI screenshots, or short video recordings, you can upload assets to GitHub and
+embed them in the PR description or comments.
+
+**Workflow:**
+1. Generate or capture the media file you want to share.
+2. Upload it to GitHub using the user attachments uploads API:
+   ```
+   # Get auth token and repo ID
+   TOKEN=$(gh auth token)
+   REPO_ID=$(gh repo view --json databaseId -q .databaseId)
+
+   # Upload the asset
+   curl -s -X POST \
+     "https://uploads.github.com/user-attachments/assets?name=diagram.png&content_type=image/png&repository_id=$REPO_ID" \
+     -H "Content-Type: application/octet-stream" \
+     -H "Accept: application/vnd.github+json" \
+     -H "X-GitHub-Api-Version: 2022-11-28" \
+     -H "Authorization: Bearer $TOKEN" \
+     --data-binary @diagram.png
+   ```
+   The request body must be raw binary file data. Do not use multipart form uploads, base64
+   encoding, or JSON wrappers. Put the filename, content type, and repository ID in the query
+   string. The response JSON contains a `url` field like
+   `https://github.com/user-attachments/assets/...`.
+3. Embed the returned URL in the PR body. For images, use `![description](url)`. For videos,
+   include the asset URL or a markdown link if a richer embed is not appropriate.
+
+Use the same upload flow for videos, but set `content_type` to the real video MIME type (for
+example `video/mp4`).
+
+Only do this when visuals add real value. Don't generate media for trivial or text-only changes.
+
+<copilot_prompt_context>
+workspace_id: 844b98a8-6b08-4b49-9466-0b2e5c65ae4d
+workspace_path: C:\Users\rapha\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-effective-guide
+workspace_name: Verify entire setup
+current_branch: rpothin-verify-entire-setup
+project_id: 4b56dfe6-0f9b-4ba2-95bc-531b6720d604
+project_name: mcdm26-ai-native-powerplatform-dev
+project_default_branch: main
+target_branch: main
+changed_files_count: 2
+changes_summary: 2 files changed. Uncommitted changes present. Unpushed commits present.
+has_uncommitted_changes: true
+has_unpushed_commits: true
+upstream_branch: none
+source_issue_repo_full_name: unknown
+source_issue_number: unknown
+source_issue_closing_reference: unknown
+</copilot_prompt_context>
