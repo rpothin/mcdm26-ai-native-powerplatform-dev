@@ -58,17 +58,40 @@ This is natively supported by Impeccable's monorepo path resolution:
 - **Per-app `PRODUCT.md`** — lives at `code-apps/<app-name>/PRODUCT.md`. Product context
   (users, purpose, brand personality, constraints) is specific to each app.
 
-Setup once: run `impeccable document` at `code-apps/` to capture the shared design system.
-Then run `impeccable init --target code-apps/<app-name>/` per app to write its PRODUCT.md.
-Impeccable will inherit the shared DESIGN.md automatically via the config.
+**One-time setup (before first code app):** run `impeccable document` at `code-apps/` to
+generate the shared `DESIGN.md`. This captures the design system that all apps in the project
+will inherit. If no code exists yet, use `impeccable new-work` to establish the visual world
+from scratch. Do not scaffold or build any code app before this step.
+
+**Per-app setup (before each new code app):** run `impeccable init --target code-apps/<app-name>/`
+to write the app's `PRODUCT.md`. This interview pins product context (users, purpose, brand
+personality, constraints) to the app before any code is written.
+
+Impeccable resolves the shared `DESIGN.md` automatically via the `config.json` `projectRoots`
+when running inside any app subfolder.
+
+### Design artifact governance
+
+`DESIGN.md`, `PRODUCT.md`, and `.impeccable/` files are human-owned. Do not write or modify
+them autonomously during a working session.
+
+When the agent identifies that an update would improve accuracy (e.g., new design tokens
+introduced, product scope shifted, a component was added):
+
+1. **Formulate the proposed change**: describe what would change and why.
+2. **Present it to the user** and wait for explicit approval.
+3. **Apply only if approved**. If declined, note the divergence and continue.
+
+This applies to every write — including minor corrections, token additions, and regeneration
+via `document` or `init`. Never invoke these commands autonomously.
 
 ### Impeccable lifecycle for code apps
 
 | Phase | Command | When to use |
 |-------|---------|-------------|
+| **Before first app** | `document` | **Strongly recommended**: generates shared `code-apps/DESIGN.md` from existing code (or `new-work` if no code yet) |
+| **Before each new app** | `init` | **Strongly recommended**: per-app PRODUCT.md — pins users, purpose, brand, constraints |
 | **Before building** | `shape [feature]` | Plan UX/UI before writing code; runs a discovery interview and produces a design brief |
-| **Before building** | `init` | Per-app: captures PRODUCT.md (users, purpose, brand, constraints) |
-| **Before building** | `document` | Shared: generates DESIGN.md from existing code (run once at `code-apps/` level) |
 | **During development** | `hooks on` | Activates design detector — fires after every file edit and flags anti-patterns |
 | **During development** | `live` | Interactive browser variant mode — pick elements, generate alternatives in real time |
 | **Evaluate (pre-PR)** | `critique [target]` | UX review: visual hierarchy, IA, cognitive load, heuristic scoring |
@@ -84,12 +107,12 @@ Impeccable will inherit the shared DESIGN.md automatically via the config.
 | **Enhance** | `colorize / animate / delight` | Strategic color, motion, personality |
 | **Maintenance** | `doctor` | Detects and repairs drift between PRODUCT.md, DESIGN.md, and .impeccable/ artifacts |
 
-**Mandatory gates for new apps:** `shape` → `init` → `document` (if DESIGN.md doesn't exist yet) → `hooks on`
+**Mandatory gates for new apps:** `document` (if first app or no DESIGN.md) → `init` → `shape` → `hooks on`
 
 **Pre-PR gates:** `critique` + `audit` before opening a pull request. Surface Critical/High findings to the user.
 
-If the user skips init or hooks, proceed but record the absence and surface it at review time.
-Never disable or silently ignore design hook findings.
+If the user explicitly skips `document` or `init`, proceed but record the gap and surface it at
+review time. Never disable or silently ignore design hook findings.
 
 If the `impeccable` skill is unavailable, flag the gap and do not attempt to reproduce its
 behaviour manually.
@@ -152,10 +175,10 @@ New app
        ├─ Missing dependency? → ask to install/enable → stop until resolved
        └─ Scope gate (environment + solution explicit)
             ├─ Missing or ambiguous? → ask user → stop until resolved
-            └─ Impeccable: shape → init → document (if no shared DESIGN.md) → hooks on
-                 ├─ Skipped? → note missing baseline, continue with caution
-                 └─ Design system active
-                      └─ create-code-app
+            └─ DESIGN.md exists at code-apps/?
+                 ├─ No → strongly recommend: impeccable document (or new-work) → wait for human approval before writing
+                 └─ Yes (or approved) → impeccable init (per-app PRODUCT.md) → wait for human approval before writing
+                      └─ shape → hooks on → create-code-app
                            └─ add-dataverse (default) or add-datasource (unclear source)
                                 └─ [optional] add additional sources
                                      └─ impeccable: critique + audit (pre-PR gates)
