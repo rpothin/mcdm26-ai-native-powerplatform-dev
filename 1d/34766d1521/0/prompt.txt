@@ -1,0 +1,28 @@
+For your information I have been able to update pac cli with the following approach: " rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:51:24   rpothin-tech-stack-readiness-check   
+ pac install latest
+Feeds used:
+ https://api.nuget.org/v3/index.json
+
+Installing package 'Microsoft.PowerApps.CLI' to 'C:\Users\rapha\AppData\Local\Microsoft\PowerAppsCli'.
+ GET https://api.nuget.org/v3/registration5-gz-semver2/microsoft.powerapps.cli/index.json
+ OK https://api.nuget.org/v3/registration5-gz-semver2/microsoft.powerapps.cli/index.json 122ms
+
+
+Attempting to gather dependency information for package 'Microsoft.PowerApps.CLI.2.10.1' with respect to project 'C:\Users\rapha\AppData\Local\Microsoft\PowerAppsCli', targeting 'Any,Version=v0.0'
+Gathering dependency information took 33.4 ms
+Attempting to resolve dependencies for package 'Microsoft.PowerApps.CLI.2.10.1' with DependencyBehavior 'Lowest'
+Resolving dependency information took 0 ms
+Resolving actions to install package 'Microsoft.PowerApps.CLI.2.10.1'
+Resolved actions to install package 'Microsoft.PowerApps.CLI.2.10.1'
+Retrieving package 'Microsoft.PowerApps.CLI 2.10.1' from 'nuget.org'.
+ GET https://api.nuget.org/v3-flatcontainer/microsoft.powerapps.cli/2.10.1/microsoft.powerapps.cli.2.10.1.nupkg
+ OK https://api.nuget.org/v3-flatcontainer/microsoft.powerapps.cli/2.10.1/microsoft.powerapps.cli.2.10.1.nupkg 81ms
+Installing Microsoft.PowerApps.CLI 2.10.1.
+Adding package 'Microsoft.PowerApps.CLI.2.10.1' to folder 'C:\Users\rapha\AppData\Local\Microsoft\PowerAppsCli'
+Added package 'Microsoft.PowerApps.CLI.2.10.1' to folder 'C:\Users\rapha\AppData\Local\Microsoft\PowerAppsCli'
+Successfully installed 'Microsoft.PowerApps.CLI 2.10.1' to C:\Users\rapha\AppData\Local\Microsoft\PowerAppsCli
+Executing nuget actions took 7.35 sec
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:51:58   rpothin-tech-stack-readiness-check   
+ pac version 
+Microsoft PowerPlatform CLI
+Version: 2.10.1+g52c3983 (.NET Framework 4.8.9337.0)"
