@@ -48,6 +48,12 @@ permissions:
   id-token: write  # Required for OIDC token exchange with Azure AD
   contents: write  # Required for gh release create/edit/delete
 
+# Queue the entire workflow so only one production deployment run executes at
+# a time, avoiding Power Platform import-side contention across runs.
+concurrency:
+  group: powerplatform-prod-solution-deploy
+  cancel-in-progress: false
+
 jobs:
   # ---------------------------------------------------------------------------
   # Job 1: detect — find which solution folders changed in this push
@@ -87,11 +93,6 @@ jobs:
   deploy:
     needs: detect
     if: ${{ needs.detect.outputs.solutions != '[]' && needs.detect.outputs.solutions != '' }}
-    # Queue imports for this workflow/environment to avoid concurrent solution
-    # deployments, which can fail due to Power Platform import-side locking.
-    concurrency:
-      group: powerplatform-prod-solution-deploy
-      cancel-in-progress: false
 
     strategy:
       matrix:
