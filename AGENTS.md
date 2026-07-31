@@ -104,7 +104,9 @@ git push origin <branch> --force-with-lease
 
 Persistent under-count in `entire activity` after syncing usually means one or more branch heads have `NO_TRAILER`.
 
+**Prerequisite — `commit_linking: always`:** `.entire/settings.json` must contain `"commit_linking": "always"`. Without it, the interactive linking prompt is silently declined in non-interactive agent subprocess commits, so even first-turn commits (when the session IS active) get no trailer. This is already set in the repo; if Entire is re-initialized, restore this setting before making any commits.
 
+## Boundaries
 
 - ✅ Always: route every task through the matching orchestrator skill before touching the CLI directly.
 - ✅ Always: all changes go through PRs — never commit directly to `main`.
