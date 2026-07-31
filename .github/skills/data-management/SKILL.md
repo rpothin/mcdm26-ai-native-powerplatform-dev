@@ -105,9 +105,13 @@ Examples:
 - `20260731_151230_bulk-import-contacts.csv`
 - `20260731_163400_delete-orphan-activity-records.fetchxml`
 
-Write the file to `data/` **before** invoking the sub-skill. If the operation succeeds,
-leave the file as a permanent record. If it fails, append `_FAILED` to the filename so the
-failure is traceable without ambiguity.
+The Dataverse sub-skills generate and execute their own artifacts autonomously — typically
+Python scripts using the official Dataverse Python SDK (`PowerPlatform-Dataverse-Client`),
+CSV files, or other payloads. The orchestrator must not pre-write these artifacts.
+
+After the sub-skill generates an artifact, **save or copy it to `data/`** using the naming
+convention above. If the operation succeeded, leave the file as-is. If it failed, append
+`_FAILED` to the filename so the failure is traceable without ambiguity.
 
 ### 4 — Environment targeting
 
@@ -127,14 +131,14 @@ Dataverse task received
                  ├─ Connection broken? → dv-connect, then retry
                  ├─ Read-only query? → dv-query
                  ├─ Record write (CRUD / import)?
-                 │    └─ Persist artifact to data/ (YYYYMMDD_HHMMSS_desc.ext) → dv-data
-                 │         └─ Schema missing? → dv-metadata first (see §2 sequencing)
+                 │    ├─ Schema missing? → dv-metadata first (see §2 sequencing)
+                 │    └─ dv-data → save generated artifact to data/ (YYYYMMDD_HHMMSS_desc.ext)
                  ├─ Schema authoring?
-                 │    └─ Check managed solutions → persist artifact → dv-metadata
+                 │    └─ Check managed solutions → dv-metadata → save generated artifact to data/
                  ├─ Solution lifecycle? → dv-solution
                  ├─ Security / roles? → dv-security
                  └─ Bulk delete / org settings?
-                      └─ Persist artifact → confirm human → dv-admin
+                      └─ confirm human → dv-admin → save generated artifact to data/
 ```
 
 ## Escape hatches
