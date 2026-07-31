@@ -58,22 +58,14 @@ git push origin <branch-name> --force-with-lease
 
 ## Boundaries
 
-- ✅ Always: invoke the matching orchestrator skill before using any CLI directly.
-- ✅ Always: work on unpacked solution folders under `solutions/` — never touch packed `.zip` files.
-- ✅ Always: keep connection references and environment variable values in `solutions/<name>/deployment-settings.json`.
-- ✅ Always: run `make app-gate` before `pac code push` for code apps.
-- ✅ Always: leave generated TypeScript under `src/generated/` untouched — connector skills regenerate it.
+- ✅ Always: route every task through the matching orchestrator skill before touching the CLI directly.
 - ✅ Always: all changes go through PRs — never commit directly to `main`.
-- ⚠️ Ask first: adding a premium connector (DLP policy implications).
-- ⚠️ Ask first: enabling a flow in production.
-- ⚠️ Ask first: importing a solution to a shared or non-dev environment.
-- ⚠️ Ask first: renaming a solution component's `SchemaName` — breaks downstream references.
-- ⚠️ Ask first: editing pipeline YAML under `.github/workflows/`.
-- 🚫 Never: hand-edit a packed solution `.zip` or the `customizations.xml` inside it.
-- 🚫 Never: commit real connection reference IDs, environment IDs, or service-principal secrets.
-- 🚫 Never: run `pac solution import` against a shared environment from a local machine.
-- 🚫 Never: hand-edit anything under `src/generated/` in code apps.
-- 🚫 Never: author Copilot Studio YAML without routing through the `agent-implementation` skill.
+- ✅ Always: work inside unpacked `solutions/<name>/` folders; never hand-edit packed `.zip` files or `customizations.xml`.
+- ✅ Always: run `make app-gate` before deploying a code app; use `make solution-gate` before any solution import.
+- ⚠️ Ask first: anything that affects a shared or production environment (imports, flow enables, connection changes, adding connectors).
+- ⚠️ Ask first: renaming a solution component's `SchemaName` or editing `.github/workflows/` pipeline YAML.
+- 🚫 Never: commit secrets, real connection reference IDs, or environment-specific IDs.
+- 🚫 Never: hand-edit generated files (`src/generated/`) or author Copilot Studio YAML outside the `agent-implementation` skill.
 
 ## Progressive-disclosure pointers
 
