@@ -1,0 +1,1 @@
+We have done lot of work around the preparation of our tech stack to be able to prepare our demonstrations in the current repository. Can you please convert everything we went through into a documentation page and eventually a script that will enable people who would like to test the setup in our repository after our presentation to quickly check / setup their tech stack?
