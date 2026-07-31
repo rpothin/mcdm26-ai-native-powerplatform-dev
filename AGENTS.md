@@ -42,13 +42,17 @@ Break any non-trivial change into a stack of small, independently-reviewable PRs
 # 1. Find the runtime session ID
 #    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
 
-# 2. Attach it from inside the nested worktree
+# 2. Run this after the final commit on the branch. If the session receives additional
+#    commits after attaching, re-run entire session attach (and force-push again) before merging.
 Set-Location <path-to-nested-worktree>
 entire session attach <runtime-session-id> --agent copilot-cli --force
 
 # 3. Force-push so the trailer reaches the remote
 git push origin <branch-name> --force-with-lease
 ```
+
+> [!WARNING]
+> `entire session attach` only amends HEAD at the moment it runs. Any commit made afterwards loses the Entire-Checkpoint trailer. Always re-attach immediately before merging if the branch received commits after the last attach.
 
 > [!TIP]
 > The `session-crosslink` skill automates steps 2–3 once you provide the runtime session ID. Invoke it from the coordinator session when the nested session is complete.
