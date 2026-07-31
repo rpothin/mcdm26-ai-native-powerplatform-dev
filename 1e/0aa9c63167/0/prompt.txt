@@ -1,0 +1,14 @@
+Here are the results: "  rapha@RaphaelPothin   ~  2026-07-30 23:26:00     
+ winget upgrade Microsoft.Azd
+Found Azure Developer CLI [Microsoft.Azd] Version 1.29.100
+This application is licensed to you by its owner.
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Downloading https://github.com/Azure/azure-dev/releases/download/azure-dev-cli_1.29.0/azd-windows-amd64.msi
+ ██████████████████████████████ 16.5 MB / 16.5 MB
+Successfully verified installer hash
+Starting package install...
+Successfully installed
+  rapha@RaphaelPothin   ~  2026-07-30 23:26:20     
+ winget upgrade GitHub.cli
+No available upgrade found.
+No newer package versions are available from the configured sources." Are we good now on this side?
