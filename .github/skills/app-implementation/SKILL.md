@@ -151,12 +151,18 @@ Never edit files under `src/generated/` by hand.
 These files are regenerated automatically when connector sub-skills run.
 Hand edits will be overwritten and may corrupt the connector binding.
 
-### Pre-push quality gate
-Before calling `deploy` or running `pac code push`:
-1. `make lint` — must pass with no errors.
-2. `make test` — must pass with no failures.
+### Pre-push quality gates (Makefile contract)
+Use gate targets to keep terminology aligned across app and solution work:
 
-If either step fails, fix the errors before deploying.
+- `app-gate` = `app-lint` + `app-test`
+- `solution-gate` = `solution-pack` + `solution-check`
+
+Before calling `deploy` or running `pac code push`:
+1. `make app-gate` — mandatory for code-app changes.
+2. `make build` — optional confidence gate.
+3. `make solution-gate` — required when solution artifacts change.
+
+If any required gate fails, fix errors before deploying.
 
 ### Premium connector confirmation
 Before adding any premium connector via `add-connector`:
@@ -182,8 +188,10 @@ New app
                            └─ add-dataverse (default) or add-datasource (unclear source)
                                 └─ [optional] add additional sources
                                      └─ impeccable: critique + audit (pre-PR gates)
-                                          └─ make lint && make test
-                                               └─ deploy
+                                          └─ make app-gate
+                                               └─ [optional] make build
+                                                    └─ [if solution changed] make solution-gate
+                                                         └─ deploy
 ```
 
 ```
@@ -196,7 +204,10 @@ Modify existing app
                  └─ Identify change type
                       ├─ New data source → appropriate add-* sub-skill
                       │    └─ Premium? → flag DLP + confirm → add-connector
-                      └─ No new source → edit, then make lint && make test → deploy
+                      └─ No new source → edit, then make app-gate
+                           └─ [optional] make build
+                                └─ [if solution changed] make solution-gate
+                                     └─ deploy
 ```
 
 ## Escape hatches
