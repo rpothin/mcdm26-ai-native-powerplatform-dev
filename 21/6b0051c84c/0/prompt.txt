@@ -1,0 +1,2 @@
+I have seen the popup for Azure CLI update but now I am getting "az version
+Failed to load python executable." How to fix this situation?
