@@ -1,0 +1,20 @@
+Thank you for clarifying. Also, tried a test with GitHub CLI and got the following result. How to fix my current configuration? " rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:47:24   rpothin-tech-stack-readiness-check   
+ gh issue list
+HTTP 401: Bad credentials (https://api.github.com/graphql)
+Try authenticating with: gh auth login -h github.com
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:48:15   rpothin-tech-stack-readiness-check   
+ gh auth login -h github.com
+The value of the GITHUB_TOKEN environment variable is being used for authentication.
+To have GitHub CLI store credentials instead, first clear the value from the environment.
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 22:48:31   rpothin-tech-stack-readiness-check   
+ gh auth status
+github.com
+ X Failed to log in to github.com using token (GITHUB_TOKEN)
+ - Active account: true
+ - The token in GITHUB_TOKEN is invalid.
+
+ ✓ Logged in to github.com account rpothin (keyring)
+ - Active account: false
+ - Git operations protocol: https
+ - Token: gho_************************************
+ - Token scopes: 'codespace', 'gist', 'read:org', 'repo', 'workflow'"
