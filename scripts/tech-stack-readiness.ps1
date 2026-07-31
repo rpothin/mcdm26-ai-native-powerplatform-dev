@@ -178,6 +178,55 @@ if ($Setup) {
     } catch {
         Write-Warning "Plugin update failed (often a lock issue if Copilot is open): $($_.Exception.Message)"
     }
+
+    # Entire: add bucket, install/upgrade, enable in repo, install skills
+    try {
+        $scoopBuckets = & scoop bucket list 2>&1 | Out-String
+        if ($scoopBuckets -notmatch '\bentire\b') {
+            Write-Host "scoop bucket add entire"
+            & scoop bucket add entire https://github.com/entireio/scoop-bucket.git 2>&1 | Out-Host
+        }
+        # Migrate from old package name 'cli' to 'entire' if needed
+        $oldInstalled = & scoop list 2>&1 | Out-String
+        if ($oldInstalled -match '\bcli\b.*entire') {
+            Write-Host "scoop uninstall cli  (migrating to entire/entire)"
+            & scoop uninstall cli 2>&1 | Out-Host
+        }
+        Write-Host "scoop install entire/entire"
+        & scoop install entire/entire 2>&1 | Out-Host
+    } catch {
+        Write-Warning "Entire install/upgrade failed: $($_.Exception.Message)"
+    }
+
+    try {
+        $entireStatus = & entire status 2>&1 | Out-String
+        if ($entireStatus -notmatch 'Enabled') {
+            Write-Host "entire enable -y --agent copilot-cli"
+            & entire enable -y --agent copilot-cli 2>&1 | Out-Host
+        }
+    } catch {
+        Write-Warning "entire enable failed: $($_.Exception.Message)"
+    }
+
+    try {
+        Write-Host "npx skills add https://github.com/entireio/skills --all"
+        & npx skills add https://github.com/entireio/skills --all 2>&1 | Out-Host
+        # Move skills to canonical Copilot folder if written elsewhere
+        $skillsDst = Join-Path $env:USERPROFILE '.copilot\skills'
+        if (!(Test-Path $skillsDst)) { New-Item -ItemType Directory -Path $skillsDst | Out-Null }
+        @('.agents', '.claude', 'agent') | ForEach-Object {
+            $src = Join-Path $PSScriptRoot "..\$_\skills"
+            if (Test-Path $src) {
+                Get-ChildItem $src -Directory | Where-Object { !(Test-Path (Join-Path $skillsDst $_.Name)) } |
+                    ForEach-Object { Move-Item $_.FullName $skillsDst }
+                if ((Get-ChildItem $src -Force | Measure-Object).Count -eq 0) { Remove-Item $src -Force }
+            }
+            $root = Join-Path $PSScriptRoot "..\$_"
+            if ((Test-Path $root) -and ((Get-ChildItem $root -Force | Measure-Object).Count -eq 0)) { Remove-Item $root -Force }
+        }
+    } catch {
+        Write-Warning "Entire skills install failed: $($_.Exception.Message)"
+    }
 }
 
 $results = [System.Collections.Generic.List[object]]::new()
@@ -197,6 +246,7 @@ $requirements = @{
     "plugin-cap" = "1.1.0"
     "plugin-pa"  = "2.3.1"
     "plugin-mcs" = "1.0.2"
+    "entire"     = "0.9.0"
 }
 
 $azRaw = Get-CommandTextOutput -Name "az" -CommandArgs @("version", "--output", "json")
@@ -265,6 +315,12 @@ if ($copilotPluginsRaw) {
     }
 }
 
+$entireRaw = Get-CommandTextOutput -Name "entire" -CommandArgs @("--version")
+$entireVersion = Parse-VersionFromRegex -InputText $entireRaw -Pattern 'Entire CLI ([0-9]+\.[0-9]+\.[0-9]+)'
+
+$gitRemoteEntireRaw = Get-CommandTextOutput -Name "git-remote-entire" -CommandArgs @("--version")
+$gitRemoteEntireVersion = Parse-VersionFromRegex -InputText $gitRemoteEntireRaw -Pattern 'git-remote-entire ([0-9]+\.[0-9]+\.[0-9]+)'
+
 $toolChecks = @(
     @{ Name = "az"; Installed = $azVersion; Required = $requirements.az; Category = "Tooling" },
     @{ Name = "azd"; Installed = $azdVersion; Required = $requirements.azd; Category = "Tooling" },
@@ -275,7 +331,9 @@ $toolChecks = @(
     @{ Name = "gh"; Installed = $ghVersion; Required = $requirements.gh; Category = "Tooling" },
     @{ Name = "git"; Installed = $gitVersion; Required = "2.0.0"; Category = "Tooling" },
     @{ Name = "gh-stack"; Installed = $ghStackVersion; Required = $requirements."gh-stack"; Category = "Extensions" },
-    @{ Name = "@microsoft/dataverse"; Installed = $dataverseInstalledVersion; Required = $requirements.dataverse; Category = "Tooling" }
+    @{ Name = "@microsoft/dataverse"; Installed = $dataverseInstalledVersion; Required = $requirements.dataverse; Category = "Tooling" },
+    @{ Name = "entire"; Installed = $entireVersion; Required = $requirements.entire; Category = "Entire" },
+    @{ Name = "git-remote-entire"; Installed = $gitRemoteEntireVersion; Required = $requirements.entire; Category = "Entire" }
 )
 
 foreach ($check in $toolChecks) {
@@ -325,6 +383,56 @@ if (Test-Path Env:GITHUB_TOKEN) {
         Add-Result -List $results -Category "Auth" -Name "GITHUB_TOKEN precedence" -Installed "invalid env token detected" -Required "unset or valid token" -Status "WARN" -Notes "Run with -FixGhAuth or remove env var"
     }
 }
+
+# Entire repo readiness
+$entireSettingsPath = Join-Path $PSScriptRoot "..\\.entire\settings.json"
+$entireEnabled = $false
+if (Test-Path $entireSettingsPath) {
+    try {
+        $entireSettings = Get-Content $entireSettingsPath -Raw | ConvertFrom-Json
+        $entireEnabled = $entireSettings.enabled -eq $true
+    } catch { }
+}
+$entireEnabledStatus = if ($entireEnabled) { "OK" } else { "FAIL" }
+$entireEnabledNotes = if ($entireEnabled) { "" } else { "Run: entire enable -y --agent copilot-cli" }
+$entireEnabledInstalled = if ($entireEnabled) { "true" } else { "-" }
+Add-Result -List $results -Category "Entire" -Name "repo enabled (.entire/settings.json)" -Installed $entireEnabledInstalled -Required "true" -Status $entireEnabledStatus -Notes $entireEnabledNotes
+
+$hooksDir = Join-Path $PSScriptRoot "..\.git\hooks"
+if (!(Test-Path $hooksDir)) {
+    # worktree: .git is a file pointing to .git/worktrees/<name>; hooks are in main .git/hooks
+    $gitFile = Join-Path $PSScriptRoot "..\.git"
+    if (Test-Path $gitFile -PathType Leaf) {
+        $gitFileContent = Get-Content $gitFile -Raw
+        $m = [regex]::Match($gitFileContent, 'gitdir:\s*(.+)')
+        if ($m.Success) {
+            # Traverse up: .git/worktrees/<name> -> .git -> hooks
+            $worktreeGitDir = $m.Groups[1].Value.Trim()
+            $mainGitDir = Split-Path (Split-Path $worktreeGitDir -Parent) -Parent
+            $hooksDir = Join-Path $mainGitDir "hooks"
+        }
+    }
+}
+$entireHooks = @('commit-msg', 'post-commit', 'pre-push', 'prepare-commit-msg')
+$installedHooks = @()
+if (Test-Path $hooksDir) {
+    $installedHooks = @(Get-ChildItem $hooksDir -Name | Where-Object { $_ -notmatch '\.sample$' })
+}
+$hooksOk = (@($entireHooks | Where-Object { $installedHooks -contains $_ })).Count -eq $entireHooks.Count
+$hooksStatus = if ($hooksOk) { "OK" } else { "FAIL" }
+$hooksNotes = if ($hooksOk) { "" } else { "Run: entire enable -y --agent copilot-cli" }
+$hooksInstalled = if ($hooksOk) { "yes" } else { "-" }
+Add-Result -List $results -Category "Entire" -Name "git hooks installed" -Installed $hooksInstalled -Required "yes" -Status $hooksStatus -Notes $hooksNotes
+
+# Entire skills check
+$expectedSkills = @('using-entire', 'what-happened', 'search', 'recall', 'replay', 'review', 'explain', 'teach', 'session-handoff', 'session-crosslink', 'session-to-skill', 'address-findings')
+$skillsRoot = Join-Path $env:USERPROFILE '.copilot\skills'
+$missingSkills = @($expectedSkills | Where-Object { !(Test-Path (Join-Path $skillsRoot $_)) })
+$skillsOk = $missingSkills.Count -eq 0
+$skillsStatus = if ($skillsOk) { "OK" } else { "WARN" }
+$skillsNotes = if ($skillsOk) { "" } else { "Missing: $($missingSkills -join ', '). Run with -Setup or: npx skills add https://github.com/entireio/skills --all" }
+$skillsInstalled = if ($skillsOk) { "$($expectedSkills.Count)/$($expectedSkills.Count)" } else { "$($expectedSkills.Count - $missingSkills.Count)/$($expectedSkills.Count)" }
+Add-Result -List $results -Category "Entire" -Name "skills (~/.copilot/skills)" -Installed $skillsInstalled -Required "$($expectedSkills.Count)/$($expectedSkills.Count)" -Status $skillsStatus -Notes $skillsNotes
 
 if ($Json) {
     $results | ConvertTo-Json -Depth 4

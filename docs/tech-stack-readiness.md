@@ -13,6 +13,7 @@ This checklist covers tooling required by the plugins/skills used in this repo:
 - `skills-for-copilot-studio` (`copilot-studio`)
 - `copilot-studio-plugin` (`mcs-assistant`)
 - `gh-stack`
+- `Entire` (checkpoint tracking for Copilot CLI sessions)
 
 ## Fast path
 
@@ -46,9 +47,13 @@ If `gh` is failing with bad credentials because of an invalid `GITHUB_TOKEN` env
 | Dataverse CLI (`@microsoft/dataverse`) | `1.0.59+` |
 | GitHub CLI (`gh`) | `2.96.0+` |
 | gh-stack extension | `0.1.0+` |
+| Entire CLI (`entire`) | `0.9.0+` |
 
 > [!NOTE]
 > `gh` latest availability through `winget` can lag behind the upstream GitHub release for a short period.
+
+> [!NOTE]
+> The Entire Scoop package was renamed from `entire/cli` to `entire/entire` at v0.9.0. If you have `cli` installed from the `entire` bucket, uninstall it (`scoop uninstall cli`) and reinstall (`scoop install entire/entire`).
 
 ## What the script checks
 
@@ -61,7 +66,10 @@ If `gh` is failing with bad credentials because of an invalid `GITHUB_TOKEN` env
    - `power-automate@power-platform-skills`
    - `mcs-assistant@copilot-studio-plugin`
 4. Dataverse CLI npm package (`@microsoft/dataverse`)
-5. Common auth pitfall: invalid `GITHUB_TOKEN` overriding valid `gh` keychain auth
+5. Entire CLI version (`entire`) and `git-remote-entire` availability
+6. Entire repo readiness: bucket added, `.entire/settings.json` committed, git hooks installed
+7. Entire skills: all expected skill folders present under `~\.copilot\skills`
+8. Common auth pitfall: invalid `GITHUB_TOKEN` overriding valid `gh` keychain auth
 
 ## What `-Setup` does
 
@@ -71,9 +79,13 @@ If `gh` is failing with bad credentials because of an invalid `GITHUB_TOKEN` env
 - `pac install latest`
 - `npm install -g @microsoft/dataverse@latest`
 - `copilot plugin update --all`
+- Entire: adds the `entire` Scoop bucket if missing, installs/upgrades `entire/entire`, runs `entire enable -y --agent copilot-cli` if not yet enabled, and installs Entire skills via `npx skills add https://github.com/entireio/skills --all` into `~\.copilot\skills`
 
 > [!WARNING]
 > Plugin update can fail with file-lock errors when plugins are in use. If that happens, close the GitHub Copilot App/CLI session and run the update command again.
+
+> [!NOTE]
+> `npx skills add` may write skills to `.agents/skills`, `.claude/skills`, or `agent/skills` depending on the agent detected. For a Copilot-centric setup, the canonical location is `~\.copilot\skills`. The script moves any misplaced copies automatically.
 
 ## Troubleshooting
 
@@ -107,4 +119,46 @@ winget install --id Microsoft.AzureCLI --source winget --force --accept-package-
 ```
 
 If you get MSI exit code `1618` (another installation in progress), wait for the current installer to finish or clear the stuck installer process, then retry.
+
+### Entire CLI not found or wrong version
+
+If `entire` is missing or still reports `0.8.42` (old package name `cli`):
+
+```powershell
+scoop bucket add entire https://github.com/entireio/scoop-bucket.git
+scoop uninstall cli         # only if you had the old package name
+scoop install entire/entire
+entire --version            # should report 0.9.0+
+```
+
+### Entire not enabled in this repo
+
+If `entire status` shows "not enabled" or git hooks are missing:
+
+```powershell
+entire enable -y --agent copilot-cli
+git add .entire/settings.json .entire/.gitignore
+git commit -m "chore: enable Entire checkpoint tracking for Copilot CLI"
+```
+
+### Entire skills installed to wrong folder
+
+`npx skills add` may write to `.agents/skills`, `.claude/skills`, or `agent/skills` instead of `~\.copilot\skills`. Move them manually:
+
+```powershell
+# Run from repo root — moves any misplaced skill folders then removes the empty dirs
+@('.agents', '.claude', 'agent') | ForEach-Object {
+    $src = Join-Path $PWD "$_\skills"
+    $dst = Join-Path $env:USERPROFILE '.copilot\skills'
+    if (Test-Path $src) {
+        Get-ChildItem $src -Directory | Where-Object { !(Test-Path (Join-Path $dst $_.Name)) } |
+            ForEach-Object { Move-Item $_.FullName $dst }
+        if ((Get-ChildItem $src -Force | Measure-Object).Count -eq 0) { Remove-Item $src -Force }
+    }
+    $root = Join-Path $PWD $_
+    if ((Test-Path $root) -and ((Get-ChildItem $root -Force | Measure-Object).Count -eq 0)) { Remove-Item $root -Force }
+}
+```
+
+After moving skills, restart your Copilot session to reload them.
 
