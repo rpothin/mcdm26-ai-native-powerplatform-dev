@@ -1,0 +1,3 @@
+Running 'entire session list' I am not seeing 6bed241e-e69f-43f3-b5ff-9566cf766fe5 . Is this normal / expected? If no how can we import this past session too?
+
+<copilot-ref kind="session" target-id="6bed241e-e69f-43f3-b5ff-9566cf766fe5" label="Add tech stack readiness guide and validation script" />
