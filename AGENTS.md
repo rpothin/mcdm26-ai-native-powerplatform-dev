@@ -36,7 +36,7 @@ Invoke the matching orchestrator skill before reaching for any CLI or tool direc
 
 ### Nested sessions, stacked PRs & Entire
 
-Each layer of a feature stack is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the crosslink step from the matching worktree before merging:
+Break any non-trivial change into a stack of small, independently-reviewable PRs using `gh-stack`. Each layer is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the crosslink step from the matching worktree before merging:
 
 ```powershell
 # 1. Find the runtime session ID
