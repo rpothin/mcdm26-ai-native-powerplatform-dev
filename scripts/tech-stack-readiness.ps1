@@ -2,11 +2,43 @@
 param(
     [switch]$Setup,
     [switch]$FixGhAuth,
-    [switch]$Json
+    [switch]$Json,
+    [Alias("h")]
+    [switch]$Help,
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$RemainingArgs
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+function Show-Usage {
+    Write-Host ""
+    Write-Host "Tech stack readiness script" -ForegroundColor Cyan
+    Write-Host "==========================="
+    Write-Host ""
+    Write-Host "Usage:"
+    Write-Host "  .\scripts\tech-stack-readiness.ps1 [options]"
+    Write-Host ""
+    Write-Host "Options:"
+    Write-Host "  -Setup       Run update/setup commands, then report readiness"
+    Write-Host "  -FixGhAuth   Remove GITHUB_TOKEN from current session if set"
+    Write-Host "  -Json        Output results as JSON"
+    Write-Host "  -Help        Show this help"
+    Write-Host ""
+    Write-Host "Examples:"
+    Write-Host "  .\scripts\tech-stack-readiness.ps1"
+    Write-Host "  .\scripts\tech-stack-readiness.ps1 -Setup"
+    Write-Host "  .\scripts\tech-stack-readiness.ps1 -FixGhAuth"
+    Write-Host "  .\scripts\tech-stack-readiness.ps1 -Json"
+    Write-Host "  .\scripts\tech-stack-readiness.ps1 --help"
+    Write-Host ""
+}
+
+if ($Help -or ($RemainingArgs -contains "--help") -or ($RemainingArgs -contains "-h")) {
+    Show-Usage
+    return
+}
 
 function Normalize-Version {
     param([string]$Value)
