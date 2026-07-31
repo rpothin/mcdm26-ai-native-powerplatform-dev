@@ -42,32 +42,57 @@ If either environment or solution is missing, ambiguous, or inferred:
 
 Do not scaffold, connect data sources, or deploy against an implicit target.
 
-## Step 2 — Design alignment with Impeccable (strongly recommended for new apps)
+## Step 2 — Design alignment with Impeccable (strongly recommended)
 
-Before scaffolding a new code app, run the `impeccable` skill's `init` flow to establish
-product context and a coherent design system. Power Apps code apps are React apps — without
-explicit design decisions upfront, UI/UX quality drifts and retroactive corrections are
-expensive.
+Power Apps code apps are React apps. Run the `impeccable` skill to establish and maintain
+design quality throughout the full lifecycle, not just at init.
 
-**What `impeccable init` produces:**
-- `PRODUCT.md` — register, user personas, brand personality, design principles, anti-references
-- `DESIGN.md` — full design system: palette, typography, spacing, component specs
-- `.impeccable/design.json` — live sidecar with color ramps, shadow/motion tokens, component snippets
-- A design hook that fires after every file edit and flags anti-patterns (literal colors, wrong
-  fonts, border-accent violations, color drift)
+### Shared DESIGN.md + per-app PRODUCT.md pattern
 
-**When to run:**
-- New app: run `impeccable init` before `create-code-app`. The interview takes a few minutes
-  and saves many correction cycles later.
-- Existing app without PRODUCT.md/DESIGN.md: strongly encourage running `impeccable init`
-  before any UI changes.
-- Existing app with PRODUCT.md/DESIGN.md: re-run `impeccable context` at the start of each
-  session to reload the design system before editing.
+This is natively supported by Impeccable's monorepo path resolution:
 
-**Artifacts location:** `code-apps/<app-name>/PRODUCT.md`, `DESIGN.md`, `.impeccable/`
+- **Shared `DESIGN.md`** — lives at `code-apps/DESIGN.md`. One design system, all apps.
+- **Shared `.impeccable/`** — lives at `code-apps/` with a `config.json` declaring each
+  `code-apps/<app-name>` as a `projectRoot`. This tells Impeccable to walk up and find the
+  shared DESIGN.md when running inside any app subfolder.
+- **Per-app `PRODUCT.md`** — lives at `code-apps/<app-name>/PRODUCT.md`. Product context
+  (users, purpose, brand personality, constraints) is specific to each app.
 
-If the user explicitly skips init, proceed but record the absence of a design baseline and
-surface it as a risk at review time. Never disable or silently ignore design hook findings.
+Setup once: run `impeccable document` at `code-apps/` to capture the shared design system.
+Then run `impeccable init --target code-apps/<app-name>/` per app to write its PRODUCT.md.
+Impeccable will inherit the shared DESIGN.md automatically via the config.
+
+### Impeccable lifecycle for code apps
+
+| Phase | Command | When to use |
+|-------|---------|-------------|
+| **Before building** | `shape [feature]` | Plan UX/UI before writing code; runs a discovery interview and produces a design brief |
+| **Before building** | `init` | Per-app: captures PRODUCT.md (users, purpose, brand, constraints) |
+| **Before building** | `document` | Shared: generates DESIGN.md from existing code (run once at `code-apps/` level) |
+| **During development** | `hooks on` | Activates design detector — fires after every file edit and flags anti-patterns |
+| **During development** | `live` | Interactive browser variant mode — pick elements, generate alternatives in real time |
+| **Evaluate (pre-PR)** | `critique [target]` | UX review: visual hierarchy, IA, cognitive load, heuristic scoring |
+| **Evaluate (pre-PR)** | `audit [target]` | Technical quality: a11y (WCAG), perf, responsive, anti-patterns (P0-P3 severity) |
+| **Refine** | `polish [target]` | Final quality pass: alignment, spacing, consistency, micro-details |
+| **Refine** | `harden [target]` | Production-ready: error states, i18n, text overflow, edge cases |
+| **Refine** | `onboard [target]` | First-run flows, empty states, activation moments |
+| **Targeted fix** | `adapt [target]` | Responsive and multi-device adaptation |
+| **Targeted fix** | `layout [target]` | Spacing, rhythm, visual hierarchy |
+| **Targeted fix** | `clarify [target]` | UX copy, labels, error messages |
+| **Targeted fix** | `typeset [target]` | Typography hierarchy and font choices |
+| **Targeted fix** | `optimize [target]` | UI performance: loading, rendering, bundle size |
+| **Enhance** | `colorize / animate / delight` | Strategic color, motion, personality |
+| **Maintenance** | `doctor` | Detects and repairs drift between PRODUCT.md, DESIGN.md, and .impeccable/ artifacts |
+
+**Mandatory gates for new apps:** `shape` → `init` → `document` (if DESIGN.md doesn't exist yet) → `hooks on`
+
+**Pre-PR gates:** `critique` + `audit` before opening a pull request. Surface Critical/High findings to the user.
+
+If the user skips init or hooks, proceed but record the absence and surface it at review time.
+Never disable or silently ignore design hook findings.
+
+If the `impeccable` skill is unavailable, flag the gap and do not attempt to reproduce its
+behaviour manually.
 
 ## Available sub-skills
 
@@ -127,14 +152,15 @@ New app
        ├─ Missing dependency? → ask to install/enable → stop until resolved
        └─ Scope gate (environment + solution explicit)
             ├─ Missing or ambiguous? → ask user → stop until resolved
-            └─ Design alignment (impeccable init — strongly recommended)
+            └─ Impeccable: shape → init → document (if no shared DESIGN.md) → hooks on
                  ├─ Skipped? → note missing baseline, continue with caution
-                 └─ PRODUCT.md + DESIGN.md created → design hook active
+                 └─ Design system active
                       └─ create-code-app
                            └─ add-dataverse (default) or add-datasource (unclear source)
                                 └─ [optional] add additional sources
-                                     └─ make lint && make test
-                                          └─ deploy
+                                     └─ impeccable: critique + audit (pre-PR gates)
+                                          └─ make lint && make test
+                                               └─ deploy
 ```
 
 ```
