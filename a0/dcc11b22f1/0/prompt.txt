@@ -1,0 +1,30 @@
+Entire setup verification and remediation complete. Here's the full summary:
+
+## What was found
+
+| Check | Before | After |
+|---|---|---|
+| Scoop bucket `entire` added | ✅ already present | ✅ |
+| Entire installed via Scoop | ✅ `entire/cli` @ 0.8.42 | ✅ `entire/entire` @ 0.9.0 |
+| `git-remote-entire` on PATH | ✅ 0.8.42 | ✅ 0.9.0 |
+| `entire enable` run for repo | ❌ never run | ✅ done |
+| Git hooks installed | ❌ none | ✅ 5 hooks (commit-msg, post-commit, post-rewrite, pre-push, prepare-commit-msg) |
+| `.entire/settings.json` committed | ❌ | ✅ committed |
+| `.entire/.gitignore` committed | ❌ | ✅ committed |
+
+## Actions taken
+
+1. **Ran `entire enable -y --agent copilot-cli`** in the repo — installed 8 Copilot CLI hooks and created `.entire/` project config
+2. **Upgraded from `entire/cli` (0.8.42) → `entire/entire` (0.9.0)** via Scoop — the package was renamed in the bucket; the CLI's own update notifier confirmed the upgrade path (`scoop uninstall cli` + `scoop install entire/entire`)
+3. **Committed `.entire/settings.json` and `.entire/.gitignore`** per quickstart guidance (these are the shared project files; `settings.local.json` stays gitignored for personal overrides)
+4. Validated `entire checkpoint list` works end-to-end — shows 1 checkpoint for the current session
+
+## Remaining manual steps
+
+**None.** The repo is fully ready:
+- Scoop quickstart steps are satisfied
+- `git-remote-entire` is functional
+- Hooks fire on `git commit` and `git push`
+- Checkpoint data will sync on next `git push` via the pre-push hook
+
+**Note for docs**: The Windows Scoop quickstart at docs.entire.io still shows `scoop install entire/cli`, but the bucket renamed the package to `entire` starting at v0.9.0. The correct install command going forward is `scoop install entire/entire`. This is an upstream docs gap — no action needed in this repo.
