@@ -1,0 +1,1 @@
+Question out of curiosity: would 'copilot plugin list' and 'copilot skill list' have been enough in our context to answer this question?
