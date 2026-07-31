@@ -60,7 +60,51 @@ git push origin <branch-name> --force-with-lease
 > [!NOTE]
 > Do not modify `.github/hooks/entire.json` — it is managed by `entire agent add` and overwritten on reinstall.
 
-## Boundaries
+### Troubleshooting: entire activity shows too few sessions
+
+`entire activity` only reflects checkpoints linked to current branch heads. In stacked workflows, rebases and force-pushes can drop trailer coverage from some layers. Use this checklist to diagnose and recover.
+
+**1. Check trailer presence per branch**
+
+```powershell
+# Run from repo root — replace branch names with your stack
+foreach($b in @(
+  'rpothin-add-orchestrator-skills',
+  'rpothin-feat-makefile-and-deployment-workflow',
+  'rpothin-init-agents-md',
+  'rpothin-add-gitignore-hardening'
+)){
+  git --no-pager log -1 --format='%H %s' origin/$b
+  $msg = git --no-pager log -1 --format=%B origin/$b
+  if($msg -match 'Entire-Checkpoint:'){ ($msg | Select-String 'Entire-Checkpoint:').Line } else { 'NO_TRAILER' }
+  ''
+}
+```
+
+Any branch printing `NO_TRAILER` is not currently linked at HEAD and will be missing from `entire activity`.
+
+**2. Recover a branch**
+
+```powershell
+Set-Location <layer-worktree>
+entire session attach <runtime-session-id> --agent copilot-cli --force
+git push origin <branch> --force-with-lease
+```
+
+> [!WARNING]
+> Any commit after `entire session attach` removes the trailer from HEAD again. If you commit after recovering a branch, re-run attach before merging.
+
+**3. Reliable finalization protocol for stacked sessions**
+
+1. Keep lower layers stable while reviewing upper layers.
+2. Do all development and rebases first.
+3. When a layer is finalised, run `entire session attach` as the **last step** on that layer.
+4. If you commit again on that layer, re-run attach.
+5. Before merge, run a final bottom→top attach pass across all open stack branches, then make no further commits.
+
+Persistent under-count in `entire activity` after syncing usually means one or more branch heads have `NO_TRAILER`.
+
+
 
 - ✅ Always: route every task through the matching orchestrator skill before touching the CLI directly.
 - ✅ Always: all changes go through PRs — never commit directly to `main`.
