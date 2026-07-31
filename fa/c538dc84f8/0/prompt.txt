@@ -1,0 +1,5 @@
+<system_notification>
+Session "Verify entire setup" (id: 844b98a8-6b08-4b49-9466-0b2e5c65ae4d) (rpothin-verify-entire-setup) has finished processing.
+Final status: idle
+If you need information from this session, use the send_session_message tool with session_id set to "844b98a8-6b08-4b49-9466-0b2e5c65ae4d".
+</system_notification>
