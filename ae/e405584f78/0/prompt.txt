@@ -1,0 +1,36 @@
+Still getting: ".\scripts\tech-stack-readiness.ps1
+
+Tech stack readiness report
+==========================
+
+Category Name Installed Required Status Notes
+-------- ---- --------- -------- ------ -----
+Extensions gh-stack 0.1.0 0.1.0 OK
+Plugins code-apps-preview@power-platform-skills - 1.1.0 FAIL Plugin not installed
+Plugins copilot-studio@skills-for-copilot-studio - 1.0.11 FAIL Plugin not installed
+Plugins dataverse@awesome-copilot - 1.10.0 FAIL Plugin not installed
+Plugins mcs-assistant@copilot-studio-plugin - 1.0.2 FAIL Plugin not installed
+Plugins power-automate@power-platform-skills - 2.3.1 FAIL Plugin not installed
+Tooling @microsoft/dataverse 1.0.59 1.0.59 OK latest=1.0.59
+Tooling az 2.88.0 2.88.0 OK
+Tooling azd 1.29.0 1.29.0 OK
+Tooling dotnet 8.0.423 8.0.0 OK
+Tooling gh 2.96.0 2.96.0 OK
+Tooling git 2.54.0 2.0.0 OK
+Tooling node 22.23.2 22.0.0 OK
+Tooling npm 11.4.2 11.0.0 OK
+Tooling pac 2.10.1 2.9.3 OK
+
+
+Result: NOT READY (5 fail(s), 0 warning(s))
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 23:43:05   rpothin-tech-stack-readiness-check     
+ copilot plugin list --json
+error: unknown option '--json'
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev\rpothin-musical-guacamole  2026-07-30 23:43:23   rpothin-tech-stack-readiness-check     
+ copilot plugin list
+Installed plugins:
+ • dataverse@awesome-copilot (v1.10.0)
+ • copilot-studio@skills-for-copilot-studio (v1.0.11)
+ • code-apps-preview@power-platform-skills (v1.1.0)
+ • mcs-assistant@copilot-studio-plugin (v1.0.2)
+ • power-automate@power-platform-skills (v2.3.1)"
