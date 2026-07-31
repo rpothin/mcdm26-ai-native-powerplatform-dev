@@ -4,55 +4,25 @@ Demo companion repo for "AI-Native Power Platform Development: Building from the
 
 ## Commands
 
-```sh
-npm run lint -- <path>   # lint one file inside a code app directory
-npm test -- <path>       # test one file inside a code app directory
-npx tsc --noEmit <path>  # typecheck one file
-```
+Run `make help` to discover all available targets and usage examples.
 
-App targets (full suite only when asked):
+Authentication — when PAC CLI has no active auth context, trigger device-code auth and surface the URL and code to the user so they can complete sign-in:
 
 ```sh
-make app-lint                  # ESLint across all code-apps/*/
-APP=<name> make app-lint       # lint one app
-make app-test                  # unit tests across all code-apps/*/
-APP=<name> make app-test       # test one app
-make app-build                 # build all code-apps/*/
-APP=<name> make app-build      # build one app
-make app-gate                  # mandatory pre-push gate: app-lint + app-test
-```
-
-Solution targets:
-
-```sh
-make solution-pack                                          # structural pack check for all solutions
-SOLUTION=<name> make solution-pack                         # pack one solution
-make solution-check                                         # run Solution Checker on all solutions
-SOLUTION=<name> make solution-check                        # check one solution
-SOLUTION=<name> make solution-check CHECKER_GEO=Europe     # specify checker geography
-make solution-gate                                          # mandatory solution gate: solution-pack + solution-check
-SOLUTION=<name> make solution-sync                         # clone missing or sync existing solution
-```
-
-Other:
-
-```sh
-pac auth create --environment <env-url>  # authenticate PAC CLI to a target environment
-pac code push                            # deploy a code app (run make app-gate first)
+pac auth create --deviceCode
 ```
 
 ## Stack
 
-- Power Platform CLI (`pac`) 2.9.3+ (tested 2.10.1)
-- Node.js 22.x · npm 11.x
-- Azure CLI 2.88.0+ · Azure Developer CLI (`azd`) 1.29.0+
-- GitHub CLI 2.96.0+ · gh-stack 0.1.0+ · Entire CLI 0.9.0+
-- Code apps: React + Vite (planned under `code-apps/`, not yet scaffolded)
-- CI/CD: GitHub Actions with OIDC auth — no long-lived secrets in workflow
+Power Platform CLI (`pac`) · Node.js · Azure CLI (`az`) · Azure Developer CLI (`azd`) · GitHub CLI (`gh`) · gh-stack · Entire CLI · React + Vite (code apps, planned)
 
-## Skill routing
+Read `docs/tech-stack-readiness.md` for exact baseline versions and the automated readiness script.
 
-Always invoke the matching project-level orchestrator skill — never implement cross-skill work by hand:
+## Way of working
+
+### Skills first — always
+
+Invoke the matching orchestrator skill before reaching for any CLI or tool directly. Skills enforce correct patterns, sequencing, and review gates that raw CLI bypasses.
 
 | Task area | Skill |
 |---|---|
@@ -62,48 +32,35 @@ Always invoke the matching project-level orchestrator skill — never implement 
 | Power Automate cloud flows (create, debug, manage) | `backend-process-implementation` |
 | Power Platform solution lifecycle (pack, check, sync, deploy settings) | `solution-management` |
 
+### Nested sessions, stacked PRs & Entire
+
+Each layer of a feature stack is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs must be crosslinked after the session finalises — use the `session-crosslink` skill from the coordinator session before merging.
+
+> [!NOTE]
+> Do not modify `.github/hooks/entire.json` — it is managed by `entire agent add` and overwritten on reinstall.
+
 ## Boundaries
 
-- ✅ Always: work on unpacked solution folders under `solutions/` — never touch packed `.zip` files directly.
+- ✅ Always: invoke the matching orchestrator skill before using any CLI directly.
+- ✅ Always: work on unpacked solution folders under `solutions/` — never touch packed `.zip` files.
 - ✅ Always: keep connection references and environment variable values in `solutions/<name>/deployment-settings.json`.
-- ✅ Always: run `make app-gate` (lint + test) before `pac code push` for code apps.
+- ✅ Always: run `make app-gate` before `pac code push` for code apps.
 - ✅ Always: leave generated TypeScript under `src/generated/` untouched — connector skills regenerate it.
 - ✅ Always: all changes go through PRs — never commit directly to `main`.
-- ⚠️ Ask first: adding a premium Power Platform connector (DLP policy implications).
-- ⚠️ Ask first: enabling a flow in a production environment.
-- ⚠️ Ask first: importing a solution to any shared or non-dev environment.
+- ⚠️ Ask first: adding a premium connector (DLP policy implications).
+- ⚠️ Ask first: enabling a flow in production.
+- ⚠️ Ask first: importing a solution to a shared or non-dev environment.
 - ⚠️ Ask first: renaming a solution component's `SchemaName` — breaks downstream references.
-- ⚠️ Ask first: editing `.github/workflows/deploy-solution.yml` or any other pipeline YAML.
+- ⚠️ Ask first: editing pipeline YAML under `.github/workflows/`.
 - 🚫 Never: hand-edit a packed solution `.zip` or the `customizations.xml` inside it.
 - 🚫 Never: commit real connection reference IDs, environment IDs, or service-principal secrets.
 - 🚫 Never: run `pac solution import` against a shared environment from a local machine.
 - 🚫 Never: hand-edit anything under `src/generated/` in code apps.
-- 🚫 Never: author Copilot Studio YAML without first routing through the `agent-implementation` skill (enforces advisor-before-author).
-
-## Nested sessions & Entire checkpoint tracking
-
-This repo uses [Entire](https://docs.entire.io) for session/checkpoint tracking. When work is done through **nested sessions** (the `pr-stack` workflow), Entire hooks fire correctly but the nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the following crosslink step from the matching worktree before merging:
-
-```powershell
-# 1. Find the runtime session ID for the nested session
-#    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
-
-# 2. Attach it from inside the nested worktree
-Set-Location <path-to-nested-worktree>
-entire session attach <runtime-session-id> --agent copilot-cli --force
-
-# 3. Force-push the amended commit so the trailer reaches the remote
-git push origin <branch-name> --force-with-lease
-```
-
-> [!TIP]
-> The `session-crosslink` skill automates steps 2–3 once you provide the runtime session ID. Invoke it from the coordinator session when the nested session is complete.
-
-> [!NOTE]
-> Do **not** modify `.github/hooks/entire.json` to work around this — the file is managed by `entire agent add` and would be overwritten on the next hook reinstall.
+- 🚫 Never: author Copilot Studio YAML without routing through the `agent-implementation` skill.
 
 ## Progressive-disclosure pointers
 
-- Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions — it covers exact baseline versions and the automated readiness script.
-- Read `agent_docs/environments.md` (stub — create when environment map is documented) before touching environment-specific config or deployment settings.
-- Read `agent_docs/pipelines.md` (stub — create when pipeline docs are ready) before modifying the deployment workflow.
+- Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions.
+- Read `agent_docs/environments.md` before touching environment-specific config or deployment settings.
+- Read `agent_docs/pipelines.md` before modifying the deployment workflow.
+
