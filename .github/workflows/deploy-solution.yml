@@ -87,6 +87,11 @@ jobs:
   deploy:
     needs: detect
     if: ${{ needs.detect.outputs.solutions != '[]' && needs.detect.outputs.solutions != '' }}
+    # Queue imports for this workflow/environment to avoid concurrent solution
+    # deployments, which can fail due to Power Platform import-side locking.
+    concurrency:
+      group: powerplatform-prod-solution-deploy
+      cancel-in-progress: false
 
     strategy:
       matrix:
