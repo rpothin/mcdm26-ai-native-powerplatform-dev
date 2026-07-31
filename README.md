@@ -26,3 +26,8 @@ The current working stack includes:
 - [**microsoft/skills-for-copilot-studio**](https://github.com/microsoft/skills-for-copilot-studio) and [**microsoft/copilot-studio-plugin**](https://github.com/microsoft/copilot-studio-plugin)
 - [**Entire**](https://entire.io/)
 - [**GitHub stacked PRs**](https://github.blog/changelog/2026-07-30-stacked-pull-requests-are-now-in-public-preview/)
+
+> [!NOTE]
+> If you want to reproduce the demo setup quickly, use:
+> - Documentation: [`docs/tech-stack-readiness.md`](docs/tech-stack-readiness.md)
+> - Script (Windows/PowerShell): [`scripts/tech-stack-readiness.ps1`](scripts/tech-stack-readiness.ps1)
