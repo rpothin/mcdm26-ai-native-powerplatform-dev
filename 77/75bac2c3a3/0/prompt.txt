@@ -1,0 +1,7 @@
+Tried your script and got the following results: ".\scripts\tech-stack-readiness.ps1
+.\scripts\tech-stack-readiness.ps1: The term '.\scripts\tech-stack-readiness.ps1' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+  rapha@RaphaelPothin   ~\.copilot\copilot-worktrees\mcdm26-ai-native-powerplatform-dev  2026-07-30 23:40:06     
+ .\scripts\tech-stack-readiness.ps1 -Setup
+.\scripts\tech-stack-readiness.ps1: The term '.\scripts\tech-stack-readiness.ps1' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again."
