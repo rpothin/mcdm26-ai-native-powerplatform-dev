@@ -73,6 +73,28 @@ Always invoke the matching project-level orchestrator skill — never implement 
 - 🚫 Never: hand-edit anything under `src/generated/` in code apps.
 - 🚫 Never: author Copilot Studio YAML without first routing through the `agent-implementation` skill (enforces advisor-before-author).
 
+## Nested sessions & Entire checkpoint tracking
+
+This repo uses [Entire](https://docs.entire.io) for session/checkpoint tracking. When work is done through **nested sessions** (the `pr-stack` workflow), Entire hooks fire correctly but the nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the following crosslink step from the matching worktree before merging:
+
+```powershell
+# 1. Find the runtime session ID for the nested session
+#    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
+
+# 2. Attach it from inside the nested worktree
+Set-Location <path-to-nested-worktree>
+entire session attach <runtime-session-id> --agent copilot-cli --force
+
+# 3. Force-push the amended commit so the trailer reaches the remote
+git push origin <branch-name> --force-with-lease
+```
+
+> [!TIP]
+> The `session-crosslink` skill automates steps 2–3 once you provide the runtime session ID. Invoke it from the coordinator session when the nested session is complete.
+
+> [!NOTE]
+> Do **not** modify `.github/hooks/entire.json` to work around this — the file is managed by `entire agent add` and would be overwritten on the next hook reinstall.
+
 ## Progressive-disclosure pointers
 
 - Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions — it covers exact baseline versions and the automated readiness script.
