@@ -9,6 +9,7 @@ code-apps/*/.env*
 # -------------------------------
 # Solution pack artifacts
 # -------------------------------
+/dist/
 /*.zip
 /solutions/**/*.zip
 
