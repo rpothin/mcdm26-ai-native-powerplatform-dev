@@ -1,0 +1,84 @@
+You are an isolated nested validation session for repo rpothin/mcdm26-ai-native-powerplatform-dev. Your task is to TEST — not assume — the proposed worktree-aware JIT Reviver approach for Entire checkpoint injection in GitHub Copilot App nested worktree sessions.
+
+## Goal
+Determine whether a custom `prepare-commit-msg` hook that runs `entire session attach <runtime-session-id> --agent copilot-cli --force` before Entire's native git hook can restore distinct per-commit Entire checkpoints and improve `entire activity` / dashboard behavior in this Copilot App + worktree setup.
+
+## Important context already established
+- In this repo, Copilot App nested sessions expose `entire session current --json` with the SAME legacy session id (`66d4c47f-329c-45bb-9069-f6333b0be939`) and `status: ended`.
+- `commit_linking: always` in `.entire/settings.json` does NOT fix nested sessions because the hook sees no active session.
+- Manual `entire session attach --force` on HEAD works, but reuses the existing checkpoint and does not create fresh live-tracked sessions.
+- Do NOT modify `.github/hooks/entire.json`.
+- This test session is disposable. You may modify git hooks in the repo-local git hooks area for the test, but keep changes scoped and clearly report exactly what you changed.
+- Do NOT push anything to origin.
+
+## Hypothesis to test
+The external suggestion claims a JIT reviver in `prepare-commit-msg` can:
+1. Detect the current worktree/session,
+2. Run `entire session attach` just before commit finalization,
+3. Cause Entire's native hook to inject a trailer and/or create distinct checkpoints,
+4. Improve `entire activity` / dashboard granularity.
+
+You must validate or falsify this with real commands.
+
+## Constraints
+- Work only in your own worktree/session.
+- Prefer minimal reversible changes.
+- Use native PowerShell / Windows-safe paths.
+- Do not hand-wave or theorize; gather evidence.
+- If a change is risky or ambiguous, inspect first.
+- You may commit locally as part of the experiment.
+- You may inspect `.git/hooks/*`, `.git/entire-sessions/*`, and session-state files to understand the runtime mapping.
+
+## Test plan
+
+### Phase 1 — Baseline and feasibility inspection
+1. Inspect the current hook files that matter:
+   - `.git/hooks/prepare-commit-msg`
+   - `.git/hooks/commit-msg`
+   - `.git/hooks/post-commit`
+2. Inspect current session/runtime signals available from this nested session:
+   - `entire session current --json`
+   - repo `.git/entire-sessions/*.json`
+   - your Copilot session workspace/session-state files if needed to identify the actual current runtime session id.
+3. Determine whether the proposed external script is even plausible in this environment. In particular, verify or falsify these claims:
+   - `pwd` inside the git hook is sufficient to identify the worktree
+   - a hook can discover the actual current runtime session id for THIS nested session
+   - `entire session attach` can make Entire generate a NEW checkpoint versus reusing an old one
+
+### Phase 2 — Implement a safe JIT test hook
+4. If feasible, modify the repo-local `prepare-commit-msg` hook in the test worktree environment to add a small prelude that:
+   - logs diagnostic output to a temp file under your own session-state files dir or another safe temp path
+   - attempts to resolve the session id for the current worktree/session
+   - runs `entire session attach <resolved-id> --agent copilot-cli --force`
+   - then allows the existing Entire hook logic to continue
+5. Be careful to preserve existing hook behavior. This is an experiment, not a permanent refactor.
+
+### Phase 3 — Execute the experiment
+6. Make at least two local test commits after installing the JIT hook.
+7. For each commit, capture:
+   - commit SHA
+   - full commit body
+   - resulting `Entire-Checkpoint` trailer value
+   - whether the trailer was present before/after attach behavior
+8. After each commit, inspect whether a NEW checkpoint id was generated or whether the same checkpoint id keeps being reused.
+9. Run `entire activity` and, if possible, other relevant Entire commands (`checkpoint list`, `session info`, etc.) to see whether granularity actually improved.
+
+### Phase 4 — Assess outcome
+10. Decide which of these conclusions is true, with evidence:
+   - **Works as hoped**: distinct checkpoints/session granularity restored
+   - **Partially works**: trailer automation restored, but still same checkpoint / no dashboard improvement
+   - **Does not work**: cannot resolve correct runtime session, attach reuses old checkpoint, or hooks do not improve activity
+11. Explain WHY, based on observed behavior.
+
+## Deliverable back to parent session
+Reply to the parent session `2529766a-ad05-42aa-a844-15d52f94d0f9` with a thorough result including:
+- What hook changes you made
+- Whether session-id resolution inside the hook worked
+- Exact checkpoint ids seen across commits
+- Whether new checkpoints were created or the same one was reused
+- Whether `entire activity` changed meaningfully
+- Your final recommendation: pursue this approach or drop it
+
+If you need to revert your hook experiment before finishing, do so and mention it.
+
+Do not open a PR. Do not push. This is a contained experiment only.
