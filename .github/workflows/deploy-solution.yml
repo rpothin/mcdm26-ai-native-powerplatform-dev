@@ -44,16 +44,14 @@ on:
     branches: [main]
     paths: ['solutions/**']
 
-permissions:
-  id-token: write  # Required for OIDC token exchange with Azure AD
-  contents: write  # Required for gh release create/edit/delete
-
 jobs:
   # ---------------------------------------------------------------------------
   # Job 1: detect — find which solution folders changed in this push
   # ---------------------------------------------------------------------------
   detect:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       solutions: ${{ steps.changed.outputs.solutions }}
 
@@ -100,6 +98,9 @@ jobs:
 
     environment: production  # Enables GitHub environment protection rules
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC token exchange with Azure AD
+      contents: write  # Required for gh release create/edit/delete
 
     steps:
       - name: Checkout
@@ -128,6 +129,16 @@ jobs:
             --folder "solutions/${{ matrix.solution }}" \
             --zipfile "dist/${{ matrix.solution }}.zip" \
             --processCanvasApps
+
+      - name: Validate deployment settings file
+        shell: bash
+        run: |
+          settings="solutions/${{ matrix.solution }}/deployment-settings.json"
+          if [ ! -f "$settings" ]; then
+            echo "ERROR: deployment-settings.json not found for solution '${{ matrix.solution }}'."
+            echo "Generate it with 'make solution-sync SOLUTION=${{ matrix.solution }}' before pushing."
+            exit 1
+          fi
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
@@ -167,6 +178,10 @@ jobs:
           TAG="${{ steps.create_release.outputs.tag }}"
           gh release edit "$TAG" --prerelease=false --latest
 
+      # NOTE: This rollback only removes the GitHub release and tag.
+      # It does NOT revert the Power Platform environment to its previous state.
+      # If the import partially succeeded, the environment may be in an inconsistent state.
+      # Manual intervention (re-importing the previous solution version) may be required.
       - name: Rollback release on failure
         if: failure() && steps.create_release.outcome == 'success'
         env:
