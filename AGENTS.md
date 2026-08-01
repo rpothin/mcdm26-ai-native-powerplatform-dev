@@ -1,0 +1,123 @@
+# AGENTS.md
+
+Demo companion repo for "AI-Native Power Platform Development: Building from the IDE" (Microsoft Community Days Montreal 2026) — demonstrates an IDE-centred, AI-assisted workflow spanning Copilot Studio agents, Power Apps code apps, and Power Platform solution ALM.
+
+## Commands
+
+Run `make help` to discover all available targets and usage examples.
+
+Authentication — when a CLI has no active auth context, trigger device-code auth and surface the URL and code to the user so they can complete sign-in:
+
+```sh
+pac auth create --deviceCode   # Power Platform / Dataverse
+az login --use-device-code     # Azure CLI (az, azd)
+gh auth login                  # GitHub CLI — follow the prompts
+```
+
+## Stack
+
+Power Platform CLI (`pac`) · Node.js · Azure CLI (`az`) · Azure Developer CLI (`azd`) · GitHub CLI (`gh`) · gh-stack · Entire CLI · React + Vite (code apps, planned)
+
+Read `docs/tech-stack-readiness.md` for exact baseline versions and the automated readiness script.
+
+## Way of working
+
+### Skills first — always
+
+Invoke the matching orchestrator skill before reaching for any CLI or tool directly. Skills enforce correct patterns, sequencing, and review gates that raw CLI bypasses.
+
+| Task area | Skill |
+|---|---|
+| Dataverse schema, records, solutions, security, environment admin | `data-management` |
+| Copilot Studio agent authoring, review, testing, ALM | `agent-implementation` |
+| Power Apps code app (scaffold, connectors, lint, deploy) | `app-implementation` |
+| Power Automate cloud flows (create, debug, manage) | `backend-process-implementation` |
+| Power Platform solution lifecycle (pack, check, sync, deploy settings) | `solution-management` |
+
+### Nested sessions, stacked PRs & Entire
+
+Break any non-trivial change into a stack of small, independently-reviewable PRs using `gh-stack`. Each layer is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the crosslink step from the matching worktree before merging:
+
+```powershell
+# 1. Find the runtime session ID
+#    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
+
+# 2. Run this after the final commit on the branch. If the session receives additional
+#    commits after attaching, re-run entire session attach (and force-push again) before merging.
+Set-Location <path-to-nested-worktree>
+entire session attach <runtime-session-id> --agent copilot-cli --force
+
+# 3. Force-push so the trailer reaches the remote
+git push origin <branch-name> --force-with-lease
+```
+
+> [!WARNING]
+> `entire session attach` only amends HEAD at the moment it runs. Any commit made afterwards loses the Entire-Checkpoint trailer. Always re-attach immediately before merging if the branch received commits after the last attach.
+
+> [!TIP]
+> The `session-crosslink` skill automates steps 2–3 once you provide the runtime session ID. Invoke it from the coordinator session when the nested session is complete.
+
+> [!NOTE]
+> Do not modify `.github/hooks/entire.json` — it is managed by `entire agent add` and overwritten on reinstall.
+
+### Troubleshooting: entire activity shows too few sessions
+
+`entire activity` only reflects checkpoints linked to current branch heads. In stacked workflows, rebases and force-pushes can drop trailer coverage from some layers. Use this checklist to diagnose and recover.
+
+**1. Check trailer presence per branch**
+
+```powershell
+# Run from repo root — replace branch names with your stack
+foreach($b in @(
+  'rpothin-add-orchestrator-skills',
+  'rpothin-feat-makefile-and-deployment-workflow',
+  'rpothin-init-agents-md',
+  'rpothin-add-gitignore-hardening'
+)){
+  git --no-pager log -1 --format='%H %s' origin/$b
+  $msg = git --no-pager log -1 --format=%B origin/$b
+  if($msg -match 'Entire-Checkpoint:'){ ($msg | Select-String 'Entire-Checkpoint:').Line } else { 'NO_TRAILER' }
+  ''
+}
+```
+
+Any branch printing `NO_TRAILER` is not currently linked at HEAD and will be missing from `entire activity`.
+
+**2. Recover a branch**
+
+```powershell
+Set-Location <layer-worktree>
+entire session attach <runtime-session-id> --agent copilot-cli --force
+git push origin <branch> --force-with-lease
+```
+
+> [!WARNING]
+> Any commit after `entire session attach` removes the trailer from HEAD again. If you commit after recovering a branch, re-run attach before merging.
+
+**3. Reliable finalization protocol for stacked sessions**
+
+1. Keep lower layers stable while reviewing upper layers.
+2. Do all development and rebases first.
+3. When a layer is finalised, run `entire session attach` as the **last step** on that layer.
+4. If you commit again on that layer, re-run attach.
+5. Before merge, run a final bottom→top attach pass across all open stack branches, then make no further commits.
+
+Persistent under-count in `entire activity` after syncing usually means one or more branch heads have `NO_TRAILER`.
+
+**Prerequisite — `commit_linking: always`:** `.entire/settings.json` must contain `"commit_linking": "always"`. Without it, the interactive linking prompt is silently declined in non-interactive agent subprocess commits. This is already set in the repo; if Entire is re-initialized, restore this setting before making any commits. Note: this setting only helps when the session is genuinely active (live `sessionStart`). In Copilot App nested sessions, the session is typically in `ended` state — `entire session attach --force` is required regardless.
+
+## Boundaries
+
+- ✅ Always: route every task through the matching orchestrator skill before touching the CLI directly.
+- ✅ Always: all changes go through PRs — never commit directly to `main`.
+- ✅ Always: work inside unpacked `solutions/<name>/` folders; never hand-edit packed `.zip` files or `customizations.xml`.
+- ✅ Always: run `make app-gate` before deploying a code app; use `make solution-gate` before any solution import.
+- ⚠️ Ask first: anything that affects a shared or production environment (imports, flow enables, connection changes, adding connectors).
+- ⚠️ Ask first: renaming a solution component's `SchemaName` or editing `.github/workflows/` pipeline YAML.
+- 🚫 Never: commit secrets, real connection reference IDs, or environment-specific IDs.
+- 🚫 Never: hand-edit generated files (`src/generated/`) or author Copilot Studio YAML outside the `agent-implementation` skill.
+
+## Progressive-disclosure pointers
+
+- Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions.
+

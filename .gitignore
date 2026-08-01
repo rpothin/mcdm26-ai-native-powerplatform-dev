@@ -1,0 +1,45 @@
+# -------------------------------
+# Code app build and local config
+# -------------------------------
+code-apps/*/dist/
+code-apps/*/node_modules/
+code-apps/*/.env*
+!code-apps/*/.env.example
+
+# -------------------------------
+# Solution pack artifacts
+# -------------------------------
+/dist/
+/*.zip
+/solutions/**/*.zip
+
+# -------------------------------
+# PAC CLI generated outputs
+# -------------------------------
+*.msapp
+pac-log-*.txt
+pac-*.log
+
+# -------------------------------
+# Node.js standard patterns
+# -------------------------------
+node_modules/
+npm-debug.log*
+*.log
+
+# -------------------------------
+# OS and editor noise
+# -------------------------------
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+
+# -------------------------------
+# Playwright test artifacts
+# -------------------------------
+playwright-report/
+blob-report/
+test-results/
+code-apps/*/playwright-report/
+code-apps/*/blob-report/
+code-apps/*/test-results/
