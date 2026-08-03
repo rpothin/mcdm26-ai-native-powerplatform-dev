@@ -14,7 +14,8 @@ SOLUTIONS := $(shell find solutions -maxdepth 1 -mindepth 1 -type d 2>/dev/null 
 
 .PHONY: help \
 	app-lint app-test app-build app-gate \
-	solution-pack solution-check solution-gate solution-sync
+	solution-pack solution-check solution-gate solution-sync \
+	entire-observe entire-link-dry entire-link-apply entire-link-apply-unsafe entire-stack-finalize
 
 ## help: list available targets with descriptions and examples
 help:
@@ -179,3 +180,27 @@ solution-sync:
 			pac solution sync --solution-folder "$$sol"; \
 		done; \
 	fi
+
+## entire-observe: capture Entire/Copilot observability snapshot (experimental, non-destructive)
+entire-observe:
+	@powershell -NoProfile -ExecutionPolicy Bypass -File scripts/entire-integration/Invoke-EntireObservability.ps1 -Stage manual
+
+## entire-link-dry: print experimental session-linking plan without mutating commits
+entire-link-dry:
+	@powershell -NoProfile -ExecutionPolicy Bypass -File scripts/entire-integration/Invoke-EntireExperimentalLink.ps1
+
+## entire-link-apply: apply experimental session attach (explicitly destructive)
+entire-link-apply:
+	@powershell -NoProfile -ExecutionPolicy Bypass -File scripts/entire-integration/Invoke-EntireExperimentalLink.ps1 -Apply
+
+## entire-link-apply-unsafe: bypass confidence gate (requires SESSION_ID=<id>)
+entire-link-apply-unsafe:
+	@if [ -z "$(SESSION_ID)" ]; then \
+		echo "SESSION_ID is required. Example: make entire-link-apply-unsafe SESSION_ID=<copilot-session-id>"; \
+		exit 1; \
+	fi
+	@powershell -NoProfile -ExecutionPolicy Bypass -File scripts/entire-integration/Invoke-EntireExperimentalLink.ps1 -Apply -AllowLowConfidence -SessionId "$(SESSION_ID)"
+
+## entire-stack-finalize: run experimental trailer audit/finalization on current branch
+entire-stack-finalize:
+	@powershell -NoProfile -ExecutionPolicy Bypass -File scripts/entire-integration/Invoke-EntireStackFinalize.ps1
