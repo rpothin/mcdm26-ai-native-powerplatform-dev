@@ -1,122 +1,149 @@
-<#
-.SYNOPSIS
-    Resolves the active Copilot session for the current git worktree.
-
-.DESCRIPTION
-    Scans ~/.copilot/session-state/*/workspace.yaml to find sessions whose
-    git_root matches the current repository root (and optionally the current
-    branch). Returns structured session metadata so other scripts can consume
-    the session ID without hard-coding paths.
-
-.PARAMETER Json
-    Emit results as a JSON object instead of a human-readable table.
-
-.PARAMETER Branch
-    Override the git branch to match against (default: current HEAD branch).
-
-.EXAMPLE
-    .\scripts\entire-integration\Resolve-CopilotSession.ps1 -Json
-    .\scripts\entire-integration\Resolve-CopilotSession.ps1
-#>
-
 [CmdletBinding()]
 param(
-    [switch]$Json,
-    [string]$Branch
+    [string]$RepoPath = (Get-Location).Path,
+    [switch]$Json
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function ConvertFrom-Yaml {
-    param([string]$Content)
-    $result = [ordered]@{}
-    foreach ($line in ($Content -split "`n")) {
-        $line = $line.TrimEnd("`r")
-        if ($line -match "^([a-zA-Z_][a-zA-Z0-9_]*):\s*'?(.+?)'?\s*$") {
-            $result[$Matches[1]] = $Matches[2].Trim("'")
+function Normalize-Path {
+    param([string]$PathValue)
+    if ([string]::IsNullOrWhiteSpace($PathValue)) { return $null }
+    try {
+        if (Test-Path -LiteralPath $PathValue) {
+            return ((Resolve-Path -LiteralPath $PathValue).Path).TrimEnd('\')
+        }
+        return ([System.IO.Path]::GetFullPath($PathValue)).TrimEnd('\')
+    } catch {
+        return $null
+    }
+}
+
+function Parse-WorkspaceYaml {
+    param([string]$Path)
+    $map = @{}
+    foreach ($line in Get-Content -Path $Path) {
+        if ($line -match '^\s*([A-Za-z0-9_]+):\s*(.*)\s*$') {
+            $map[$matches[1]] = $matches[2]
         }
     }
-    return $result
+    return $map
 }
 
-# Resolve current git root
-$gitRoot = $null
-try {
-    $gitRoot = (git rev-parse --show-toplevel 2>$null).Trim() -replace '/', '\'
-} catch { }
+$repo = Normalize-Path $RepoPath
+Set-Location $repo
 
-# Resolve current branch
-$currentBranch = $Branch
-if (-not $currentBranch) {
-    try {
-        $currentBranch = (git rev-parse --abbrev-ref HEAD 2>$null).Trim()
-    } catch { }
+$gitCommonDirRaw = (git --no-pager rev-parse --git-common-dir).Trim()
+$gitCommonDir = if ([System.IO.Path]::IsPathRooted($gitCommonDirRaw)) {
+    Normalize-Path $gitCommonDirRaw
+} else {
+    Normalize-Path (Join-Path $repo $gitCommonDirRaw)
 }
+$entireSessionsDir = Join-Path $gitCommonDir 'entire-sessions'
 
-$sessionStateRoot = Join-Path $env:USERPROFILE ".copilot\session-state"
+$sessionStateRoot = Join-Path $env:USERPROFILE '.copilot\session-state'
 $candidates = @()
 
 if (Test-Path $sessionStateRoot) {
-    $workspaceFiles = Get-ChildItem $sessionStateRoot -Recurse -Filter "workspace.yaml" -ErrorAction SilentlyContinue
-    foreach ($file in $workspaceFiles) {
-        try {
-            $raw = Get-Content $file.FullName -Raw -ErrorAction Stop
-            $parsed = ConvertFrom-Yaml -Content $raw
+    Get-ChildItem -Path $sessionStateRoot -Directory | ForEach-Object {
+        $workspaceYaml = Join-Path $_.FullName 'workspace.yaml'
+        if (-not (Test-Path $workspaceYaml)) { return }
 
-            # Normalize paths for comparison
-            $sessionGitRoot = ($parsed["git_root"] -replace '/', '\').TrimEnd('\')
-            $normalizedGitRoot = $gitRoot.TrimEnd('\')
+        $data = Parse-WorkspaceYaml -Path $workspaceYaml
+        if (-not $data.ContainsKey('id')) { return }
 
-            if ($sessionGitRoot -ieq $normalizedGitRoot) {
-                $candidates += [pscustomobject]@{
-                    SessionId    = $parsed["id"]
-                    Branch       = $parsed["branch"]
-                    Repository   = $parsed["repository"]
-                    GitRoot      = $parsed["git_root"]
-                    ClientName   = $parsed["client_name"]
-                    CreatedAt    = $parsed["created_at"]
-                    UpdatedAt    = $parsed["updated_at"]
-                    McTaskId     = $parsed["mc_task_id"]
-                    McSessionId  = $parsed["mc_session_id"]
-                    WorkspaceFile = $file.FullName
-                    BranchMatch  = ($parsed["branch"] -ieq $currentBranch)
-                }
+        $cwd = Normalize-Path $data['cwd']
+        $gitRoot = Normalize-Path $data['git_root']
+        $score = 0
+        $reasons = @()
+
+        if ($cwd -and $cwd -eq $repo) {
+            $score += 70
+            $reasons += 'cwd_match'
+        }
+        if ($gitRoot -and $gitRoot -eq $repo) {
+            $score += 30
+            $reasons += 'git_root_match'
+        }
+
+        if ($score -eq 0) { return }
+
+        $id = $data['id']
+        $entireSessionFile = Join-Path $entireSessionsDir "$id.json"
+        $tracked = Test-Path $entireSessionFile
+        $phase = $null
+        if ($tracked) {
+            try {
+                $session = Get-Content -Path $entireSessionFile -Raw | ConvertFrom-Json
+                $phase = $session.phase
+            } catch {
+                $phase = 'unknown'
             }
-        } catch {
-            # Skip unreadable files
+        }
+
+        $updated = $null
+        if ($data.ContainsKey('updated_at')) {
+            try { $updated = [datetime]$data['updated_at'] } catch { }
+        }
+        if (-not $updated -and $data.ContainsKey('created_at')) {
+            try { $updated = [datetime]$data['created_at'] } catch { }
+        }
+
+        $candidates += [pscustomobject]@{
+            session_id   = $id
+            repo_path    = $repo
+            workspace    = $workspaceYaml
+            score        = $score
+            reasons      = $reasons
+            tracked      = $tracked
+            tracked_phase = $phase
+            updated_at   = $updated
         }
     }
 }
 
-# Prefer sessions where branch matches, then most-recently-updated
-$resolved = $candidates |
-    Sort-Object @{E={[int]($_.BranchMatch)}; Ascending=$false},
-                @{E={$_.UpdatedAt}; Ascending=$false} |
-    Select-Object -First 1
+$sorted = $candidates | Sort-Object @{Expression = 'score'; Descending = $true }, @{Expression = 'updated_at'; Descending = $true }
+$top = $sorted | Select-Object -First 1
+$sameTop = @($sorted | Where-Object { $_.score -eq $top.score })
 
-if (-not $resolved) {
-    $msg = "No Copilot session found for git root: $gitRoot"
-    if ($Json) {
-        @{ error = $msg; gitRoot = $gitRoot; branch = $currentBranch } | ConvertTo-Json
+$classification = 'ambiguous'
+$confidence = 0.0
+$reasonCodes = @()
+
+if (-not $top) {
+    $classification = 'ambiguous'
+    $reasonCodes += 'no_candidate'
+} elseif ($sameTop.Count -gt 1) {
+    $classification = 'ambiguous'
+    $reasonCodes += 'multiple_top_candidates'
+} else {
+    if (-not $top.tracked) {
+        $classification = 'untracked_runtime'
+        $confidence = 0.75
+        $reasonCodes += 'workspace_match_untracked'
+    } elseif ($top.tracked_phase -eq 'ended') {
+        $classification = 'tracked_ended'
+        $confidence = 0.85
+        $reasonCodes += 'workspace_match_tracked_ended'
     } else {
-        Write-Warning $msg
+        $classification = 'tracked_live'
+        $confidence = 0.9
+        $reasonCodes += 'workspace_match_tracked'
     }
-    exit 1
+}
+
+$result = [pscustomobject]@{
+    repo_path       = $repo
+    classification  = $classification
+    confidence      = $confidence
+    reason_codes    = $reasonCodes
+    selected        = $top
+    candidates      = $sorted
 }
 
 if ($Json) {
-    $resolved | Select-Object SessionId, Branch, Repository, GitRoot, ClientName, CreatedAt, UpdatedAt, McTaskId, McSessionId, BranchMatch |
-        ConvertTo-Json
+    $result | ConvertTo-Json -Depth 6
 } else {
-    Write-Host ""
-    Write-Host "Resolved Copilot Session" -ForegroundColor Cyan
-    Write-Host "========================"
-    Write-Host "  SessionId   : $($resolved.SessionId)"
-    Write-Host "  Branch      : $($resolved.Branch)"
-    Write-Host "  Repository  : $($resolved.Repository)"
-    Write-Host "  BranchMatch : $($resolved.BranchMatch)"
-    Write-Host "  ClientName  : $($resolved.ClientName)"
-    Write-Host "  CreatedAt   : $($resolved.CreatedAt)"
-    Write-Host ""
+    $result
 }

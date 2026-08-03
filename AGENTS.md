@@ -36,29 +36,48 @@ Invoke the matching orchestrator skill before reaching for any CLI or tool direc
 
 ### Nested sessions, stacked PRs & Entire
 
-Break any non-trivial change into a stack of small, independently-reviewable PRs using `gh-stack`. Each layer is its own nested session and worktree, spawned from a coordinator session. Entire tracks checkpoints automatically via git hooks, but nested session IDs are **not automatically linked** to their checkpoints. After finalising each nested session, run the crosslink step from the matching worktree before merging:
+Break any non-trivial change into a stack of small, independently-reviewable PRs using `gh-stack`. Each layer is its own nested session and worktree, spawned from a coordinator session.
+
+### Entire traceability protocol (mandatory)
+
+Use this exact flow for every branch/worktree in this repo:
 
 ```powershell
-# 1. Find the runtime session ID
-#    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
-
-# 2. Run this after the final commit on the branch. If the session receives additional
-#    commits after attaching, re-run entire session attach (and force-push again) before merging.
+# 1. Capture observability evidence before finalization
 Set-Location <path-to-nested-worktree>
-entire session attach <runtime-session-id> --agent copilot-cli --force
+make entire-observe
 
-# 3. Force-push so the trailer reaches the remote
+# 2. Run dry attach decision first (never skip)
+make entire-link-dry
+
+# 3. Apply only when dry output is acceptable
+make entire-link-apply
+
+# 4. If apply is blocked but branch must be recovered, use explicit runtime session ID
+#    (from ~/.copilot/session-state/<project-session-id>/workspace.yaml or events.jsonl)
+make entire-link-apply-unsafe SESSION_ID=<runtime-session-id>
+
+# 5. Finalize and verify branch-head trailer posture
+make entire-stack-finalize
+
+# 6. Push branch state
 git push origin <branch-name> --force-with-lease
 ```
 
 > [!WARNING]
-> `entire session attach` only amends HEAD at the moment it runs. Any commit made afterwards loses the Entire-Checkpoint trailer. Always re-attach immediately before merging if the branch received commits after the last attach.
+> **Do not run raw `entire session attach ... --force` by default.** Use helper targets first. Raw attach is break-glass only when helper flow cannot proceed.
+
+> [!WARNING]
+> **Single-writer rule (mandatory):** never run overlapping attach operations from multiple sessions on the same branch/worktree. We reproduced silent trailer replacement (`Entire-Checkpoint`) under concurrent raw attaches.
 
 > [!TIP]
-> The `session-crosslink` skill automates steps 2–3 once you provide the runtime session ID. Invoke it from the coordinator session when the nested session is complete.
+> If `entire session current` resolves to an ended/wrong session, resolve runtime session ID from `~/.copilot/session-state/<project-session-id>/workspace.yaml` and use `SESSION_ID=...` explicit mode.
 
 > [!NOTE]
 > Do not modify `.github/hooks/entire.json` — it is managed by `entire agent add` and overwritten on reinstall.
+
+> [!NOTE]
+> In autopilot worktrees, `workspace.yaml` can keep the creation-time branch name after `rename_branch`; treat branch mismatch as expected drift and resolve by git root + recency.
 
 ### Troubleshooting: entire activity shows too few sessions
 
@@ -87,24 +106,25 @@ Any branch printing `NO_TRAILER` is not currently linked at HEAD and will be mis
 
 ```powershell
 Set-Location <layer-worktree>
-entire session attach <runtime-session-id> --agent copilot-cli --force
-git push origin <branch> --force-with-lease
+make entire-link-apply-unsafe SESSION_ID=<runtime-session-id>
+make entire-stack-finalize
+git push origin <branch> --force-with-lease   # if not already pushed by helper flow
 ```
 
 > [!WARNING]
-> Any commit after `entire session attach` removes the trailer from HEAD again. If you commit after recovering a branch, re-run attach before merging.
+> Any commit after attach/finalize can invalidate branch-head traceability. Re-run the mandatory protocol before merge.
 
 **3. Reliable finalization protocol for stacked sessions**
 
 1. Keep lower layers stable while reviewing upper layers.
 2. Do all development and rebases first.
-3. When a layer is finalised, run `entire session attach` as the **last step** on that layer.
-4. If you commit again on that layer, re-run attach.
-5. Before merge, run a final bottom→top attach pass across all open stack branches, then make no further commits.
+3. When a layer is finalised, run the **mandatory helper protocol** (`entire-observe` -> `entire-link-dry` -> `entire-link-apply`/`entire-link-apply-unsafe` -> `entire-stack-finalize`) as the **last step**.
+4. If you commit again on that layer, re-run the mandatory helper protocol.
+5. Before merge, run a final bottom→top mandatory helper pass across all open stack branches, then make no further commits.
 
 Persistent under-count in `entire activity` after syncing usually means one or more branch heads have `NO_TRAILER`.
 
-**Prerequisite — `commit_linking: always`:** `.entire/settings.json` must contain `"commit_linking": "always"`. Without it, the interactive linking prompt is silently declined in non-interactive agent subprocess commits. This is already set in the repo; if Entire is re-initialized, restore this setting before making any commits. Note: this setting only helps when the session is genuinely active (live `sessionStart`). In Copilot App nested sessions, the session is typically in `ended` state — `entire session attach --force` is required regardless.
+**Prerequisite — `commit_linking: always`:** `.entire/settings.json` must contain `"commit_linking": "always"`. Without it, the interactive linking prompt is silently declined in non-interactive agent subprocess commits. This is already set in the repo; if Entire is re-initialized, restore this setting before making any commits. Note: this setting only helps when the session is genuinely active (live `sessionStart`). In Copilot App nested sessions, session state can still resolve to `ended`; use the mandatory helper protocol with explicit runtime `SESSION_ID` recovery mode when needed.
 
 ## Boundaries
 
@@ -120,4 +140,3 @@ Persistent under-count in `entire activity` after syncing usually means one or m
 ## Progressive-disclosure pointers
 
 - Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions.
-
