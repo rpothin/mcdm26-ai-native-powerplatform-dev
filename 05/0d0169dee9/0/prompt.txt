@@ -1,0 +1,19 @@
+[RESEARCH REQUEST]
+The user has requested deep research on the following topic:
+
+**So far, trying to make the GitHub Copilot CLI through the GitHub Copilot App worked with Entire we noticed that our work trough the sessions under this repository was not tracked as expected (see details: "C:\Users\rapha\Downloads\entire-discord-technical-feedback-report.md"). The more I think about it, the more I tell myself that we are perhaps doing something wrong based on false assumptions. Considering the resources below: - "C:\Users\rapha\Downloads\Copilot+Entire_Scenario_Walkthrough.md" - answer to a question from me by the AI sidecar in Entire documentation - https://docs.entire.io/agents/copilot-cli#copilot-cli - https://docs.entire.io/quickstart#copilot-cli - https://docs.entire.io/ Please, - review our GitHub Copilot CLI + Entire setup in this repository and around (like Entire skills under "C:\Users\rapha\.copilot\skills") to see if there are noticeable gaps with what we should have to have it working - optionnally launch a nested session for troubleshooting of entire commands we should use part of our workflow to see if sessions, checkpoints, commits work as expected - if our setup is correct but the integration still does not work as expected, please consider a few options we could try to make it work (even if taking a step back from the default setup) compare these approaches and formulate a recommendation**
+
+Conduct a thorough investigation and produce a comprehensive, well-cited answer.
+
+The system prompt includes an absolute session-scoped `artifacts_dir`. You MUST save the full report as markdown using the absolute path formed by appending this relative path to that directory:
+
+`research/so-far-trying-to-make-the-github-copilot.md`
+
+Use `bash` to create the parent directory if needed, then write the file with `apply_patch`.
+
+Requirements:
+- Use local repository tools, GitHub search, and web tools when available and useful. Do not assume unavailable tool coverage.
+- Do not use `ask_user`. Make reasonable assumptions and note uncertainty explicitly.
+- Save the full report before your final response.
+- In your final response, summarize the key findings and include the saved report path.
+- Use precise citations for files, URLs, and other evidence when possible.
