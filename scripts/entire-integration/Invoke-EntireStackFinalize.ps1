@@ -94,7 +94,7 @@ $branch = (git rev-parse --abbrev-ref HEAD 2>$null).Trim()
 Write-Success "Session ID : $sessionId"
 Write-Host "             Branch     : $branch"
 if (-not $sessionObj.BranchMatch) {
-    Write-Host "  WARN Branch mismatch — proceeding with best-effort match" -ForegroundColor Yellow
+    Write-Host "  WARN Branch mismatch - proceeding with best-effort match" -ForegroundColor Yellow
 }
 
 # Step 2 — entire session attach
@@ -134,9 +134,13 @@ if ($NoPush) {
 } else {
     $pushCmd = @("push", $Remote, $branch, "--force-with-lease")
     Write-Step "git $($pushCmd -join ' ')"
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $pushResult = & git @pushCmd 2>&1 | Out-String
-    if ($LASTEXITCODE -ne 0) {
-        Write-Failure "git push failed (exit $LASTEXITCODE):`n$pushResult"
+    $pushExit = $LASTEXITCODE
+    $ErrorActionPreference = $prevPref
+    if ($pushExit -ne 0) {
+        Write-Failure "git push failed (exit $pushExit):`n$pushResult"
         exit 1
     }
     Write-Success "Branch pushed: $Remote/$branch"
