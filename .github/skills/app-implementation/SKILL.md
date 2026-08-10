@@ -52,11 +52,15 @@ design quality throughout the full lifecycle, not just at init.
 This is natively supported by Impeccable's monorepo path resolution:
 
 - **Shared `DESIGN.md`** — lives at `code-apps/DESIGN.md`. One design system, all apps.
+  **This already exists for Poutine League** (the "Comptoir Championship" system) — `impeccable
+  document` is a one-time step, already done; do not regenerate it without an explicit request
+  and human approval.
 - **Shared `.impeccable/`** — lives at `code-apps/` with a `config.json` declaring each
   `code-apps/<app-name>` as a `projectRoot`. This tells Impeccable to walk up and find the
   shared DESIGN.md when running inside any app subfolder.
 - **Per-app `PRODUCT.md`** — lives at `code-apps/<app-name>/PRODUCT.md`. Product context
-  (users, purpose, brand personality, constraints) is specific to each app.
+  (users, purpose, brand personality, constraints) is specific to each app. Do not confuse this
+  with the root-level `PRODUCT.md` (whole-product functional vision) — see root `AGENTS.md`.
 
 **One-time setup (before first code app):** run `impeccable document` at `code-apps/` to
 generate the shared `DESIGN.md`. This captures the design system that all apps in the project
@@ -65,7 +69,9 @@ from scratch. Do not scaffold or build any code app before this step.
 
 **Per-app setup (before each new code app):** run `impeccable init --target code-apps/<app-name>/`
 to write the app's `PRODUCT.md`. This interview pins product context (users, purpose, brand
-personality, constraints) to the app before any code is written.
+personality, constraints) to the app before any code is written. Root `PRODUCT.md` (and, for
+agent context, `ARCHITECTURE.md` §5) already identify the two expected apps — **employee app**
+and **admin/moderation app** — use them to seed this interview rather than starting from scratch.
 
 Impeccable resolves the shared `DESIGN.md` automatically via the `config.json` `projectRoots`
 when running inside any app subfolder.

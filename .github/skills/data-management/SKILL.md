@@ -42,6 +42,16 @@ If either environment or solution is missing, ambiguous, or inferred:
 
 Do not proceed using defaults, recent-session guesses, or partial scope values.
 
+## Source of truth for schema
+
+Before authoring or modifying any table, column, or relationship, consult `ARCHITECTURE.md` §1
+(Data model) at the repo root — it defines the confirmed Poutine League entities (Restaurant,
+Poutine Submission, Tag, Try, Review, Season, Category, Season Result, Hall of Fame Entry),
+their key fields, and the ER diagram. Treat it as the schema source of truth rather than
+re-deriving the data model from the task description. If a task requires a schema change not
+reflected there, flag the divergence and propose an `ARCHITECTURE.md` update per its human-owned
+governance (see root `AGENTS.md`) before proceeding.
+
 ## Sub-skill routing
 
 | Task | Sub-skill |

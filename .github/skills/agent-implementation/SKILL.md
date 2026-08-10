@@ -64,6 +64,17 @@ dependency preflight → scope gate → clone (manage) → describe (mcs-assista
 
 Never skip the describe or design steps for non-trivial changes.
 
+## Source of truth for which agents to build
+
+Before designing or authoring any agent, consult `ARCHITECTURE.md` §2 (AI agentic experiences)
+at the repo root — it defines the required agent set: one interactive conversational agent
+(embedded in the employee code app + published to Microsoft 365 Copilot) plus three specialized
+headless backend agents (Submission Review, Fun Facts, Review Quality), each on the GitHub
+Copilot harness. §3 also documents the submission-review escalation design and flags that
+Copilot Studio Workflows/the Request for Information node are a future exploration, not yet
+supported by the installed plugins — don't attempt to build against that pattern until the
+open question is resolved.
+
 ## Step-by-step routing
 
 ### Step 2 — Ensure a local agent exists

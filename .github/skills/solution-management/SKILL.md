@@ -53,6 +53,16 @@ If either is missing, ambiguous, or inferred:
 Only the Dev environment is a valid target for agent-driven solution work. Any request
 targeting staging or production must be rejected — point the user to the GitHub workflow.
 
+## Source of truth for ALM strategy
+
+`ARCHITECTURE.md` §7 (ALM & environments) at the repo root confirms the current strategy for
+this project: a **single Dev environment with one unmanaged solution** holding all components
+(tables, flows, code apps, agents). Use it to pre-fill the scope gate above instead of
+re-negotiating environment/solution scope from scratch each session — but still have the user
+confirm the exact environment ID/URL and solution unique name before any write. The repo's
+`.github/workflows/deploy-solution.yml` illustrates the target multi-environment promotion
+pattern but is explicitly out of scope for live agent-driven work (see Hard boundaries below).
+
 ## Operations and tool routing
 
 ### Solution creation

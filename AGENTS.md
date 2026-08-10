@@ -20,6 +20,21 @@ Power Platform CLI (`pac`) · Node.js · Azure CLI (`az`) · Azure Developer CLI
 
 Read `docs/tech-stack-readiness.md` for exact baseline versions and the automated readiness script.
 
+## Foundational documents
+
+The demo product (**Poutine League**) is specified across three layered documents. Consult the one matching the question at hand before designing or authoring anything — don't re-derive intent that is already documented:
+
+| Document | Answers questions about | Consult before |
+|---|---|---|
+| [`PRODUCT.md`](PRODUCT.md) | Functional vision, audience, gamification rules, agentic feature priorities | Any product/UX decision |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Data model, agents, flows, ALM/environment strategy | Any Dataverse schema, flow, or agent work |
+| [`code-apps/DESIGN.md`](code-apps/DESIGN.md) | Visual design system (colors, type, components) shared by all code apps | Any code app UI work |
+
+> [!NOTE]
+> Naming collision to be aware of: the root `PRODUCT.md` above is the **whole-product functional vision**. A different, per-app `code-apps/<app-name>/PRODUCT.md` also exists/will exist — that one is Impeccable's narrower **product context for a single code app** (users, brand personality, constraints for that app only). Don't confuse the two when reading or writing either.
+
+These three foundational documents are **human-owned**. If a session finds one out of date (e.g., a new agent, table, or design token was introduced that isn't reflected), formulate the proposed change, present it to the user, and apply only after explicit approval — the same governance already required for `DESIGN.md` in the `app-implementation` skill.
+
 ## Way of working
 
 ### Skills first — always
@@ -130,6 +145,7 @@ Persistent under-count in `entire activity` after syncing usually means one or m
 
 - ✅ Always: route every task through the matching orchestrator skill before touching the CLI directly.
 - ✅ Always: all changes go through PRs — never commit directly to `main`.
+- ✅ Always: treat `PRODUCT.md`, `ARCHITECTURE.md`, and `code-apps/DESIGN.md` as the source of truth for scope/design decisions; propose and get approval before editing them (see [Foundational documents](#foundational-documents)).
 - ✅ Always: work inside unpacked `solutions/<name>/` folders; never hand-edit packed `.zip` files or `customizations.xml`.
 - ✅ Always: run `make app-gate` before deploying a code app; use `make solution-gate` before any solution import.
 - ⚠️ Ask first: anything that affects a shared or production environment (imports, flow enables, connection changes, adding connectors).
@@ -140,3 +156,4 @@ Persistent under-count in `entire activity` after syncing usually means one or m
 ## Progressive-disclosure pointers
 
 - Read `docs/tech-stack-readiness.md` before setting up the toolchain or validating installed versions.
+- Read the [Foundational documents](#foundational-documents) table above before any product, schema, flow, agent, or UI design decision.
