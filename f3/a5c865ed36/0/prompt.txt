@@ -1,0 +1,1 @@
+Based on 'PRODUCT.md', 'ARCHITECTURE.md' and the structure we are considering for the implementation of code apps, can you please interview me so we can use [Impeccable document](https://impeccable.style/docs/document/) to generate a 'DESIGN.md' document that we will be able to leverage for the implementation of our code apps is a consistent design?
