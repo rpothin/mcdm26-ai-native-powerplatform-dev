@@ -1,0 +1,1 @@
+Following the introduction of 'PRODUCT.md', 'ARCHITECTURE.md' and 'code-apps/DESIGN.md' in our repository, do you think some adjustments should be made for example to 'README.md', 'AGENTS.md' or even '.github/skills'? If yes, draft proposition of adjustments that could enable us to consolidate our setup before diving into the implementation?
