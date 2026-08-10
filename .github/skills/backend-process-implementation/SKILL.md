@@ -57,6 +57,15 @@ Do not create, modify, diagnose, or enable flows against an implicit target.
 | `manage-desktop-flows` | Manage RPA / desktop flows |
 | `route-environments` | Resolve and switch the active Power Platform environment |
 
+## Source of truth for the flow backlog
+
+Before scaffolding a new flow, consult `ARCHITECTURE.md` §3–4 (Submission review flow;
+Non-AI backend processes) at the repo root — it enumerates the flows this product needs
+(submission review orchestration, geocoding, fun facts generation, nightly leaderboard
+computation, season rollover, winner announcement notification), their triggers, and which
+call a Copilot Studio agent via **Execute Agent and wait**. Treat it as the flow backlog
+rather than re-deriving requirements from an ad hoc request.
+
 ## Project conventions
 
 ### 1 — Solution-bound flows only
@@ -67,7 +76,8 @@ When creating a flow, always pass the solution name to `create-flow`.
 ### 2 — Naming convention
 All flows must follow: `<SolutionPrefix>_<VerbObject>`
 
-Examples:
+Examples (replace `MCDM` with the actual solution publisher prefix once confirmed — see the
+scope gate in Step 1; these are illustrative only and don't reflect the Poutine League domain):
 - `MCDM_NotifyOnCaseCreated`
 - `MCDM_ProcessApprovalResponse`
 - `MCDM_SyncContactToSharePoint`

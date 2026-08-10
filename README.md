@@ -4,8 +4,15 @@ Demo companion repository for [**AI-Native Power Platform Development: Building 
 
 This repository is the working space for presentation-aligned demonstrations that show how Power Platform work can move from a browser-first experience to an **AI-native, IDE-centered workflow**. The goal is not to prove that one tool replaces every other tool. The goal is to show where AI-assisted development fits, where review gates still matter, and how to structure the work so the results stay reliable.
 
-> [!NOTE]
-> This is an early bootstrap repository. The structure is intentionally generic for now, and concrete demo assets will be added incrementally as the session build-out progresses.
+## What's being built
+
+The demo product is **Poutine League** — an internal, gamified experience for discovering and rating Montreal poutines, built exclusively on Power Platform (Dataverse, Power Automate, Power Apps code apps, Copilot Studio agents). Start here, in order:
+
+- [`PRODUCT.md`](PRODUCT.md) — functional vision: what the product does and for whom.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — technical design: data model, agents, flows, ALM.
+- [`code-apps/DESIGN.md`](code-apps/DESIGN.md) — shared visual design system for the code apps.
+
+These three documents are human-owned; see [`AGENTS.md`](AGENTS.md#foundational-documents) for how agents should treat them.
 
 ## Session framing
 
