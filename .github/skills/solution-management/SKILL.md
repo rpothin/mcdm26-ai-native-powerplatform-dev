@@ -2,11 +2,12 @@
 name: solution-management
 description: >
   Orchestrates Power Platform solution lifecycle in the Dev environment for a Power Platform
-  project. Covers solution creation, local clone and sync, deployment-settings file
-  generation for connection references and environment variables, solution checker validation,
-  solution packing, and dependency hygiene. Use when starting any content work session or
-  when a pre-PR quality gate is needed. Triggers on: create solution, clone solution, sync
-  solution, solution checker, pack solution, deployment settings, generate settings,
+  project. Covers solution creation, local clone and sync, semantic-versioned solution version
+  bumps, deployment-settings file generation for connection references and environment
+  variables, solution checker validation, solution packing, and dependency hygiene. Use when
+  starting any content work session or when a pre-PR quality gate is needed. Triggers on:
+  create solution, clone solution, sync solution, bump solution version, semver, semantic
+  versioning, solution checker, pack solution, deployment settings, generate settings,
   connection references, environment variables, solution hygiene, dependency check,
   pre-PR validation, init solution. Do NOT use for: deploying or importing solutions to
   staging or production (use the GitHub deployment workflow), creating Dataverse tables or
@@ -83,6 +84,31 @@ Goal: keep local solution files current with the Dev environment state.
 - Never manually edit files under `solutions/<solution-unique-name>/Other/` — they are
   managed by the tooling.
 
+### Solution versioning ([Semantic Versioning](https://semver.org/))
+
+Goal: keep the solution's version meaningful and monotonically increasing, using SemVer
+semantics mapped onto Dataverse's mandatory 4-segment version format
+(`Major.Minor.Build.Revision` — SemVer only defines `MAJOR.MINOR.PATCH`).
+
+| SemVer | Dataverse segment | Bump when |
+|---|---|---|
+| `MAJOR` | Major | Breaking change — removed/renamed component, breaking schema change |
+| `MINOR` | Minor | New backward-compatible feature — new table, column, flow, agent, app |
+| `PATCH` | Build (3rd segment) | Backward-compatible fix |
+| *(none — SemVer has no 4th part)* | Revision (4th segment) | Always `0` in this repo; Dataverse requires the segment, SemVer does not use it |
+
+**Bump the version in the Dev environment (source of truth), then re-sync locally** —
+never hand-edit `Other/Solution.xml` directly (it is tooling-managed, see Local clone and
+sync above):
+
+1. `dv-solution` — use if it exposes a version-bump operation.
+2. `pac solution online-version --environment <url> --solution-name <UniqueName> --solution-version <Major.Minor.Patch.0>` — primary fallback (CLI). Omit `--solution-version` to read the current online version.
+3. Re-sync/re-export the solution so the local unpacked `Other/Solution.xml` reflects the new version.
+
+Bump the version as part of any change that introduces a new component or a fix, before
+running the solution checker / pack step of the pre-PR quality gate. Ask the user to confirm
+the bump level (major/minor/patch) whenever it isn't obvious from the change.
+
 ### Deployment-settings generation
 
 Goal: produce `solutions/<solution-unique-name>/deployment-settings.json` containing all
@@ -146,10 +172,11 @@ Start of a feature session
 Pre-PR quality gate
   └─ Sync (pull latest Dev state)
        └─ deployment-settings.json up to date? → regenerate if not
-            └─ solution checker (dv-solution → pac fallback)
-                 ├─ Critical/High findings? → block → surface to user
-                 └─ Clean (or waived) → pac solution pack
-                      └─ Ready for PR
+            └─ Version bump needed? → bump SemVer (online-version → re-sync)
+                 └─ solution checker (dv-solution → pac fallback)
+                      ├─ Critical/High findings? → block → surface to user
+                      └─ Clean (or waived) → pac solution pack
+                           └─ Ready for PR
 ```
 
 ## Hard boundaries
