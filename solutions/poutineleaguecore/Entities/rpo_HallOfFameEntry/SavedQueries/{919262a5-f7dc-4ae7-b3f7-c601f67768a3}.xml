@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<savedqueries xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <savedquery>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>0</CanBeDeleted>
+    <isquickfindquery>0</isquickfindquery>
+    <isprivate>0</isprivate>
+    <isdefault>0</isdefault>
+    <savedqueryid>{919262a5-f7dc-4ae7-b3f7-c601f67768a3}</savedqueryid>
+    <layoutxml>
+      <grid name="resultset" jump="rpo_name" select="1" icon="1" preview="1">
+        <row name="result" id="rpo_halloffameentryid">
+          <cell name="rpo_name" width="300" />
+          <cell name="createdon" width="125" />
+        </row>
+      </grid>
+    </layoutxml>
+    <querytype>0</querytype>
+    <fetchxml>
+      <fetch version="1.0" mapping="logical">
+        <entity name="rpo_halloffameentry">
+          <attribute name="rpo_halloffameentryid" />
+          <attribute name="rpo_name" />
+          <attribute name="createdon" />
+          <order attribute="rpo_name" descending="false" />
+          <filter type="and">
+            <condition attribute="statecode" operator="eq" value="1" />
+          </filter>
+        </entity>
+      </fetch>
+    </fetchxml>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <LocalizedNames>
+      <LocalizedName description="Inactive Hall of Fame Entrys" languagecode="1033" />
+    </LocalizedNames>
+  </savedquery>
+</savedqueries>
