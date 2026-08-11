@@ -3,6 +3,7 @@
   <EntityRelationship Name="business_unit_rpo_poutinesubmission" />
   <EntityRelationship Name="business_unit_rpo_restaurant" />
   <EntityRelationship Name="business_unit_rpo_review" />
+  <EntityRelationship Name="business_unit_rpo_season" />
   <EntityRelationship Name="business_unit_rpo_tag" />
   <EntityRelationship Name="business_unit_rpo_try" />
   <EntityRelationship Name="lk_rpo_poutinesubmission_createdby" />
@@ -11,6 +12,8 @@
   <EntityRelationship Name="lk_rpo_restaurant_modifiedby" />
   <EntityRelationship Name="lk_rpo_review_createdby" />
   <EntityRelationship Name="lk_rpo_review_modifiedby" />
+  <EntityRelationship Name="lk_rpo_season_createdby" />
+  <EntityRelationship Name="lk_rpo_season_modifiedby" />
   <EntityRelationship Name="lk_rpo_tag_createdby" />
   <EntityRelationship Name="lk_rpo_tag_modifiedby" />
   <EntityRelationship Name="lk_rpo_try_createdby" />
@@ -18,6 +21,7 @@
   <EntityRelationship Name="owner_rpo_poutinesubmission" />
   <EntityRelationship Name="owner_rpo_restaurant" />
   <EntityRelationship Name="owner_rpo_review" />
+  <EntityRelationship Name="owner_rpo_season" />
   <EntityRelationship Name="owner_rpo_tag" />
   <EntityRelationship Name="owner_rpo_try" />
   <EntityRelationship Name="rpo_poutinesubmission_rpo_try_rpo_PoutineSubmissionId" />
@@ -30,12 +34,14 @@
   <EntityRelationship Name="team_rpo_poutinesubmission" />
   <EntityRelationship Name="team_rpo_restaurant" />
   <EntityRelationship Name="team_rpo_review" />
+  <EntityRelationship Name="team_rpo_season" />
   <EntityRelationship Name="team_rpo_tag" />
   <EntityRelationship Name="team_rpo_try" />
   <EntityRelationship Name="TransactionCurrency_rpo_PoutineSubmission" />
   <EntityRelationship Name="user_rpo_poutinesubmission" />
   <EntityRelationship Name="user_rpo_restaurant" />
   <EntityRelationship Name="user_rpo_review" />
+  <EntityRelationship Name="user_rpo_season" />
   <EntityRelationship Name="user_rpo_tag" />
   <EntityRelationship Name="user_rpo_try" />
 </EntityRelationships>
