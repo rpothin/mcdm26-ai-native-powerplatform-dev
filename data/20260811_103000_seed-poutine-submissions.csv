@@ -1,0 +1,19 @@
+name,description,price,status,restaurant_name,submitter_email,tags
+Classic Smoked Meat Poutine,Curly fries topped with hand-cut smoked meat and squeaky cheese curds,14.50,Approved,La Banquise,raphael@rpothinmvp.onmicrosoft.com,Classic;Smoked Meat
+Truffle Duck Confit Poutine,Duck confit and shaved truffle over crispy fries with a rich veal gravy,22.00,Approved,Poutineville,maverick@rpothinmvp.onmicrosoft.com,Truffle;Duck Confit
+Vegan Mushroom Gravy Poutine,Plant-based cheese curds and mushroom gravy on golden fries,13.00,Submitted,Patati Patata,maya@rpothinmvp.onmicrosoft.com,Vegan;Classic
+Spicy BBQ Pulled Pork Poutine,Slow-smoked pulled pork with a spicy BBQ glaze and jalapeno,16.75,Approved,Chez Claudette,raphael@rpothinmvp.onmicrosoft.com,Spicy;Pulled Pork;BBQ
+Foie Gras Poutine Deluxe,Seared foie gras medallions atop a classic poutine base,28.00,In Review,Restaurant Vito,maverick@rpothinmvp.onmicrosoft.com,Foie Gras;Classic
+Montreal Smoked Meat Deluxe Poutine,"Triple stack of smoked meat, curds, and peppercorn gravy",19.50,Approved,Snowdon Deli,raphael@rpothinmvp.onmicrosoft.com,Montreal Smoked Meat Deluxe;Smoked Meat
+Le Roi Classic Poutine,The house classic - crispy fries fresh curds and gravy,12.00,Draft,Le Roi du Smoked Meat,maya@rpothinmvp.onmicrosoft.com,Classic
+Belgian Curly Fry Poutine,Extra crispy curly fries with double cheese curds,13.50,Submitted,Frite Alors!,maverick@rpothinmvp.onmicrosoft.com,Curly Fries;Cheese Curds Extra
+Smoked Meat Diner Poutine,Diner-style poutine with house-smoked meat shavings,15.00,Approved,Deville Dinerbar,raphael@rpothinmvp.onmicrosoft.com,Smoked Meat;Classic
+Heritage Poutine Originale,"La Belle Province's original recipe, since 1968",11.50,Approved,La Belle Province,maya@rpothinmvp.onmicrosoft.com,Classic
+Dic Ann's Secret Sauce Poutine,Fries and curds topped with the diner's famous secret sauce,10.75,Rejected,Dic Ann's,maverick@rpothinmvp.onmicrosoft.com,Classic;Spicy
+Greasy Spoon Bacon Poutine,Loaded poutine with crispy bacon bits and extra gravy,14.00,In Review,Greasy Spoon,raphael@rpothinmvp.onmicrosoft.com,Bacon;Classic
+Poutine Centrale Kimchi Fusion,Korean-inspired poutine with kimchi and gochujang gravy,17.25,Submitted,Poutine Centrale,maya@rpothinmvp.onmicrosoft.com,Kimchi;Spicy
+Palais Gluten-Free Poutine,Gluten-free fries and curds for a classic taste without the gluten,15.50,Draft,Le Nouveau Palais,maverick@rpothinmvp.onmicrosoft.com,Gluten-Free;Classic
+Ma Poule Mouillee Chicken Poutine,Roast chicken gravy poutine with crispy skin bits,16.00,Submitted,Ma Poule Mouillee,raphael@rpothinmvp.onmicrosoft.com,Classic;BBQ
+Lobster Butter Poutine,Butter-poached lobster over fries with lemon aioli drizzle,26.50,In Review,La Banquise,maya@rpothinmvp.onmicrosoft.com,Lobster;Truffle
+Mac and Cheese Poutine Mashup,Creamy mac and cheese blended with classic poutine fixings,15.25,Draft,Poutineville,maverick@rpothinmvp.onmicrosoft.com,Mac and Cheese;Classic
+Breakfast Poutine Special,Fries curds and gravy topped with a fried egg and bacon,13.75,Rejected,Snowdon Deli,raphael@rpothinmvp.onmicrosoft.com,Breakfast;Bacon

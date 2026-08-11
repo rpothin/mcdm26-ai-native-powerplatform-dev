@@ -1,0 +1,110 @@
+{
+  "description": "Schema definition used to create the Poutine Submission table (layer 3/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md \u00a71 (Data model), POUTINE_SUBMISSION entity block. Most complex layer so far: real lookups to Restaurant (layer 1) and systemuser (built-in), plus an N:N relationship to Tag (layer 2).",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_PoutineSubmission",
+    "logicalName": "rpo_poutinesubmission",
+    "entitySetName": "rpo_poutinesubmissions",
+    "metadataId": "9b335a87-bb12-f011-998b-6045bd053599",
+    "displayName": "Poutine Submission",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_poutinesubmissionid",
+    "purpose": "A submitted poutine, owned by the submitting employee. Central fact table linking a Restaurant, a submitting systemuser, and a set of Tags."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "notes": "Primary name column (poutine name), auto-created with the table."
+    },
+    {
+      "logicalName": "rpo_description",
+      "schemaName": "rpo_Description",
+      "displayName": "Description",
+      "type": "Memo",
+      "notes": "Multiline description of the submission."
+    },
+    {
+      "logicalName": "rpo_status",
+      "schemaName": "rpo_Status",
+      "displayName": "Status",
+      "type": "Picklist (local option set)",
+      "options": [
+        { "value": 100000000, "label": "Draft" },
+        { "value": 100000001, "label": "Submitted" },
+        { "value": 100000002, "label": "In Review" },
+        { "value": 100000003, "label": "Approved" },
+        { "value": 100000004, "label": "Rejected" }
+      ],
+      "default": "Draft",
+      "notes": "Created via an IntEnum (PoutineSubmissionStatus) passed to client.tables.add_columns(). The 'In Review' label (a display name with a space, invalid as a Python identifier) was supplied via the enum's __labels__ dunder class attribute, which the SDK reads for custom multi-word display labels and Python's Enum metaclass ignores as machinery."
+    },
+    {
+      "logicalName": "rpo_price",
+      "schemaName": "rpo_Price",
+      "displayName": "Price",
+      "type": "Money (Currency)",
+      "precision": 2,
+      "minValue": 0,
+      "maxValue": 100000,
+      "notes": "Chose true Currency (MoneyAttributeMetadata) over Decimal: a menu price is semantically a monetary amount, and Dataverse Currency columns get built-in currency-aware formatting/base-currency conversion (rpo_price_base). The SDK's add_columns() 'decimal'/'money' type strings both map to DecimalAttributeMetadata, not true Money -- required a raw Web API POST to EntityDefinitions(...)/Attributes with @odata.type Microsoft.Dynamics.CRM.MoneyAttributeMetadata."
+    },
+    {
+      "logicalName": "rpo_photo",
+      "schemaName": "rpo_Photo",
+      "displayName": "Photo",
+      "type": "Image",
+      "canStoreFullImage": true,
+      "maxSizeInKB": 10240,
+      "notes": "Dataverse Image column (ImageAttributeMetadata) -- not exposed by the SDK's add_columns() type strings ('file' maps to FileAttributeMetadata, a generic file column, not Image). Created via raw Web API POST. Left null for all sample data per task scope (no need to source real images for this layer)."
+    }
+  ],
+  "lookups": [
+    {
+      "logicalName": "rpo_restaurantid",
+      "schemaName": "rpo_RestaurantId",
+      "displayName": "Restaurant",
+      "referencedTable": "rpo_restaurant",
+      "required": true,
+      "relationshipSchemaName": "rpo_restaurant_rpo_poutinesubmission_rpo_RestaurantId",
+      "relationshipId": "ee7003c5-8f95-f111-b8dc-000d3a340fc1",
+      "creationMethod": "client.tables.create_lookup_field() -- worked as-is because the referenced table (rpo_restaurant) already carries the rpo customization prefix, so the SDK's auto-generated relationship schema name is valid."
+    },
+    {
+      "logicalName": "rpo_submitterid",
+      "schemaName": "rpo_SubmitterId",
+      "displayName": "Submitter",
+      "referencedTable": "systemuser",
+      "referencedAttribute": "systemuserid",
+      "required": true,
+      "relationshipSchemaName": "rpo_PoutineSubmission_Submitter",
+      "relationshipId": "5c4cb44d-9095-f111-b8dc-000d3a340fc1",
+      "creationMethod": "client.tables.create_lookup_field() FAILED here: its auto-generated relationship schema name is '{referenced}_{referencing}_{lookupField}', which for systemuser (a built-in table with no customization prefix) produces 'systemuser_rpo_poutinesubmission_rpo_SubmitterId' -- rejected by Dataverse because custom EntityRelationship schema names must themselves start with a valid customization prefix. Worked around by calling client.tables.create_one_to_many_relationship() directly with LookupAttributeMetadata + OneToManyRelationshipMetadata, supplying an explicit rpo_-prefixed relationship schema name ('rpo_PoutineSubmission_Submitter'). This is a reusable pattern for any future lookup to a built-in/OOB Dataverse table."
+    }
+  ],
+  "manyToManyRelationships": [
+    {
+      "schemaName": "rpo_PoutineSubmission_Tag",
+      "relationshipId": "b646a46a-9095-f111-b8db-000d3a3409ce",
+      "entity1LogicalName": "rpo_poutinesubmission",
+      "entity2LogicalName": "rpo_tag",
+      "navigationPropertyName": "rpo_PoutineSubmission_Tag",
+      "creationMethod": "client.tables.create_many_to_many_relationship() with ManyToManyRelationshipMetadata(schema_name='rpo_PoutineSubmission_Tag', entity1_logical_name='rpo_poutinesubmission', entity2_logical_name='rpo_tag')."
+    }
+  ],
+  "solutionAttachment": {
+    "issue": "As with layers 1 & 2, client.tables.create()/add_columns()/create_lookup_field()/create_many_to_many_relationship() calls passed solution=\"poutineleaguecore\" but the table's own Entity component did not reliably show up via a plain solutioncomponent query at first read.",
+    "remediation": "pac solution add-solution-component --solutionUniqueName poutineleaguecore --component <GUID> --componentType 1 --environment <env> for the table (schema-name form failed with 'Failed to resolve entity metadata'; the EntityMetadataId GUID had to be used). For the three relationships (Restaurant lookup, Submitter lookup, Tag N:N) the same command was run with --componentType 10 (Entity Relationship) and each relationship's relationship_id GUID.",
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 (table present) and confirmed the table's RootComponentBehavior is 'Include Subcomponents' (0). Then did a scratch pac solution export + unpack (not committed) and grepped the resulting customizations.xml for all three EntityRelationship schema names -- all three (rpo_restaurant_rpo_poutinesubmission_rpo_RestaurantId, rpo_PoutineSubmission_Submitter, rpo_PoutineSubmission_Tag) were present, confirming relationships attached to an entity with 'Include Subcomponents' export correctly even when a direct solutioncomponent row for componenttype=10 isn't independently listed (Dataverse treats them as implied subcomponents once the parent entity is included with that behavior)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) with raw Web API fallback for Money and Image column types, and for the systemuser relationship schema name.",
+    "phasedCreation": "Table + Description/Status columns first, then Price/Photo (Web API), then Restaurant + Submitter lookups, then the Tag N:N relationship -- each phase separated by a 20-25s wait for metadata propagation per the dv-metadata skill's phased-creation guidance.",
+    "notes": "Table creation followed by an immediate list_columns() call transiently returned 'Table not found' even though client.tables.get() succeeded -- actual propagation lag in this environment was closer to 50-55s total, longer than the skill's suggested 15-30s baseline."
+  }
+}

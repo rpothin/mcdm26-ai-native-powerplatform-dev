@@ -1,15 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="business_unit_rpo_poutinesubmission" />
   <EntityRelationship Name="business_unit_rpo_restaurant" />
   <EntityRelationship Name="business_unit_rpo_tag" />
+  <EntityRelationship Name="lk_rpo_poutinesubmission_createdby" />
+  <EntityRelationship Name="lk_rpo_poutinesubmission_modifiedby" />
   <EntityRelationship Name="lk_rpo_restaurant_createdby" />
   <EntityRelationship Name="lk_rpo_restaurant_modifiedby" />
   <EntityRelationship Name="lk_rpo_tag_createdby" />
   <EntityRelationship Name="lk_rpo_tag_modifiedby" />
+  <EntityRelationship Name="owner_rpo_poutinesubmission" />
   <EntityRelationship Name="owner_rpo_restaurant" />
   <EntityRelationship Name="owner_rpo_tag" />
+  <EntityRelationship Name="rpo_PoutineSubmission_Submitter" />
+  <EntityRelationship Name="rpo_PoutineSubmission_Tag" />
+  <EntityRelationship Name="rpo_restaurant_rpo_poutinesubmission_rpo_RestaurantId" />
+  <EntityRelationship Name="team_rpo_poutinesubmission" />
   <EntityRelationship Name="team_rpo_restaurant" />
   <EntityRelationship Name="team_rpo_tag" />
+  <EntityRelationship Name="TransactionCurrency_rpo_PoutineSubmission" />
+  <EntityRelationship Name="user_rpo_poutinesubmission" />
   <EntityRelationship Name="user_rpo_restaurant" />
   <EntityRelationship Name="user_rpo_tag" />
 </EntityRelationships>
