@@ -1,0 +1,53 @@
+You are layer 8 of 9 in a stacked-PR build-out of the Poutine League Dataverse data model (see AGENTS.md, PRODUCT.md, ARCHITECTURE.md at repo root). This session implements the **Season Result** table (plus a supporting child table, see design decision below). Do not touch any other table.
+
+## Context you must read first
+- `ARCHITECTURE.md` §1 (Data model) — Season Result row: "Persisted, nightly-computed leaderboard standing per season/category... Lookup to Season, lookup to Category, ranked entries (employee or poutine + score), computed-at timestamp." Also read the "Confirmed decisions" subsection (around line 141) which confirms Season Result stores a FULL ranked-list snapshot, not just a top-1 winner.
+- `docs/dev-solution-conventions.md` — naming conventions.
+- `AGENTS.md` — routing rules.
+
+## IMPORTANT: pre-made design decision (read carefully, do not re-litigate)
+Dataverse cannot store an array/list inside a single row. The coordinating session already decided (autonomously, since the human was unavailable to confirm) how to model the "ranked entries" list. You must implement it exactly as follows and flag it prominently in your PR description for human review/adjustment:
+
+1. **`rpo_SeasonResult`** (the header/snapshot record) — one row per season+category combination:
+   - Lookup to `rpo_Season`
+   - Lookup to `rpo_Category`
+   - `computedat` — DateTime timestamp of when the nightly computation ran. **Apply the DateTime gotcha workaround (see below)** — create via raw Web API call with explicit Format (`DateAndTime`) and DateTimeBehavior (`UserLocal`), not the SDK's generic add_columns with a plain "datetime" string.
+2. **`rpo_SeasonResultEntry`** (NEW 10th supporting table, one row per ranked entry within a Season Result) — relational decomposition of the "ranked entries" list, not new business scope:
+   - Lookup to `rpo_SeasonResult` (parent — required, N:1)
+   - `rank` — Whole Number (1 = top rank)
+   - `score` — Decimal
+   - Lookup to `systemuser` (employee) — NULLABLE, populated only when the parent Category's computation type is employee-based (e.g. Best Supporter, Best Critic). Use the direct-relationship workaround for systemuser lookups (see gotcha #2 below) with an explicit `rpo_`-prefixed relationship name (e.g. `rpo_SeasonResultEntry_Employee`).
+   - Lookup to `rpo_PoutineSubmission` (poutine) — NULLABLE, populated only when the Category's computation type is poutine-based (e.g. Best Seller, Top Poutine). Exactly one of the two lookups should be populated per row, never both, never neither.
+
+Do NOT model this as JSON/text blob or fixed top-N columns — the child-table approach was the decision made. If, after reading ARCHITECTURE.md yourself, you believe this decision is clearly wrong or conflicts with something explicit in the doc, stop and flag it back to the coordinator rather than proceeding silently — but do not just substitute your own alternative approach without flagging it.
+
+## Environment/solution context (already resolved, reuse directly)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: poutineleaguecore (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: rpo
+- Tables from layers 1-7 (Restaurant, Tag, Poutine Submission, Try, Review, Season, Category) already exist in this same Dev environment with real sample data. Query Season and Category records via `dv-query` to build realistic sample Season Result data referencing them.
+
+## Branch / stacking
+You are on a fresh branch already stacked on `rpothin-feat-data-category-table` (layer 7's branch). Do not rebase or retarget. Your PR MUST target `rpothin-feat-data-category-table` as its base (use gh-stack conventions, not base=main). Rename your branch to `rpothin-feat-data-season-result-table` early on via the rename_branch tool.
+
+## Reusable gotchas from prior layers
+1. **Solution attachment**: SDK's `client.tables.create(..., solution=...)` doesn't reliably auto-attach new tables to `poutineleaguecore`'s solutioncomponent list. After creating EACH table (both rpo_SeasonResult and rpo_SeasonResultEntry), explicitly verify solution membership and fix with `pac solution add-solution-component --component <logical-name> --componentType 1` if needed, then re-verify. Do this for both tables.
+2. **Systemuser lookup relationship naming**: the SDK's `create_lookup_field()` convenience wrapper auto-generates an invalid relationship schema name for lookups to built-in tables like `systemuser`. Use `create_one_to_many_relationship()` directly with an explicit `rpo_`-prefixed name (e.g. `rpo_SeasonResultEntry_Employee`) for the employee lookup on `rpo_SeasonResultEntry`.
+3. **DateTime columns**: creating via generic `add_columns()`/`create()` with a plain `"datetime"` string leaves `DateTimeBehavior` unset and breaks later metadata operations irreversibly (short of delete+recreate). Create `computedat` via a raw Web API call with explicit `Format` (`DateAndTime`) and `DateTimeBehavior` (`UserLocal`) from the start.
+
+## Your workflow (same 5 phases every layer follows)
+1. **Schema configuration** (`data-management` → `dv-metadata`): Check first neither `rpo_SeasonResult` nor `rpo_SeasonResultEntry` exist yet. Create both tables with the exact fields above, plus the 1:N relationship between them. Verify solution attachment for both (gotcha #1).
+2. **Sample data population** (`data-management` → `dv-query` + `dv-data`): Query existing Season records (pick e.g. the Closed/past season) and all 4 Category records. For each Category, decide (from its computation type / name, per PRODUCT.md context) whether it's employee-based or poutine-based, then create one `rpo_SeasonResult` header row per season+category pair, and 3-5 `rpo_SeasonResultEntry` child rows per header (ranked, decreasing score) referencing REAL existing systemuser/poutine-submission records (resolve systemusers by email, poutine submissions by querying the Approved ones from layer 3's sample data — never hardcode GUIDs). Save seed CSVs under `data/` with the timestamp-naming convention.
+3. **Validation**: Re-check both tables/columns/relationships against your understanding of ARCHITECTURE.md's description + the design decision above. Spot-query seeded data via `dv-query` — confirm each SeasonResultEntry has exactly one of employee/poutine populated, ranks are sequential per header, no orphaned lookups. Run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** (`solution-management`): Sync locally, bump SemVer MINOR (verify actual current version from `solutions/poutineleaguecore/Other/Solution.xml`), run solution checker, resolve/waive Critical/High findings, pack (`make solution-gate`).
+5. **Entire traceability + stacked PR**: Run the mandatory Entire protocol (`entire-observe` → `entire-link-dry` → `entire-link-apply`[-unsafe] → `entire-stack-finalize`) as the LAST step. Commit, push, open a PR based on `rpothin-feat-data-category-table`, titled `feat(data): configure Season Result table + sample data (layer 8/9)`. **In the PR description, include a clearly-labeled section explaining the SeasonResultEntry design decision and that it was made autonomously in the coordinator's absence of human confirmation — explicitly invite the human reviewer to weigh in / request changes if they'd prefer a different representation.**
+
+## Boundaries
+- Do not modify any other layer's schema/data.
+- Do not edit PRODUCT.md/ARCHITECTURE.md/DESIGN.md without stopping and asking first, EXCEPT you may (and should) add a short clarifying note to ARCHITECTURE.md's Season Result row/Confirmed-decisions section documenting the SeasonResultEntry child table, since this is filling in an implementation detail the doc left conceptual — keep the edit small and factual, and call it out explicitly in your PR description as a proposed doc update for the human to approve/reject.
+- Never commit environment-specific GUIDs into tracked files.
+- Route everything through skills (`data-management`, `solution-management`).
+
+## Reporting back
+When finished (PR opened) or blocked, message the coordinator (project_session_id df0089ba-085d-44ca-9a1f-9f7ca29fdff3) with: PR number/link, solution version before/after, tables+columns created, sample row counts, confirmation of the SeasonResultEntry design choice, and any NEW gotchas for layer 9. Do not wait idle for review — once PR is opened and reported, your work is done.
