@@ -1,0 +1,136 @@
+{
+  "description": "Schema definition used to create the Season Result data model (layer 8/9 of the Poutine League Dataverse data model build-out): rpo_SeasonResult (header/snapshot) + rpo_SeasonResultEntry (ranked-entry child table). Source of truth: ARCHITECTURE.md Sec 1 (Data model), SEASON_RESULT entity block + Confirmed decisions (full ranked-list snapshot per season/category, not just top-1).",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "designDecision": {
+    "problem": "Dataverse cannot store an array/list inside a single row, but ARCHITECTURE.md's 'Confirmed decisions' requires Season Result to store a FULL ranked-list snapshot per season/category, not just the top-1 winner.",
+    "decisionMadeBy": "Coordinating session (layer orchestrator), made autonomously in the human's absence -- flagged prominently for human review/adjustment in the PR description.",
+    "chosenApproach": "Relational decomposition: rpo_SeasonResult is the header/snapshot row (one per season+category), and a NEW 10th supporting table rpo_SeasonResultEntry holds one row per ranked entry within that snapshot (1:N child of rpo_SeasonResult). This is a relational-decomposition implementation detail of the existing Season Result entity, not new business scope.",
+    "rejectedAlternatives": ["JSON/text blob column on rpo_SeasonResult", "Fixed top-N columns (e.g. rank1id, rank2id, ...) on rpo_SeasonResult"],
+    "invitesHumanReview": true
+  },
+  "tables": [
+    {
+      "schemaName": "rpo_SeasonResult",
+      "logicalName": "rpo_seasonresult",
+      "entitySetName": "rpo_seasonresults",
+      "displayName": "Season Result",
+      "primaryNameAttribute": "rpo_name",
+      "primaryIdAttribute": "rpo_seasonresultid",
+      "purpose": "Header/snapshot record: one row per season+category combination, representing the persisted, nightly-computed leaderboard standing.",
+      "columns": [
+        {
+          "logicalName": "rpo_name",
+          "schemaName": "rpo_Name",
+          "displayName": "Name",
+          "type": "String",
+          "notes": "Primary name column, auto-created with the table. Seed data composes '<Season name> - <Category name>' since Season Result has no other natural name."
+        },
+        {
+          "logicalName": "rpo_computedat",
+          "schemaName": "rpo_ComputedAt",
+          "displayName": "Computed At",
+          "type": "DateTime",
+          "format": "DateAndTime",
+          "dateTimeBehavior": "UserLocal",
+          "requiredLevel": "ApplicationRequired",
+          "notes": "Timestamp of when the nightly leaderboard computation ran. Created via raw Web API with explicit Format=DateAndTime and DateTimeBehavior=UserLocal from the start (per the documented gotcha from layers 3/4) -- no delete+recreate cycle was needed this time."
+        }
+      ],
+      "lookups": [
+        {
+          "logicalName": "rpo_seasonid",
+          "schemaName": "rpo_SeasonId",
+          "displayName": "Season",
+          "referencedTable": "rpo_season",
+          "required": true,
+          "relationshipSchemaName": "rpo_season_rpo_seasonresult_rpo_SeasonId",
+          "creationMethod": "client.tables.create_lookup_field() -- worked as-is (referenced table already carries the rpo prefix)."
+        },
+        {
+          "logicalName": "rpo_categoryid",
+          "schemaName": "rpo_CategoryId",
+          "displayName": "Category",
+          "referencedTable": "rpo_category",
+          "required": true,
+          "relationshipSchemaName": "rpo_category_rpo_seasonresult_rpo_CategoryId",
+          "creationMethod": "client.tables.create_lookup_field() -- worked as-is (referenced table already carries the rpo prefix)."
+        }
+      ]
+    },
+    {
+      "schemaName": "rpo_SeasonResultEntry",
+      "logicalName": "rpo_seasonresultentry",
+      "entitySetName": "rpo_seasonresultentries",
+      "displayName": "Season Result Entry",
+      "primaryNameAttribute": "rpo_name",
+      "primaryIdAttribute": "rpo_seasonresultentryid",
+      "purpose": "NEW 10th supporting table (not in the original ARCHITECTURE.md table list). One row per ranked entry within a Season Result snapshot -- relational decomposition of the 'ranked entries' list described in ARCHITECTURE.md, per the design decision above.",
+      "columns": [
+        {
+          "logicalName": "rpo_name",
+          "schemaName": "rpo_Name",
+          "displayName": "Name",
+          "type": "String",
+          "notes": "Primary name column, auto-created with the table. Seed data composes '<Category name> rank <N> (<Season name>)'."
+        },
+        {
+          "logicalName": "rpo_rank",
+          "schemaName": "rpo_Rank",
+          "displayName": "Rank",
+          "type": "Integer",
+          "notes": "1 = top rank within the parent Season Result's ranked list."
+        },
+        {
+          "logicalName": "rpo_score",
+          "schemaName": "rpo_Score",
+          "displayName": "Score",
+          "type": "Decimal",
+          "notes": "The computed score for this entry (semantics depend on the parent Category's computationtype -- e.g. try count, weighted rating, helpfulness score)."
+        }
+      ],
+      "lookups": [
+        {
+          "logicalName": "rpo_seasonresultid",
+          "schemaName": "rpo_SeasonResultId",
+          "displayName": "Season Result",
+          "referencedTable": "rpo_seasonresult",
+          "required": true,
+          "relationshipSchemaName": "rpo_seasonresult_rpo_seasonresultentry_rpo_SeasonResultId",
+          "creationMethod": "client.tables.create_lookup_field() -- worked as-is (referenced table already carries the rpo prefix). This is the required N:1 parent relationship."
+        },
+        {
+          "logicalName": "rpo_employeeid",
+          "schemaName": "rpo_EmployeeId",
+          "displayName": "Employee",
+          "referencedTable": "systemuser",
+          "referencedAttribute": "systemuserid",
+          "required": false,
+          "relationshipSchemaName": "rpo_SeasonResultEntry_Employee",
+          "creationMethod": "client.tables.create_lookup_field() FAILS for lookups to systemuser (documented gotcha from layers 3/4: auto-generated relationship schema name lacks a customization prefix). Worked around by calling client.tables.create_one_to_many_relationship() directly with LookupAttributeMetadata + OneToManyRelationshipMetadata, supplying an explicit rpo_-prefixed relationship schema name ('rpo_SeasonResultEntry_Employee') and RequiredLevel=None.",
+          "notes": "Nullable. Populated only when the parent Category's computationtype is employee-based (try_count_by_submitter, try_count_by_employee, review_helpfulness_score). Exactly one of rpo_EmployeeId / rpo_PoutineSubmissionId is populated per row -- never both, never neither. Validated in scripts/validate_season_result_data.py."
+        },
+        {
+          "logicalName": "rpo_poutinesubmissionid",
+          "schemaName": "rpo_PoutineSubmissionId",
+          "displayName": "Poutine Submission",
+          "referencedTable": "rpo_poutinesubmission",
+          "required": false,
+          "relationshipSchemaName": "rpo_poutinesubmission_rpo_seasonresultentry_rpo_PoutineSubmissionId",
+          "creationMethod": "client.tables.create_lookup_field() -- worked as-is (referenced table already carries the rpo prefix).",
+          "notes": "Nullable. Populated only when the parent Category's computationtype is poutine-based (weighted_rating). Exactly one of rpo_EmployeeId / rpo_PoutineSubmissionId is populated per row."
+        }
+      ]
+    }
+  ],
+  "solutionAttachment": {
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 and confirmed both rpo_seasonresult (MetadataId d3e48e32-b05b-4690-9a46-7ddb63dfa834) and rpo_seasonresultentry (MetadataId 360dcc42-b885-4b4c-a29e-2b4e346134d6) are present in poutineleaguecore, attached automatically via the solution= parameter on client.tables.create() (no pac solution add-solution-component call was needed for either table, consistent with layer 4's finding)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) with raw Web API for the rpo_ComputedAt DateTime column.",
+    "phasedCreation": "Both tables created first, waited 30s, then non-lookup columns (rpo_Rank, rpo_Score), waited 30s, then rpo_ComputedAt via raw Web API, waited 30s, then all 5 lookups created sequentially with ~20s pauses between each.",
+    "noNewGotchas": "The documented gotchas from layers 3/4 (systemuser lookup relationship naming, DateTime column creation) were applied proactively from the start this time and both worked cleanly on first attempt -- no delete+recreate cycles were needed."
+  }
+}
