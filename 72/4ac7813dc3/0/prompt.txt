@@ -1,0 +1,38 @@
+You are layer 6 of 9 in a stacked-PR build-out of the Poutine League Dataverse data model (see AGENTS.md, PRODUCT.md, ARCHITECTURE.md at repo root). This session implements the **Season** table only. Do not touch any other table.
+
+## Context you must read first
+- `ARCHITECTURE.md` §1 (Data model) — the Season table's exact fields/types per the ER diagram.
+- `PRODUCT.md` — for context on what a "season" means in the gamification model (a recurring competition period).
+- `docs/dev-solution-conventions.md` — naming conventions.
+- `AGENTS.md` — routing rules (always use skills, never raw pac/API calls unless the skill's own tool priority is exhausted).
+
+## Environment/solution context (already resolved, reuse directly — do not re-resolve)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: poutineleaguecore (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: rpo
+- This is a single unmanaged Dev solution; tables from layers 1-5 (Restaurant, Tag, Poutine Submission, Try, Review) already exist in this same Dev environment with real sample data, since each prior layer applied its changes directly to Dev. You do NOT need to recreate them, but you can query them if useful for context (not needed for Season, which is standalone).
+
+## Branch / stacking
+You are on a fresh branch already stacked on `rpothin-feat-data-review-table` (layer 5's branch, itself stacked on layer 4, etc. — do not rebase or retarget). When you open your PR, it MUST target `rpothin-feat-data-review-table` as the base branch (use `gh-stack` tooling, not a manual `gh pr create` with base=main). Rename your branch to something descriptive like `rpothin-feat-data-season-table` early on (via the rename_branch tool) if it hasn't already been set.
+
+## Reusable gotchas discovered by prior layers (read before you start — avoids repeating known failures)
+1. **Solution attachment**: the Python Dataverse SDK's `client.tables.create(..., solution=...)` does not reliably auto-attach the new table to the `poutineleaguecore` solution's component list — it can silently land only in the org Default Solution instead. After creating the table, EXPLICITLY verify it's a member of `poutineleaguecore` (e.g. query solutioncomponents or use pac solution list-components-equivalent check) and if missing, run `pac solution add-solution-component --component <table-logical-name> --componentType 1` (componentType 1 = Entity) to attach it, then re-verify.
+2. **DateTime columns**: if Season needs a Start Date / End Date (check ARCHITECTURE.md for exact field names/types), creating a DateTime column via the SDK's generic `add_columns()`/`create()` with a plain `"datetime"` type string leaves `DateTimeBehavior` unset, which later breaks metadata operations on the entity with errors like `"Failure in generation Filtered<table>..."`. Neither entity-scoped nor org-wide Publish fixes this after the fact. Workaround: create DateTime columns via a raw Web API call with explicit `Format` (e.g. `DateOnly` or `DateAndTime` per the field's actual semantics) and `DateTimeBehavior` (e.g. `DateOnly` behavior for pure dates, `UserLocal` for date+time) set correctly from the start.
+3. **Choice/status columns**: if Season has a status choice column (e.g. Active/Closed per ARCHITECTURE.md), use the standard dv-metadata choice-column creation flow (global or local choice set as appropriate) — no known gotcha here, just documenting since Season is expected to have one.
+
+## Your workflow (same 5 phases every layer follows)
+1. **Schema configuration** (`data-management` → `dv-metadata` sub-skill): Check first whether `rpo_Season` (or your best schema-name guess before creation) already exists — it should NOT yet. Create the table and its columns/choices exactly as ARCHITECTURE.md specifies for Season under the `rpo` prefix. Verify solution attachment per gotcha #1. Save any generated schema-definition artifacts under `data/` per the skill's naming convention (`YYYYMMDD_HHMMSS_<desc>.<ext>`).
+2. **Sample data population** (`data-management` → `dv-query` + `dv-data`): Author a seed CSV/JSON under `data/` with the same timestamp-naming convention. Decide the sample volume yourself — enough seasons to make the demo feel populated (e.g. 2-3 seasons: at least one Closed/past season and one Active/current season) without being excessive. Season is standalone (no FK to other tables), so no cross-table resolution needed.
+3. **Validation**: Re-check the created table/columns/choices against ARCHITECTURE.md's ERD field-by-field (names, types, required-ness). Spot-query the seeded data via `dv-query` to confirm row counts and that choice values are correct. Run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** (`solution-management` skill): Sync the solution locally (pull latest customizations for the Season table into the unpacked `solutions/poutineleaguecore/` folder), bump the SemVer version (MINOR bump — new table; current version should be 1.5.0 after layer 5, so bump to 1.6.0 — verify the actual current version from `solutions/poutineleaguecore/Other/Solution.xml` rather than trusting this number blindly), run the solution checker, resolve/waive any Critical/High findings, then pack (`make solution-gate`).
+5. **Entire traceability + stacked PR**: Run the mandatory Entire protocol exactly as documented in AGENTS.md (`entire-observe` → `entire-link-dry` → `entire-link-apply`[-unsafe with explicit SESSION_ID if needed] → `entire-stack-finalize`) as the LAST step before pushing. Then commit, push via `gh-stack`, and open a PR whose base branch is `rpothin-feat-data-review-table` (layer 5), titled like `feat(data): configure Season table + sample data (layer 6/9)`.
+
+## Boundaries
+- Do not modify Restaurant/Tag/Poutine Submission/Try/Review schema or data — those layers are already complete and under review as separate stacked PRs.
+- Do not edit PRODUCT.md/ARCHITECTURE.md/DESIGN.md without stopping and asking the human first (per AGENTS.md governance) — only if you find a genuine divergence between ARCHITECTURE.md and what you're building.
+- Never commit environment-specific GUIDs (systemuser IDs, environment IDs, solution IDs) into tracked files — not applicable here since Season has no systemuser lookups, but keep in mind for consistency.
+- Route everything through skills (`data-management`, `solution-management`) — avoid raw `pac`/Web API calls except as documented workarounds above or when the skill's own tool priority is exhausted.
+
+## Reporting back
+When you finish (PR opened successfully) OR if you hit a blocker you can't resolve, message back to this coordinating session (project_session_id df0089ba-085d-44ca-9a1f-9f7ca29fdff3) with a concise status: PR number/link, solution version before/after, table+columns created, sample row count, and any NEW gotchas discovered (so they can be passed to layer 7). Do not wait idle for a review or approval — once your PR is opened and you've reported back, your work here is done.
