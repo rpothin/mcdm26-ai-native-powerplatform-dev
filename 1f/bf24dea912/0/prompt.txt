@@ -1,0 +1,38 @@
+You are layer 7 of 9 in a stacked-PR build-out of the Poutine League Dataverse data model (see AGENTS.md, PRODUCT.md, ARCHITECTURE.md at repo root). This session implements the **Category** table only. Do not touch any other table.
+
+## Context you must read first
+- `ARCHITECTURE.md` §1 (Data model) — the Category table's exact fields/types per the ER diagram.
+- `PRODUCT.md` — find the 4 launch gamification categories (expected to be named something like Best Seller, Top Poutine, Best Supporter, Best Critic — verify exact names/descriptions from the doc itself, don't trust this paraphrase) that must be seeded as Category sample data.
+- `docs/dev-solution-conventions.md` — naming conventions.
+- `AGENTS.md` — routing rules (always use skills, never raw pac/API calls unless the skill's own tool priority is exhausted).
+
+## Environment/solution context (already resolved, reuse directly — do not re-resolve)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: poutineleaguecore (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: rpo
+- This is a single unmanaged Dev solution; tables from layers 1-6 (Restaurant, Tag, Poutine Submission, Try, Review, Season) already exist in this same Dev environment with real sample data. You do NOT need to recreate them. Category is standalone (no FK to other tables), so no cross-table resolution needed for this layer.
+
+## Branch / stacking
+You are on a fresh branch already stacked on `rpothin-feat-data-season-table` (layer 6's branch, itself stacked on layer 5, 4, 3, 2, 1 — do not rebase or retarget). When you open your PR, it MUST target `rpothin-feat-data-season-table` as the base branch (use `gh-stack` tooling: `gh stack link` or the project's stacked-PR flow — NOT a manual `gh pr create` with base=main). Rename your branch to something descriptive like `rpothin-feat-data-category-table` early on (via the rename_branch tool) if it hasn't already been set.
+
+## Reusable gotchas discovered by prior layers (read before you start — avoids repeating known failures)
+1. **Solution attachment**: the Python Dataverse SDK's `client.tables.create(..., solution=...)` does not reliably auto-attach the new table to the `poutineleaguecore` solution's component list — it can silently land only in the org Default Solution instead. After creating the table, EXPLICITLY verify it's a member of `poutineleaguecore` and if missing, run `pac solution add-solution-component --component <table-logical-name> --componentType 1` (componentType 1 = Entity) to attach it, then re-verify.
+2. **DateTime columns**: not expected to apply to Category, but if you add any date/time field, creating it via the SDK's generic `add_columns()`/`create()` with a plain `"datetime"` type string leaves `DateTimeBehavior` unset, breaking later metadata operations. Workaround: create via raw Web API call with explicit `Format` + `DateTimeBehavior` set from the start.
+3. **Choice columns**: if Category has a "computation type" field represented as a choice, use the standard dv-metadata choice-column creation flow (global or local choice set as appropriate).
+
+## Your workflow (same 5 phases every layer follows)
+1. **Schema configuration** (`data-management` → `dv-metadata` sub-skill): Check first whether `rpo_Category` already exists — it should NOT yet. Create the table and its columns exactly as ARCHITECTURE.md specifies for Category under the `rpo` prefix. Verify solution attachment per gotcha #1. Save any generated schema-definition artifacts under `data/` per the skill's naming convention (`YYYYMMDD_HHMMSS_<desc>.<ext>`).
+2. **Sample data population** (`data-management` → `dv-query` + `dv-data`): Author a seed CSV/JSON under `data/` with the same timestamp-naming convention. Seed EXACTLY the 4 launch categories named in `PRODUCT.md` (read the doc for exact names and descriptions — do not invent your own category names). Category is standalone, no cross-table resolution needed.
+3. **Validation**: Re-check the created table/columns against ARCHITECTURE.md's ERD field-by-field (names, types, required-ness). Spot-query the seeded data via `dv-query` to confirm exactly 4 rows matching PRODUCT.md's category list. Run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** (`solution-management` skill): Sync the solution locally, bump the SemVer version (MINOR bump — new table; verify the actual current version from `solutions/poutineleaguecore/Other/Solution.xml` rather than assuming a number), run the solution checker, resolve/waive any Critical/High findings, then pack (`make solution-gate`).
+5. **Entire traceability + stacked PR**: Run the mandatory Entire protocol exactly as documented in AGENTS.md (`entire-observe` → `entire-link-dry` → `entire-link-apply`[-unsafe with explicit SESSION_ID if needed] → `entire-stack-finalize`) as the LAST step before pushing. Then commit, push, and open a PR whose base branch is `rpothin-feat-data-season-table` (layer 6), titled like `feat(data): configure Category table + sample data (layer 7/9)`. After the PR opens, note its number back to the coordinator so it can be linked into GitHub stack #20 via `gh stack link 20 <pr-number>` (the coordinator handles this, but confirming the PR number promptly helps).
+
+## Boundaries
+- Do not modify Restaurant/Tag/Poutine Submission/Try/Review/Season schema or data — those layers are already complete and under review as separate stacked PRs.
+- Do not edit PRODUCT.md/ARCHITECTURE.md/DESIGN.md without stopping and asking the human first (per AGENTS.md governance) — only if you find a genuine divergence between ARCHITECTURE.md and what you're building.
+- Never commit environment-specific GUIDs into tracked files.
+- Route everything through skills (`data-management`, `solution-management`) — avoid raw `pac`/Web API calls except as documented workarounds above or when the skill's own tool priority is exhausted.
+
+## Reporting back
+When you finish (PR opened successfully) OR if you hit a blocker you can't resolve, message back to this coordinating session (project_session_id df0089ba-085d-44ca-9a1f-9f7ca29fdff3) with a concise status: PR number/link, solution version before/after, table+columns created, sample row count (should be 4), and any NEW gotchas discovered (so they can be passed to layer 8). Do not wait idle for a review or approval — once your PR is opened and you've reported back, your work here is done.
