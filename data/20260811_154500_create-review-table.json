@@ -1,0 +1,83 @@
+{
+  "description": "Schema definition used to create the Review table (layer 5/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md \u00a71 (Data model), REVIEW entity block and ER diagram (TRY ||--o| REVIEW : \"rated by\"). Review = a star rating (1-5) plus comment left after a Try, with an AI-assessed helpfulness score populated later by a backend agent (out of scope here, left null).",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_Review",
+    "logicalName": "rpo_review",
+    "entitySetName": "rpo_reviews",
+    "metadataId": "49fe945c-59b7-4cb1-ba0f-82ce960409e9",
+    "displayName": "Review",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_reviewid",
+    "purpose": "Rating + comment left after a Try. Links a Try (layer 4) to the reviewer (systemuser), carries a required star rating (1-5), an optional multiline comment, and a nullable AI-assessed helpfulness score populated later by the Review Quality backend agent (out of scope for this layer)."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "notes": "Primary name column, auto-created with the table. No natural name exists for a Review record; seed data composes '<Try name> reviewed by <employee>' as the value."
+    },
+    {
+      "logicalName": "rpo_starrating",
+      "schemaName": "rpo_StarRating",
+      "displayName": "Star Rating",
+      "type": "Integer",
+      "requiredLevel": "ApplicationRequired",
+      "minValue": 1,
+      "maxValue": 5,
+      "notes": "See NEW GOTCHA in creationMethod below -- RequiredLevel and Min/MaxValue are not exposed by the SDK's generic 'int' type string and had to be set via a raw Web API PUT after column creation."
+    },
+    {
+      "logicalName": "rpo_comment",
+      "schemaName": "rpo_Comment",
+      "displayName": "Comment",
+      "type": "Memo",
+      "requiredLevel": "None",
+      "notes": "Multiline text. Must use the SDK's 'memo' type string in add_columns() -- the generic 'string' type string creates a single-line text column instead. This column was initially created as 'string' by mistake, then deleted and recreated as 'memo'."
+    },
+    {
+      "logicalName": "rpo_helpfulnessscore",
+      "schemaName": "rpo_HelpfulnessScore",
+      "displayName": "Helpfulness Score",
+      "type": "Decimal",
+      "requiredLevel": "None",
+      "notes": "AI-assessed helpfulness score. Nullable/optional by design -- populated later by the Review Quality backend agent (out of scope for this layer). Left null for all sample rows seeded here."
+    }
+  ],
+  "lookups": [
+    {
+      "logicalName": "rpo_tryid",
+      "schemaName": "rpo_TryId",
+      "displayName": "Try",
+      "referencedTable": "rpo_try",
+      "required": true,
+      "relationshipSchemaName": "rpo_try_rpo_review_rpo_TryId",
+      "creationMethod": "client.tables.create_lookup_field() -- worked as-is because the referenced table (rpo_try) already carries the rpo customization prefix, so the SDK's auto-generated relationship schema name is valid."
+    },
+    {
+      "logicalName": "rpo_reviewerid",
+      "schemaName": "rpo_ReviewerId",
+      "displayName": "Reviewer",
+      "referencedTable": "systemuser",
+      "referencedAttribute": "systemuserid",
+      "required": true,
+      "relationshipSchemaName": "rpo_Review_Reviewer",
+      "creationMethod": "client.tables.create_lookup_field() FAILS for lookups to systemuser (documented gotcha from prior layers: auto-generated relationship schema name lacks a customization prefix). Worked around by calling client.tables.create_one_to_many_relationship() directly with LookupAttributeMetadata + OneToManyRelationshipMetadata, supplying an explicit rpo_-prefixed relationship schema name ('rpo_Review_Reviewer'), matching the rpo_Try_Employee pattern from layer 4."
+    }
+  ],
+  "solutionAttachment": {
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 and confirmed the rpo_review table (metadata GUID 49fe945c-59b7-4cb1-ba0f-82ce960409e9) is present in poutineleaguecore, attached automatically via the solution= parameter on client.tables.create() (no pac solution add-solution-component call was needed). Confirmed both rpo_try_rpo_review_rpo_TryId and rpo_Review_Reviewer relationships appear in the final pac solution export used for this PR (solutions/poutineleaguecore/Other/Relationships/rpo_Try.xml and Relationships/SystemUser.xml)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) with raw Web API fallback for RequiredLevel/Min/MaxValue on rpo_starrating.",
+    "phasedCreation": "Table + rpo_StarRating/rpo_Comment/rpo_HelpfulnessScore columns first, then a fixup pass (delete+recreate rpo_Comment as memo; raw Web API PUT for rpo_StarRating constraints), then both lookups, waiting for metadata propagation between phases.",
+    "newGotcha_requiredLevelAndMinMax": "Creating an Integer column via the SDK's generic add_columns()/create() 'int' type string does not expose RequiredLevel or MinValue/MaxValue -- the column is created as optional with the SDK's default numeric range. Fix: raw Web API PUT to EntityDefinitions(LogicalName='rpo_review')/Attributes(LogicalName='rpo_starrating')/Microsoft.Dynamics.CRM.IntegerAttributeMetadata with RequiredLevel.Value='ApplicationRequired', MinValue=1, MaxValue=5, plus the MSCRM.SolutionName header. This succeeded (204 response). Recommendation for future layers: always set RequiredLevel and Min/MaxValue on Integer/Decimal columns via raw Web API immediately after creation via the SDK, rather than relying on generic type-string parameters.",
+    "newGotcha_memoTypeString": "The SDK's generic 'string' type string in add_columns() always creates a single-line text (String) column, never multiline (Memo) -- there is no format parameter to request multiline via the generic string type. Use the 'memo' type string explicitly instead. rpo_Comment was initially created with 'string' by mistake and had to be deleted and recreated with 'memo'.",
+    "verificationLimitation": "client.tables.list_columns() does not support MinValue/MaxValue in select= on the base AttributeMetadata type (400 error: \"Could not find a property named 'MinValue'\"). Min/Max constraint success was confirmed via the raw Web API PUT's 204 response only, not re-verified by reading it back with a type-cast query."
+  }
+}
