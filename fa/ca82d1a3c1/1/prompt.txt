@@ -1,0 +1,43 @@
+You are layer 5 of a 9-layer stacked-PR build-out of the Dataverse data model for the Poutine League product, in the `poutineleaguecore` solution. Your branch is stacked ON TOP OF layer 4's branch `rpothin-feat-data-try-table` (PR #18, Try table, solution version 1.4.0), which stacks on layers 3 (Poutine Submission), 2 (Tag), and 1 (Restaurant). Layer 6 (Season table) will stack on top of YOUR branch once you finish. Do NOT wait for human review/approval of your PR before finishing your turn — open the PR and end your work; a coordinator session will move on to the next layer as soon as you're done.
+
+## Required reading before acting
+- `AGENTS.md` (repo root) — way-of-working, skill-first policy, boundaries, mandatory Entire traceability protocol.
+- `ARCHITECTURE.md` §1 (Data model) — schema source of truth for the Review table, including the ER diagram (REVIEW entity block).
+- `docs/dev-solution-conventions.md` — solution/publisher naming conventions.
+
+## Scope for this layer: Review table ONLY
+Per `ARCHITECTURE.md` §1, Review is "Rating + comment left after a Try" with: star rating (1-5), comment text, lookup to Try (and/or Poutine Submission per the ER diagram — the ER diagram shows `TRY ||--o| REVIEW : "rated by"` and Review has `tryid FK`, so lookup to Try is primary), lookup to reviewer (systemuser), AI-assessed helpfulness score (nullable, populated later by a backend agent — create the column but leave it null in sample data). The Try table (`rpo_try`, layer 4) already exists in Dev with 12 sample tries — use real records for lookups.
+
+Author as a custom table under the `rpo` publisher prefix:
+- Lookup to `rpo_try` (required) — e.g. `rpo_tryid`
+- Lookup to `systemuser` for the reviewer (required) — e.g. `rpo_reviewerid`
+- `rpo_starrating` (Whole Number, 1-5, required)
+- `rpo_comment` (String, multiline)
+- `rpo_helpfulnessscore` (Decimal, nullable — AI-assessed, populated later by the Review Quality backend agent, out of scope here; leave null for all sample rows)
+
+## IMPORTANT: known gotchas from earlier layers (avoid repeating them)
+1. **systemuser lookup**: the SDK's `create_lookup_field()` convenience wrapper auto-generates an invalid relationship schema name when the lookup target is a built-in table with no customization prefix (e.g. `systemuser`). Workaround: call `create_one_to_many_relationship()` directly with an explicit `rpo_`-prefixed relationship name (e.g. `rpo_Review_Reviewer`) for the reviewer lookup. The lookup to `rpo_try` (a custom table) does not have this problem.
+2. **Solution attachment**: verify the new table (and any new relationships) actually land in the `poutineleaguecore` solution's `solutioncomponent` list, not just the org Default Solution — use `pac solution add-solution-component` if the SDK's `solution=` parameter doesn't auto-attach.
+3. This layer has no DateTime column, but if you add any timestamp column for any reason, create it via raw Web API with an explicit `Format` + `DateTimeBehavior` (a generic `"datetime"` type string via `add_columns()`/`create()` leaves `DateTimeBehavior` unset and breaks later metadata operations).
+
+## Environment / solution scope (already resolved — use directly, do not re-ask)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: `poutineleaguecore` (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: `rpo`
+- Current solution version after layer 4: 1.4.0 (you will bump to 1.5.0)
+
+## Workflow (use the `data-management` and `solution-management` skills)
+1. **Schema configuration** — invoke `data-management` → `dv-metadata`. Check-first the table doesn't already exist. Author the table, its lookups (using the direct-relationship workaround for the reviewer lookup), star rating, comment, and helpfulness score columns. Verify solution-component attachment. Save schema artifacts to `data/` (naming convention `YYYYMMDD_HHMMSS_<desc>.<ext>`).
+2. **Sample data population** — via `dv-query`, list the real Try records (12 available from layer 4) and real active Dev systemusers (resolve by email, same pattern as prior layers — **do not hardcode systemuser GUIDs in committed CSVs**). Author a seed CSV in `data/` with a reasonable number of review records (your judgment on count, up to 12 since each Try can have at most one Review per the ER diagram's `TRY ||--o| REVIEW` optional one-to-one), varied star ratings (1-5) and plausible comments, `rpo_helpfulnessscore` left blank/null for all rows.
+3. **Validation** — re-check table/columns/relationships against `ARCHITECTURE.md`, spot-query seeded records via `dv-query` (row count, no orphaned lookups, star ratings in range 1-5, helpfulness score null), run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** — sync, bump SemVer MINOR (1.4.0 → 1.5.0), solution checker (resolve/flag Critical/High), pack (`make solution-gate`).
+5. **Entire traceability protocol (mandatory, LAST step before pushing)** — `make entire-observe` → `make entire-link-dry` → `make entire-link-apply` (or `-apply-unsafe SESSION_ID=...` if blocked) → `make entire-stack-finalize`.
+6. **Stacked PR** — commit, push, open PR with base branch `rpothin-feat-data-try-table` (stacks on layer 4) titled `feat(data): configure Review table + sample data (layer 5/9)`. Note this is layer 5/9 and list everything created.
+
+## Boundaries (from AGENTS.md)
+- Never commit secrets, real connection reference IDs, or raw environment-specific GUIDs into tracked files.
+- Work only inside the unpacked `solutions/poutineleaguecore/` folder; never hand-edit `Other/` files.
+- Dev-only work already approved for this build-out.
+
+When finished (PR opened), reply back summarizing: table/columns/relationships created, sample review count + rating distribution, solution version, and the PR URL/branch name, so the coordinator can start layer 6 (Season) stacked on your branch.
