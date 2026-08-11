@@ -1,0 +1,66 @@
+{
+  "description": "Schema definition used to create the Try table (layer 4/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md \u00a71 (Data model), TRY entity block. Try = an employee self-declaring they tried a poutine: lookup to Poutine Submission (layer 3), lookup to the employee (systemuser), and a timestamp.",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_Try",
+    "logicalName": "rpo_try",
+    "entitySetName": "rpo_tries",
+    "metadataId": "f7ec76ae-bfab-4d7e-a082-39f5da5fbf4b",
+    "displayName": "Try",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_tryid",
+    "purpose": "An employee self-declaring they tried a poutine. Links a Poutine Submission (layer 3) to the employee (systemuser) who tried it, with a timestamp of when."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "notes": "Primary name column, auto-created with the table. No natural name exists for a Try record, so seed data composes '<Poutine name> tried by <employee>' as the value."
+    },
+    {
+      "logicalName": "rpo_triedon",
+      "schemaName": "rpo_TriedOn",
+      "displayName": "Tried On",
+      "type": "DateTime",
+      "format": "DateAndTime",
+      "dateTimeBehavior": "UserLocal",
+      "requiredLevel": "ApplicationRequired",
+      "notes": "Timestamp of the try. See NEW GOTCHA in creationMethod below -- this column had to be deleted and recreated via raw Web API after the SDK's generic 'datetime' type string left DateTimeBehavior unset."
+    }
+  ],
+  "lookups": [
+    {
+      "logicalName": "rpo_poutinesubmissionid",
+      "schemaName": "rpo_PoutineSubmissionId",
+      "displayName": "Poutine Submission",
+      "referencedTable": "rpo_poutinesubmission",
+      "required": true,
+      "relationshipSchemaName": "rpo_poutinesubmission_rpo_try_rpo_PoutineSubmissionId",
+      "creationMethod": "client.tables.create_lookup_field() -- worked as-is because the referenced table (rpo_poutinesubmission) already carries the rpo customization prefix, so the SDK's auto-generated relationship schema name is valid."
+    },
+    {
+      "logicalName": "rpo_employeeid",
+      "schemaName": "rpo_EmployeeId",
+      "displayName": "Employee",
+      "referencedTable": "systemuser",
+      "referencedAttribute": "systemuserid",
+      "required": true,
+      "relationshipSchemaName": "rpo_Try_Employee",
+      "creationMethod": "client.tables.create_lookup_field() FAILS for lookups to systemuser (documented gotcha from layer 3: auto-generated relationship schema name lacks a customization prefix). Worked around by calling client.tables.create_one_to_many_relationship() directly with LookupAttributeMetadata + OneToManyRelationshipMetadata, supplying an explicit rpo_-prefixed relationship schema name ('rpo_Try_Employee')."
+    }
+  ],
+  "solutionAttachment": {
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 and confirmed the rpo_try table (metadata GUID f7ec76ae-bfab-4d7e-a082-39f5da5fbf4b) is present in poutineleaguecore, attached automatically via the solution= parameter on client.tables.create() (no pac solution add-solution-component call was needed this time, unlike layers 1-3). Relationship components (componenttype=10) are not independently listed in solutioncomponent -- consistent with layers 1-3's finding that RootComponentBehavior 'Include Subcomponents' on the parent table implies relationship export without a separate solutioncomponent row. Confirmed both rpo_poutinesubmission_rpo_try_rpo_PoutineSubmissionId and rpo_Try_Employee appear in the final pac solution export used for this PR (solutions/poutineleaguecore/Other/Relationships/SystemUser.xml and rpo_PoutineSubmission.xml)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) with raw Web API fallback for the rpo_triedon DateTime column.",
+    "phasedCreation": "Table + rpo_TriedOn column first, then both lookups, waiting ~90-120s between phases for metadata propagation (longer than the skill's 15-30s baseline in this environment, consistent with layer 3's note).",
+    "newGotcha_dateTimeBehavior": "Creating a DateTime column via the SDK's generic add_columns()/create() 'datetime' type string leaves DateTimeAttributeMetadata.DateTimeBehavior unset (None), even though Format shows DateOnly/DateAndTime. This invalid state causes any subsequent metadata operation on the entity (e.g. create_lookup_field(), create_one_to_many_relationship()) to fail with 'Failure in generation Filteredrpo_Try for attribute rpo_triedon. Verify metadata for that attribute.' -- Dataverse trying and failing to regenerate the entity's FilteredView SQL view. Neither entity-scoped PublishXml nor org-wide PublishAllXml fixes this. Fix: DELETE the broken attribute via raw Web API, then recreate it via raw Web API POST to EntityDefinitions(LogicalName='rpo_try')/Attributes with an explicit DateTimeAttributeMetadata body including Format: 'DateAndTime' and DateTimeBehavior: {Value: 'UserLocal'}, plus the MSCRM.SolutionName header. Recommendation for future layers: always create DateTime/timestamp columns via raw Web API with an explicit DateTimeBehavior, never via the SDK's generic 'datetime' type string, to avoid this failure mode and the propagation-wait cycles it costs.",
+    "redHerring": "IsRetrievable/IsFilterable/IsSearchable on the DateTime attribute stayed False throughout, including after the fix worked and both lookups were created successfully -- these flags are not a reliable readiness signal for DateTime columns in this environment."
+  }
+}
