@@ -1,0 +1,31 @@
+You are layer 2 of a 9-layer stacked-PR build-out of the Dataverse data model for the Poutine League product, in the `poutineleaguecore` solution. Your branch is stacked ON TOP OF layer 1's branch `rpothin-feat-data-restaurant-table` (which already added the Restaurant table + sample data, PR #15, solution version 1.1.0). Layer 3 (Poutine Submission table) will stack on top of YOUR branch once you finish. Do NOT wait for human review/approval of your PR before finishing your turn — open the PR and end your work; a coordinator session will move on to the next layer as soon as you're done.
+
+## Required reading before acting
+- `AGENTS.md` (repo root) — way-of-working, skill-first policy, boundaries, mandatory Entire traceability protocol.
+- `ARCHITECTURE.md` §1 (Data model) — schema source of truth for the Tag table.
+- `docs/dev-solution-conventions.md` — solution/publisher naming conventions.
+
+## Scope for this layer: Tag table ONLY
+Per `ARCHITECTURE.md` §1, Tag is a "Descriptive tag (classic, smoked meat, vegan, spicy, …)" with key field: Name. It has a many-to-many relationship with Poutine Submission, but that N:N relationship and the Poutine Submission table itself do NOT exist yet — they will be created in layer 3. For THIS layer, just create the standalone Tag table with its Name column; do not attempt to create the N:N relationship yet (Poutine Submission doesn't exist). Author it as a custom table under the `rpo` publisher prefix, in the `poutineleaguecore` solution.
+
+## Environment / solution scope (already resolved — use directly, do not re-ask)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: `poutineleaguecore` (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: `rpo`
+- Current solution version after layer 1: 1.1.0 (you will bump to 1.2.0)
+
+## Workflow (use the `data-management` and `solution-management` skills — do NOT call `pac`/dv plugin tools ad hoc; always invoke the skill first)
+1. **Schema configuration** — invoke the `data-management` skill. Check-first whether the Tag table already exists (it should not). Author the table and its Name column via `dv-metadata`, and explicitly verify the table is attached to the `poutineleaguecore` solution's `solutioncomponent` list (not just the org Default Solution) — layer 1 discovered the SDK's `create(..., solution=...)` param doesn't always auto-attach; use `pac solution add-solution-component` if needed and re-verify. Save generated schema-definition artifacts to `data/` per the skill's naming convention (`YYYYMMDD_HHMMSS_<desc>.<ext>`).
+2. **Sample data population** — via `dv-data`, author a seed CSV in `data/` with a reasonable set of poutine-relevant tags (e.g. classic, smoked meat, vegan, spicy, poutine-italienne, foie gras, curly fries, etc. — use your judgment on count) and import them.
+3. **Validation** — re-check the created table/column against `ARCHITECTURE.md`, spot-query seeded records via `dv-query` to confirm row count and no duplicate tag names, and run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** — invoke `solution-management`: sync locally, bump SemVer version (MINOR — new table, 1.1.0 → 1.2.0), run the solution checker (resolve/flag any Critical/High findings), then pack (`make solution-gate`).
+5. **Entire traceability protocol (mandatory, run as the LAST step before pushing)** — `make entire-observe` → `make entire-link-dry` → `make entire-link-apply` (or `make entire-link-apply-unsafe SESSION_ID=<runtime-session-id>` if apply is blocked) → `make entire-stack-finalize`. Do not skip this.
+6. **Stacked PR** — commit, push, and open a PR with base branch `rpothin-feat-data-restaurant-table` (NOT `main` — this stacks on layer 1) titled `feat(data): configure Tag table + sample data (layer 2/9)`. In the body, note this is layer 2/9 and list what was created (table, column, sample tag count, solution version bump).
+
+## Boundaries (from AGENTS.md)
+- Never commit secrets, real connection reference IDs, or environment-specific GUIDs beyond what's already documented.
+- Work only inside the unpacked `solutions/poutineleaguecore/` folder; never hand-edit `Other/` files or packed `.zip`.
+- Dev-only work already approved for this build-out — no need to ask before writing to Dev.
+
+When finished (PR opened), reply back summarizing: table/column created, sample tag count, solution version, and the PR URL/branch name, so the coordinator can start layer 3 (Poutine Submission) stacked on your branch.
