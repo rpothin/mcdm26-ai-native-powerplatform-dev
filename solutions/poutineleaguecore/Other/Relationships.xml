@@ -1,9 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <EntityRelationship Name="business_unit_rpo_restaurant" />
+  <EntityRelationship Name="business_unit_rpo_tag" />
   <EntityRelationship Name="lk_rpo_restaurant_createdby" />
   <EntityRelationship Name="lk_rpo_restaurant_modifiedby" />
+  <EntityRelationship Name="lk_rpo_tag_createdby" />
+  <EntityRelationship Name="lk_rpo_tag_modifiedby" />
   <EntityRelationship Name="owner_rpo_restaurant" />
+  <EntityRelationship Name="owner_rpo_tag" />
   <EntityRelationship Name="team_rpo_restaurant" />
+  <EntityRelationship Name="team_rpo_tag" />
   <EntityRelationship Name="user_rpo_restaurant" />
+  <EntityRelationship Name="user_rpo_tag" />
 </EntityRelationships>
