@@ -48,24 +48,24 @@ the values in this document plus the GitHub variables above — never commit it.
 
 ## Versioning ([Semantic Versioning](https://semver.org/))
 
-The `poutineleaguecore` solution version follows SemVer, mapped onto Dataverse's mandatory
-4-segment `Major.Minor.Build.Revision` format (SemVer only defines `MAJOR.MINOR.PATCH`):
+The `poutineleaguecore` solution version follows SemVer. Dataverse's solution version format
+(`Major.Minor.Build`) maps 1:1 onto SemVer's `MAJOR.MINOR.PATCH` — no reserved or padded
+segment needed.
 
 | SemVer | Dataverse segment | Bump when |
 |---|---|---|
 | `MAJOR` | Major | Breaking change — removed/renamed component, breaking schema change |
 | `MINOR` | Minor | New backward-compatible feature — new table, column, flow, agent, app |
 | `PATCH` | Build (3rd segment) | Backward-compatible fix |
-| *(none — SemVer has no 4th part)* | Revision (4th segment) | Always `0`; required by Dataverse's format but has no SemVer meaning |
 
-Current version: `1.0.0.0` (initial release — MAJOR=1, MINOR=0, PATCH=0, Revision=0).
+Current version: `1.0.0` (initial release — MAJOR=1, MINOR=0, PATCH=0).
 
 Bump the version **in the Dev environment first** (source of truth for the live solution
 record), then re-sync locally so `solutions/poutineleaguecore/Other/Solution.xml` picks up the
 change — never hand-edit that file directly:
 
 ```powershell
-pac solution online-version --environment $(gh variable get DEV_ENVIRONMENT_URL --repo rpothin/mcdm26-ai-native-powerplatform-dev) --solution-name poutineleaguecore --solution-version <Major.Minor.Patch.0>
+pac solution online-version --environment $(gh variable get DEV_ENVIRONMENT_URL --repo rpothin/mcdm26-ai-native-powerplatform-dev) --solution-name poutineleaguecore --solution-version <Major.Minor.Patch>
 ```
 
 See the `solution-management` skill's "Solution versioning" section for the full workflow.

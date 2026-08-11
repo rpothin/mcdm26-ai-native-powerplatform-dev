@@ -87,22 +87,21 @@ Goal: keep local solution files current with the Dev environment state.
 ### Solution versioning ([Semantic Versioning](https://semver.org/))
 
 Goal: keep the solution's version meaningful and monotonically increasing, using SemVer
-semantics mapped onto Dataverse's mandatory 4-segment version format
-(`Major.Minor.Build.Revision` — SemVer only defines `MAJOR.MINOR.PATCH`).
+semantics. Dataverse's solution version format (`Major.Minor.Build`) maps 1:1 onto SemVer's
+`MAJOR.MINOR.PATCH` — no reserved or padded segment needed.
 
 | SemVer | Dataverse segment | Bump when |
 |---|---|---|
 | `MAJOR` | Major | Breaking change — removed/renamed component, breaking schema change |
 | `MINOR` | Minor | New backward-compatible feature — new table, column, flow, agent, app |
 | `PATCH` | Build (3rd segment) | Backward-compatible fix |
-| *(none — SemVer has no 4th part)* | Revision (4th segment) | Always `0` in this repo; Dataverse requires the segment, SemVer does not use it |
 
 **Bump the version in the Dev environment (source of truth), then re-sync locally** —
 never hand-edit `Other/Solution.xml` directly (it is tooling-managed, see Local clone and
 sync above):
 
 1. `dv-solution` — use if it exposes a version-bump operation.
-2. `pac solution online-version --environment <url> --solution-name <UniqueName> --solution-version <Major.Minor.Patch.0>` — primary fallback (CLI). Omit `--solution-version` to read the current online version.
+2. `pac solution online-version --environment <url> --solution-name <UniqueName> --solution-version <Major.Minor.Patch>` — primary fallback (CLI). Omit `--solution-version` to read the current online version.
 3. Re-sync/re-export the solution so the local unpacked `Other/Solution.xml` reflects the new version.
 
 Bump the version as part of any change that introduces a new component or a fix, before
