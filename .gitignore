@@ -7,6 +7,11 @@ code-apps/*/.env*
 !code-apps/*/.env.example
 
 # -------------------------------
+# Dataverse plugin local connection config
+# -------------------------------
+/.env
+
+# -------------------------------
 # Solution pack artifacts
 # -------------------------------
 /dist/
@@ -43,3 +48,13 @@ test-results/
 code-apps/*/playwright-report/
 code-apps/*/blob-report/
 code-apps/*/test-results/
+
+.claude/mcp_settings.json
+.token_cache.bin
+*.snk
+__pycache__/
+*.pyc
+solutions/*.zip
+plugins/**/bin/
+plugins/**/obj/
+

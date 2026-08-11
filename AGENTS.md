@@ -35,6 +35,25 @@ The demo product (**Poutine League**) is specified across three layered document
 
 These three foundational documents are **human-owned**. If a session finds one out of date (e.g., a new agent, table, or design token was introduced that isn't reflected), formulate the proposed change, present it to the user, and apply only after explicit approval — the same governance already required for `DESIGN.md` in the `app-implementation` skill.
 
+## Dev environment & solution resolution
+
+All Poutine League content lives in a single Dataverse solution in the Dev environment. Every
+new session (each running in a fresh, ephemeral worktree) should resolve this context up front
+instead of asking the user again:
+
+- **System-generated GUIDs** (environment URL/ID, solution ID) live in **GitHub repository
+  variables** — never in tracked files. Resolve with:
+  ```powershell
+  gh variable get DEV_ENVIRONMENT_URL --repo rpothin/mcdm26-ai-native-powerplatform-dev
+  gh variable get DEV_ENVIRONMENT_ID  --repo rpothin/mcdm26-ai-native-powerplatform-dev
+  gh variable get DEV_SOLUTION_ID     --repo rpothin/mcdm26-ai-native-powerplatform-dev
+  ```
+- **Human-chosen, stable names** (solution unique name, publisher prefix, etc.) live in
+  [`docs/dev-solution-conventions.md`](docs/dev-solution-conventions.md).
+
+Read both before invoking `solution-management`, `data-management`, `agent-implementation`,
+`app-implementation`, or `backend-process-implementation` for any Dev environment work.
+
 ## Way of working
 
 ### Skills first — always
