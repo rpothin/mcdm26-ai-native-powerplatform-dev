@@ -1,0 +1,1 @@
+Propose a plan for the creation of a solution in our Dev environment for the implementation of our product using the skills available to you and following best practices but also the safe persistence of key informations that will become usable in subsequent coding sessions to ensure all the work is done in the considered solution we will create in the considered Dev environment.
