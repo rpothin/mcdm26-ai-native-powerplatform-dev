@@ -1,0 +1,30 @@
+You are layer 1 of a 9-layer stacked-PR build-out of the Dataverse data model for the Poutine League product, in the `poutineleaguecore` solution. This branch is the BASE of the stack (branches off `main`); layer 2 (Tag table) will stack on top of your branch once you finish. Do NOT wait for human review/approval of your PR before finishing your turn — open the PR and end your work; a coordinator session will move on to the next layer as soon as you're done.
+
+## Required reading before acting
+- `AGENTS.md` (repo root) — way-of-working, skill-first policy, boundaries, mandatory Entire traceability protocol.
+- `ARCHITECTURE.md` §1 (Data model) — schema source of truth for the Restaurant table.
+- `docs/dev-solution-conventions.md` — solution/publisher naming conventions.
+
+## Scope for this layer: Restaurant table ONLY
+Per `ARCHITECTURE.md` §1, the Restaurant table represents "A Montreal restaurant/place where a poutine was found", with indicative key fields: Name, address, geocoded latitude/longitude, city area/neighborhood. Author it as a custom table under the `rpo` publisher prefix, in the `poutineleaguecore` solution unique name (see `docs/dev-solution-conventions.md`). No other tables exist yet in this solution — Restaurant has no dependencies on other custom tables.
+
+## Environment / solution scope (already resolved — use directly, do not re-ask)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: `poutineleaguecore` (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: `rpo`
+
+## Workflow (use the `data-management` and `solution-management` skills — do NOT call `pac`/dv plugin tools ad hoc; always invoke the skill first)
+1. **Schema configuration** — invoke the `data-management` skill. Have it check-first whether the Restaurant table already exists in the solution (it should not). Author the table and its columns (name, address, latitude, longitude, neighborhood/city area — decide reasonable Dataverse column types, e.g. decimal for lat/long) via `dv-metadata`. Save any generated schema-definition artifacts to `data/` per the skill's naming convention (`YYYYMMDD_HHMMSS_<desc>.<ext>`).
+2. **Sample data population** — via the same `data-management` skill (`dv-data`), author a seed CSV in `data/` with a reasonable number of real/plausible Montreal restaurants (use your judgment on how many — enough to feel populated for a demo, not exhaustive) and import them. This is a standalone table so no cross-table lookups are needed yet.
+3. **Validation** — re-check the created table/columns against the `ARCHITECTURE.md` field list (names, types), spot-query the seeded records via `dv-query` to confirm row count and data sanity, and run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** — invoke the `solution-management` skill: sync the solution locally, bump the SemVer version (MINOR — new table; ask nothing, just bump appropriately and record the new version), run the solution checker (resolve or clearly flag any Critical/High findings — do not pack over unresolved ones), then pack (`make solution-gate` or the skill's pack step).
+5. **Entire traceability protocol (mandatory, run as the LAST step before pushing)** — from this worktree root: `make entire-observe` → `make entire-link-dry` → `make entire-link-apply` (or `make entire-link-apply-unsafe SESSION_ID=<runtime-session-id>` if apply is blocked, per `AGENTS.md`) → `make entire-stack-finalize`. Do not skip this.
+6. **Stacked PR** — commit your changes (all changes go through a PR per `AGENTS.md`, never direct to `main`), push the branch, and open a PR against `main` (this is the base layer of the stack) titled something like `feat(data): configure Restaurant table + sample data (layer 1/9)`. In the PR body, note this is layer 1 of a 9-table Dataverse stacked build-out and list what was created (table, columns, sample data row count, solution version bump).
+
+## Boundaries (from AGENTS.md — do not violate)
+- Never commit secrets, real connection reference IDs, or other environment-specific GUIDs into tracked files (the environment/solution GUIDs above are for your own tool calls only, not for embedding in committed code/docs beyond what already exists in `docs/dev-solution-conventions.md`/GitHub variables).
+- Work only inside the unpacked `solutions/poutineleaguecore/` folder structure; never hand-edit packed `.zip` or `customizations.xml`; never hand-edit `Other/` files (tooling-managed).
+- This is Dev-only work already approved by the human for this build-out — you do not need to ask before writing to Dev.
+
+When finished (PR opened), reply back summarizing: table/columns created, sample data row count, solution version, and the PR URL/branch name, so the coordinator can start layer 2 (Tag table) stacked on your branch.
