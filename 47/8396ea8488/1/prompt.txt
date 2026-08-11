@@ -1,0 +1,40 @@
+You are layer 9 of 9 (the FINAL layer) in a stacked-PR build-out of the Poutine League Dataverse data model (see AGENTS.md, PRODUCT.md, ARCHITECTURE.md at repo root). This session implements the **Hall of Fame Entry** table only.
+
+## Context you must read first
+- `ARCHITECTURE.md` §1 (Data model) — Hall of Fame Entry row: "All-time winners, archived at season close... Lookup to Season, lookup to Category, winner (employee or poutine), badge/title text."
+- `docs/dev-solution-conventions.md` — naming conventions.
+- `AGENTS.md` — routing rules.
+
+## Design note (simpler than layer 8's Season Result — do NOT copy that pattern)
+Unlike `Season Result` (which stores a full ranked LIST and needed a child table), `Hall of Fame Entry` stores exactly ONE winner per season+category (the top-1, crowned at season close). This does NOT need a child table — model the polymorphic "winner (employee or poutine)" directly on `rpo_HallOfFameEntry` as two nullable lookups (to `systemuser` for employee-type categories, to `rpo_PoutineSubmission` for poutine-type categories), exactly one populated per row depending on the category's computation type — same polymorphic pattern as layer 8's `rpo_SeasonResultEntry`, just without the parent/child split.
+
+## Environment/solution context (already resolved, reuse directly)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: poutineleaguecore (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: rpo
+- Tables from layers 1-8 (Restaurant, Tag, Poutine Submission, Try, Review, Season, Category, Season Result + Season Result Entry) already exist in this same Dev environment with real sample data. Query Season and Category records, and reuse the same season+category pairs from layer 8's Season Result sample data where sensible (a Hall of Fame Entry is typically the crowned top-1 winner from a Season Result snapshot for a CLOSED season) — this keeps the demo data internally consistent.
+
+## Branch / stacking
+You are on a fresh branch already stacked on `rpothin-feat-data-season-result-table` (layer 8's branch — the top of the current 8-layer stack). Do not rebase or retarget. Your PR MUST target `rpothin-feat-data-season-result-table` as its base (gh-stack conventions, not base=main). Rename your branch to `rpothin-feat-data-hall-of-fame-entry-table` early on via the rename_branch tool.
+
+## Reusable gotchas from prior layers
+1. **Solution attachment**: SDK's `client.tables.create(..., solution=...)` doesn't reliably auto-attach new tables to `poutineleaguecore`'s solutioncomponent list. After creating the table, explicitly verify solution membership and fix with `pac solution add-solution-component --component <logical-name> --componentType 1` if needed, then re-verify.
+2. **Systemuser lookup relationship naming**: SDK's `create_lookup_field()` wrapper generates an invalid relationship name for lookups to built-in tables like `systemuser`. Use `create_one_to_many_relationship()` directly with an explicit `rpo_`-prefixed name (e.g. `rpo_HallOfFameEntry_Employee`) for the employee lookup.
+3. **DateTime columns**: not expected to apply here (Hall of Fame Entry has no date/time field per ARCHITECTURE.md), but if you add one, use a raw Web API call with explicit Format + DateTimeBehavior, never the SDK's generic "datetime" string type.
+
+## Your workflow (same 5 phases every layer follows) — this is the LAST one, no layer 10 to hand off to
+1. **Schema configuration** (`data-management` → `dv-metadata`): Check first `rpo_HallOfFameEntry` doesn't exist yet. Create the table with: lookup to `rpo_Season`, lookup to `rpo_Category`, nullable lookup to `systemuser` (employee winner), nullable lookup to `rpo_PoutineSubmission` (poutine winner), and a badge/title text column (String, e.g. `rpo_badgetitle`, something like "Season Winter 2026 — Best Critic Champion"). Verify solution attachment per gotcha #1.
+2. **Sample data population** (`data-management` → `dv-query` + `dv-data`): Query the existing Season, Category, and (if useful) Season Result / Season Result Entry records from layer 8. For each of the 4 categories in at least one CLOSED season, create one Hall of Fame Entry row representing that category's top-1 winner (ideally matching the rank=1 entry from that season/category's Season Result Entry data, for internal consistency — but use your judgement, this doesn't need to be perfectly synchronized). Resolve systemuser/poutine-submission references by email/existing records, never hardcode GUIDs. Save seed CSV under `data/` with the timestamp-naming convention.
+3. **Validation**: Re-check the table/columns against ARCHITECTURE.md's description. Spot-query seeded data via `dv-query` — confirm each row has exactly one of employee/poutine populated, references resolve correctly. Run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** (`solution-management`): Sync locally, bump SemVer MINOR (verify actual current version from `solutions/poutineleaguecore/Other/Solution.xml`), run solution checker, resolve/waive Critical/High findings, pack (`make solution-gate`). **This is the last layer — double check the FINAL solution version number is correct and the solution as a whole (all 9+1 tables) packs and checks cleanly**, since this represents the culmination of the whole 9-table build-out.
+5. **Entire traceability + stacked PR**: Run the mandatory Entire protocol (`entire-observe` → `entire-link-dry` → `entire-link-apply`[-unsafe] → `entire-stack-finalize`) as the LAST step. Commit, push, open a PR based on `rpothin-feat-data-season-result-table`, titled `feat(data): configure Hall of Fame Entry table + sample data (layer 9/9)`. In the PR description, note that this is the FINAL layer completing the full 9-table Dataverse data model build-out (10 tables total counting the Season Result Entry decomposition from layer 8), and that the human should now review/merge the full stack bottom-up (PRs #15 through this one) using `gh-stack`.
+
+## Boundaries
+- Do not modify any other layer's schema/data.
+- Do not edit PRODUCT.md/ARCHITECTURE.md/DESIGN.md without stopping and asking first, unless documenting a small factual addition analogous to layer 8's flagged note (not expected to be needed here since this table doesn't need a schema decomposition).
+- Never commit environment-specific GUIDs into tracked files.
+- Route everything through skills (`data-management`, `solution-management`).
+
+## Reporting back
+When finished (PR opened) or blocked, message the coordinator (project_session_id df0089ba-085d-44ca-9a1f-9f7ca29fdff3) with: PR number/link, solution version before/after, table+columns created, sample row count, and confirmation that the FULL 9-layer (10-table) stack is now complete. Do not wait idle for review — once PR is opened and reported, your work — and the whole plan's build-out — is done.
