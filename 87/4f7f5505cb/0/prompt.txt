@@ -1,0 +1,41 @@
+You are layer 3 of a 9-layer stacked-PR build-out of the Dataverse data model for the Poutine League product, in the `poutineleaguecore` solution. Your branch is stacked ON TOP OF layer 2's branch `rpothin-fuzzy-robot` (PR #16, Tag table, solution version 1.2.0), which itself stacks on layer 1 (`rpothin-feat-data-restaurant-table`, PR #15, Restaurant table). Layer 4 (Try table) will stack on top of YOUR branch once you finish. Do NOT wait for human review/approval of your PR before finishing your turn — open the PR and end your work; a coordinator session will move on to the next layer as soon as you're done.
+
+## Required reading before acting
+- `AGENTS.md` (repo root) — way-of-working, skill-first policy, boundaries, mandatory Entire traceability protocol.
+- `ARCHITECTURE.md` §1 (Data model) — schema source of truth for the Poutine Submission table, including the ER diagram (POUTINE_SUBMISSION entity block) for exact field list.
+- `docs/dev-solution-conventions.md` — solution/publisher naming conventions.
+
+## Scope for this layer: Poutine Submission table ONLY (most complex layer — has real dependencies)
+Per `ARCHITECTURE.md` §1 and the ER diagram, Poutine Submission is "A submitted poutine, owned by the submitting employee" with: name/description, price, photo (Dataverse file/image column), status (choice: Draft, Submitted, In Review, Approved, Rejected), lookup to Restaurant, lookup to submitter (systemuser). It also has an N:N relationship to Tag. Both Restaurant (`rpo_restaurant`, layer 1) and Tag (`rpo_tag`, layer 2) already exist in Dev with real sample data — use them for real lookups, do not create placeholders.
+
+Author as a custom table under the `rpo` publisher prefix:
+- `rpo_name` (String) — poutine name
+- `rpo_description` (String, multiline) — description
+- `rpo_price` (Currency or Decimal — your judgment, note the choice in the PR)
+- `rpo_photo` (Image column type)
+- `rpo_status` (Choice/OptionSet: Draft, Submitted, In Review, Approved, Rejected — default Draft)
+- Lookup to `rpo_restaurant` (required)
+- Lookup to `systemuser` for the submitter (this is Dataverse's built-in system user table — NOT a custom table; use a standard lookup, e.g. `rpo_submitterid` or the SDK's native customer/owner-style lookup pattern to systemuser)
+- N:N relationship between `rpo_poutinesubmission` and `rpo_tag`
+
+## Environment / solution scope (already resolved — use directly, do not re-ask)
+- Dev environment URL: https://raphaelpothin-sandbox.crm.dynamics.com/
+- Dev environment ID: 36f603f9-0af2-e33d-98a5-64b02c1bac19
+- Dev solution unique name: `poutineleaguecore` (solution ID: c08f9f79-2c95-f111-b8dc-000d3a340fc1)
+- Publisher prefix: `rpo`
+- Current solution version after layer 2: 1.2.0 (you will bump to 1.3.0)
+
+## Workflow (use the `data-management` and `solution-management` skills)
+1. **Schema configuration** — invoke `data-management` → `dv-metadata`. Check-first the table doesn't already exist. Author the table, columns, choice set, the lookup to Restaurant, the lookup to systemuser, and the N:N relationship to Tag. **Explicitly verify solution-component attachment** to `poutineleaguecore` (layers 1 and 2 both found the SDK's `create(..., solution=...)` doesn't reliably auto-attach — use `pac solution add-solution-component` and re-verify if needed; the N:N relationship component itself may also need explicit attachment). Save schema artifacts to `data/` (naming convention `YYYYMMDD_HHMMSS_<desc>.<ext>`).
+2. **Sample data population** — via `dv-query` first, list the real Restaurant records (from layer 1) and real Dev `systemuser` records (query active users, e.g. by `isdisabled eq false`) so you can resolve lookups to real GUIDs at import time. **Do NOT hardcode systemuser GUIDs in committed CSV files** — either resolve by email/alternate key during the import script, or if the CSV must contain an identifier, use the user's email/UPN as the CSV value and resolve to GUID at execution time (never commit a raw systemuser GUID to a tracked file). Author a seed CSV in `data/` with a reasonable number of submissions (your judgment on count) spanning several Draft/Submitted/In Review/Approved/Rejected statuses, referencing real Restaurant records and 2-3 real tags each via the N:N relationship, attributed to a small set of real Dev users as submitters. Photo column can be left empty/null for sample data (no need to source real images).
+3. **Validation** — re-check table/columns/relationships against `ARCHITECTURE.md`, spot-query seeded records via `dv-query` (row count, no orphaned lookups, N:N pairs resolve, status values valid), run the `dv-overview` safe-change checklist.
+4. **Solution export / pre-PR gate** — sync, bump SemVer MINOR (1.2.0 → 1.3.0), solution checker (resolve/flag Critical/High), pack (`make solution-gate`).
+5. **Entire traceability protocol (mandatory, LAST step before pushing)** — `make entire-observe` → `make entire-link-dry` → `make entire-link-apply` (or `-apply-unsafe SESSION_ID=...` if blocked) → `make entire-stack-finalize`.
+6. **Stacked PR** — commit, push, open PR with base branch `rpothin-fuzzy-robot` (stacks on layer 2) titled `feat(data): configure Poutine Submission table + sample data (layer 3/9)`. Note this is layer 3/9 and list everything created, including how the systemuser lookups were resolved without embedding GUIDs.
+
+## Boundaries (from AGENTS.md)
+- Never commit secrets, real connection reference IDs, or raw environment-specific GUIDs (systemuser GUIDs included) into tracked files.
+- Work only inside the unpacked `solutions/poutineleaguecore/` folder; never hand-edit `Other/` files.
+- Dev-only work already approved for this build-out.
+
+When finished (PR opened), reply back summarizing: table/columns/relationships created, sample submission count + status distribution, how systemuser resolution was handled, solution version, and the PR URL/branch name, so the coordinator can start layer 4 (Try) stacked on your branch.
