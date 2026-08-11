@@ -6,7 +6,7 @@
       <LocalizedName description="Poutine League Core" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.6.0</Version>
+    <Version>1.7.0</Version>
     <Managed>2</Managed>
     <Publisher>
       <UniqueName>RaphaelPothin</UniqueName>
@@ -78,6 +78,7 @@
       </Addresses>
     </Publisher>
     <RootComponents>
+      <RootComponent type="1" schemaName="rpo_category" behavior="0" />
       <RootComponent type="1" schemaName="rpo_poutinesubmission" behavior="0" />
       <RootComponent type="1" schemaName="rpo_restaurant" behavior="0" />
       <RootComponent type="1" schemaName="rpo_review" behavior="0" />

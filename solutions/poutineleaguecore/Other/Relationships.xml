@@ -1,11 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EntityRelationships xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <EntityRelationship Name="business_unit_rpo_category" />
   <EntityRelationship Name="business_unit_rpo_poutinesubmission" />
   <EntityRelationship Name="business_unit_rpo_restaurant" />
   <EntityRelationship Name="business_unit_rpo_review" />
   <EntityRelationship Name="business_unit_rpo_season" />
   <EntityRelationship Name="business_unit_rpo_tag" />
   <EntityRelationship Name="business_unit_rpo_try" />
+  <EntityRelationship Name="lk_rpo_category_createdby" />
+  <EntityRelationship Name="lk_rpo_category_modifiedby" />
   <EntityRelationship Name="lk_rpo_poutinesubmission_createdby" />
   <EntityRelationship Name="lk_rpo_poutinesubmission_modifiedby" />
   <EntityRelationship Name="lk_rpo_restaurant_createdby" />
@@ -18,6 +21,7 @@
   <EntityRelationship Name="lk_rpo_tag_modifiedby" />
   <EntityRelationship Name="lk_rpo_try_createdby" />
   <EntityRelationship Name="lk_rpo_try_modifiedby" />
+  <EntityRelationship Name="owner_rpo_category" />
   <EntityRelationship Name="owner_rpo_poutinesubmission" />
   <EntityRelationship Name="owner_rpo_restaurant" />
   <EntityRelationship Name="owner_rpo_review" />
@@ -31,6 +35,7 @@
   <EntityRelationship Name="rpo_Review_Reviewer" />
   <EntityRelationship Name="rpo_Try_Employee" />
   <EntityRelationship Name="rpo_try_rpo_review_rpo_TryId" />
+  <EntityRelationship Name="team_rpo_category" />
   <EntityRelationship Name="team_rpo_poutinesubmission" />
   <EntityRelationship Name="team_rpo_restaurant" />
   <EntityRelationship Name="team_rpo_review" />
@@ -38,6 +43,7 @@
   <EntityRelationship Name="team_rpo_tag" />
   <EntityRelationship Name="team_rpo_try" />
   <EntityRelationship Name="TransactionCurrency_rpo_PoutineSubmission" />
+  <EntityRelationship Name="user_rpo_category" />
   <EntityRelationship Name="user_rpo_poutinesubmission" />
   <EntityRelationship Name="user_rpo_restaurant" />
   <EntityRelationship Name="user_rpo_review" />
