@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "appId": null,
+  "appDisplayName": "Poutine League - Employee",
+  "region": "prod",
+  "environmentId": "36f603f9-0af2-e33d-98a5-64b02c1bac19",
+  "description": "Poutine League employee app: submit, browse, try, review, and track leaderboards for Montreal's best poutines.",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {
+    "dc0dd9e8-064e-4365-bd17-068d39b5dc5d": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+      "displayName": "Microsoft Dataverse",
+      "dataSources": [
+        "commondataserviceforapps"
+      ],
+      "dataSets": {}
+    }
+  },
+  "databaseReferences": {}
+}
