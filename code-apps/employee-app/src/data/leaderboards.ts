@@ -131,7 +131,7 @@ export async function listSeasonResultEntries(seasonId: string, categoryId: stri
   if (!seasonResult) return [];
 
   const entryRows = await listRows(ENTITY_SETS.seasonResultEntries, {
-    select: ['rpo_seasonresultentryid', 'rpo_rank', 'rpo_score', 'rpo_employeeid', 'rpo_poutinesubmissionid'],
+    select: ['rpo_seasonresultentryid', 'rpo_rank', 'rpo_score', '_rpo_employeeid_value', '_rpo_poutinesubmissionid_value'],
     filter: `_rpo_seasonresultid_value eq '${escapeODataString(String(seasonResult.rpo_seasonresultid))}'`,
     orderBy: ['rpo_rank asc'],
   });
@@ -166,10 +166,10 @@ export async function listHallOfFameEntries(): Promise<HallOfFameEntryRow[]> {
     select: [
       'rpo_halloffameentryid',
       'rpo_badgetitle',
-      'rpo_seasonid',
-      'rpo_categoryid',
-      'rpo_employeeid',
-      'rpo_poutinesubmissionid',
+      '_rpo_seasonid_value',
+      '_rpo_categoryid_value',
+      '_rpo_employeeid_value',
+      '_rpo_poutinesubmissionid_value',
     ],
     orderBy: ['createdon desc'],
   });

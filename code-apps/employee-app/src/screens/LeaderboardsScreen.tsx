@@ -112,7 +112,6 @@ export function LeaderboardsScreen() {
   return (
     <div className="leaderboards-screen">
       <header className="leaderboards-screen__header">
-        <p className="leaderboards-screen__eyebrow">Phase 5</p>
         <h1 className="leaderboards-screen__title">Leaderboards & Hall of Fame</h1>
       </header>
 

@@ -10,15 +10,6 @@
   gap: var(--space-xs);
 }
 
-.leaderboards-screen__eyebrow {
-  font-family: var(--font-body);
-  font-size: var(--text-label-size);
-  font-weight: var(--text-label-weight);
-  letter-spacing: var(--text-label-letter-spacing);
-  text-transform: uppercase;
-  color: var(--color-gravy-text-soft);
-}
-
 .leaderboards-screen__title {
   font-family: var(--font-display);
   font-size: var(--text-headline-size);
