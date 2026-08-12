@@ -746,13 +746,16 @@ exists (to be picked up via the `agent-implementation` skill at that time).
 
 1. ~~Get an environment admin to enable "Power Apps code apps"~~ — done; the
    Phase 4 layer's session pushed the app live (see "Post-Phase-4 push/export
-   follow-up" above). This Phase 5 layer's corrected build (lookup `$select`
-   fix + "Phase 5" label removal, below) still needs its own redeploy pass so
-   the live app reflects the Leaderboards screen too.
+   follow-up" above). ~~This Phase 5 layer's corrected build (lookup
+   `$select` fix + "Phase 5" label removal) still needs its own redeploy
+   pass~~ — done, see "Post-rebase fix pass" below; live app now reflects the
+   Leaderboards screen too:
+   `https://apps.powerapps.com/play/e/36f603f9-0af2-e33d-98a5-64b02c1bac19/app/1caf2f0c-988f-4aa3-b914-f60143e69dee`.
 2. ~~Export/unpack the `poutineleaguecore` solution~~ — done; the Employee
    role and the code app's `CanvasApps` component are both in source control
-   (see above). Re-export/unpack again after this layer's redeploy to capture
-   the updated `CanvasApps` asset.
+   (see above). ~~Re-export/unpack again after this layer's redeploy to
+   capture the updated `CanvasApps` asset~~ — done, see "Post-rebase fix
+   pass" below (`make solution-gate`: 0 findings across all severities).
 3. Do a live smoke test of all five phases (submission CRUD, cap enforcement,
    Browse feed, detail view, Try/Review creation + dedup, Map pins/popups/
    ungeocoded notice, Leaderboards/Hall of Fame incl. the empty-state path)
@@ -793,6 +796,11 @@ so the whole stack is consistent:
       after the fix.
 - [x] As the current top of stack, this layer also performed the final
       redeploy: `pa app push --solution-id
-      c08f9f79-2c95-f111-b8dc-000d3a340fc1 --non-interactive`, followed by
+      c08f9f79-2c95-f111-b8dc-000d3a340fc1 --non-interactive`, succeeding
+      and confirming the live app
+      (`https://apps.powerapps.com/play/e/36f603f9-0af2-e33d-98a5-64b02c1bac19/app/1caf2f0c-988f-4aa3-b914-f60143e69dee`)
+      now reflects the corrected Leaderboards/Hall of Fame screen. Followed by
       `pac solution export`/`pac solution unpack` to capture the updated
-      `CanvasApps` component, and `make solution-gate` (0 findings).
+      `CanvasApps` component (new content-hashed asset filenames, 2 stale old
+      asset files removed via `git rm`), and `make solution-gate` — **0
+      findings** across Critical/High/Medium/Low/Informational.
