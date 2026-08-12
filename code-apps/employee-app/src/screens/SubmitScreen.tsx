@@ -143,7 +143,6 @@ export function SubmitScreen() {
   return (
     <div className="submit-screen">
       <header className="submit-screen__header">
-        <p className="submit-screen__eyebrow">Phase 1</p>
         <h1 className="submit-screen__title">Submit a poutine</h1>
         <p className="submit-screen__cap">{capMessage}</p>
       </header>

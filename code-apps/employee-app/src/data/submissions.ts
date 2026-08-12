@@ -36,7 +36,7 @@ export interface PoutineSubmissionRow {
   tags: TagRow[];
 }
 
-const SUBMISSION_SELECT = ['rpo_poutinesubmissionid', 'rpo_name', 'rpo_description', 'rpo_price', 'rpo_status', 'rpo_restaurantid', 'createdon'];
+const SUBMISSION_SELECT = ['rpo_poutinesubmissionid', 'rpo_name', 'rpo_description', 'rpo_price', 'rpo_status', '_rpo_restaurantid_value', 'createdon'];
 const TAG_EXPAND = `${SUBMISSION_TAG_RELATIONSHIP}($select=rpo_tagid,rpo_name)`;
 
 function escapeODataString(value: string): string {
