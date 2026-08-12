@@ -58,6 +58,20 @@ Save) — no CLI/API path was found. Local scaffolding, data-source wiring, and
 `npm run build`/`npm run dev` all work regardless; only the live/deployed app URL
 is blocked until an environment admin flips this toggle.
 
+**Re-confirmed with a second, independent CLI** (post-Phase 4, during the
+push/export follow-up): the newer GA `@microsoft/power-apps-cli` (`pa`/`power-apps`
+binaries, distinct from the PAC CLI's preview `pac code` command group) hits the
+**exact same** `CodeAppOperationNotAllowedInEnvironment` 403 on `pa app push
+--solution-id c08f9f79-2c95-f111-b8dc-000d3a340fc1 --non-interactive`, after a
+successful, correctly-scoped sign-in (`pa auth login`, confirmed as
+`raphael@rpothinmvp.onmicrosoft.com`, matching the active `pac auth list` profile
+and the environment ID in `power.config.json`). This proves the block is a
+**server-side environment feature gate**, not a CLI/tooling choice or an auth
+problem — switching CLIs cannot work around it. Direct link for an environment
+admin to flip the toggle:
+`https://admin.powerplatform.microsoft.com/environments/environment/36f603f9-0af2-e33d-98a5-64b02c1bac19/settings/product/features`
+→ enable "Power Apps code apps" → Save.
+
 ## Data sources
 
 Dataverse (`shared_commondataserviceforapps`, connection
@@ -503,16 +517,48 @@ Built on branch `rpothin-employee-app-map-view`, stacked on the Phase 3 branch
   directly against `solutions/poutineleaguecore/Entities/rpo_Restaurant/
   Entity.xml`.
 
+## Post-Phase-4 push/export follow-up
+
+Phases 0–5 are complete and stacked as PRs (#26–#32), registered as a native
+GitHub Stack (#31). The user asked whether the code app had been pushed to the
+Dev solution; it had not. This session (still on the Phase 4 branch, which ended
+up being the top of the stack) attempted the push directly and exported what
+could be exported independently of it:
+
+- [x] Re-verified `pac code push` still fails with the known 403 (see "Known
+      blocker" above).
+- [x] Installed and tried the newer, separate GA CLI (`@microsoft/power-apps-cli`,
+      `pa`/`power-apps` binaries) as a second path — `pa auth login` succeeded
+      (correct account), but `pa app push --solution-id <solutionId>
+      --non-interactive` hit the **identical** `CodeAppOperationNotAllowedInEnvironment`
+      403. This is decisive: the block is environment-side, not CLI-side. No
+      further CLI/API workaround was attempted, per this agent's constraint not
+      to work around access-control blockers — it requires a human admin action
+      in the Admin Center UI (link above).
+- [x] Independent of the push blocker: exported + unpacked the current
+      `poutineleaguecore` Dev solution state into `solutions/poutineleaguecore/`
+      (`pac solution export` → `pac solution unpack`). This picked up the
+      Phase 0 **Employee security role** (`Roles/Employee.xml`,
+      `RootComponent type="20"` added to `Other/Solution.xml`), which existed in
+      Dataverse since Phase 0 but had never been synced to source control. No
+      code-app component exists to export yet, since the app was never
+      successfully pushed (`appId` in `power.config.json` is still `null`).
+- [x] `make solution-gate` (pack + solution checker) passed clean — 0
+      Critical/High/Medium/Low findings.
+
 ## Next steps (per the agreed phased plan)
 
 1. Get an environment admin to enable "Power Apps code apps" on
-   `raphaelpothin-sandbox`, then run `pac code push` for the first real deploy.
-2. Export/unpack the `poutineleaguecore` solution to `solutions/poutineleaguecore/`
-   to bring the new Employee role into source control.
-3. Open the Phase 0 PR (stacked via `gh-stack`), gated by `make app-gate` (passing).
-4. Once the environment blocker clears, do a live smoke test of Phases 1–4
+   `raphaelpothin-sandbox` (direct link in "Known blocker" above), then retry
+   either `pac code push` or `pa app push --solution-id
+   c08f9f79-2c95-f111-b8dc-000d3a340fc1 --non-interactive` for the first real
+   deploy.
+2. ~~Export/unpack the `poutineleaguecore` solution to bring the new Employee
+   role into source control.~~ Done (this session) — see above.
+3. After a successful push, re-export/unpack the solution again to capture the
+   new code app component (e.g. under a `Canvas Apps`/code-app equivalent
+   solution folder) and record the live app URL here.
+4. Once the environment blocker clears, do a live smoke test of Phases 1–5
    (submission CRUD, cap enforcement, Browse feed, detail view, Try/Review
-   creation + dedup, Map pins/popups/ungeocoded notice) against real Dataverse
-   data.
-5. Phase 5 — Leaderboards/Hall of Fame (Top Poutine + Best Supporter only for
-   v1).
+   creation + dedup, Map pins/popups/ungeocoded notice, Leaderboards) against
+   real Dataverse data.

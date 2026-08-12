@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Role id="{75c18758-5e96-f111-b8db-000d3a3409ce}" name="Employee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <IsCustomizable>1</IsCustomizable>
+  <IsAutoAssigned>0</IsAutoAssigned>
+  <RolePrivileges>
+    <RolePrivilege name="prvAppendrpo_PoutineSubmission" level="Basic" />
+    <RolePrivilege name="prvAppendrpo_Restaurant" level="Basic" />
+    <RolePrivilege name="prvAppendrpo_Review" level="Basic" />
+    <RolePrivilege name="prvAppendrpo_Tag" level="Basic" />
+    <RolePrivilege name="prvAppendrpo_Try" level="Basic" />
+    <RolePrivilege name="prvAppendTorpo_PoutineSubmission" level="Basic" />
+    <RolePrivilege name="prvAppendTorpo_Restaurant" level="Basic" />
+    <RolePrivilege name="prvAppendTorpo_Review" level="Basic" />
+    <RolePrivilege name="prvAppendTorpo_Tag" level="Basic" />
+    <RolePrivilege name="prvAppendTorpo_Try" level="Basic" />
+    <RolePrivilege name="prvCreaterpo_PoutineSubmission" level="Basic" />
+    <RolePrivilege name="prvCreaterpo_Restaurant" level="Basic" />
+    <RolePrivilege name="prvCreaterpo_Review" level="Basic" />
+    <RolePrivilege name="prvCreaterpo_Try" level="Basic" />
+    <RolePrivilege name="prvCreateSharePointData" level="Global" />
+    <RolePrivilege name="prvReadPluginAssembly" level="Global" />
+    <RolePrivilege name="prvReadPluginType" level="Global" />
+    <RolePrivilege name="prvReadrpo_Category" level="Global" />
+    <RolePrivilege name="prvReadrpo_HallOfFameEntry" level="Global" />
+    <RolePrivilege name="prvReadrpo_PoutineSubmission" level="Global" />
+    <RolePrivilege name="prvReadrpo_Restaurant" level="Global" />
+    <RolePrivilege name="prvReadrpo_Review" level="Global" />
+    <RolePrivilege name="prvReadrpo_Season" level="Global" />
+    <RolePrivilege name="prvReadrpo_SeasonResult" level="Global" />
+    <RolePrivilege name="prvReadrpo_SeasonResultEntry" level="Global" />
+    <RolePrivilege name="prvReadrpo_Tag" level="Global" />
+    <RolePrivilege name="prvReadrpo_Try" level="Global" />
+    <RolePrivilege name="prvReadSdkMessage" level="Global" />
+    <RolePrivilege name="prvReadSdkMessageProcessingStep" level="Global" />
+    <RolePrivilege name="prvReadSdkMessageProcessingStepImage" level="Global" />
+    <RolePrivilege name="prvReadSharePointData" level="Global" />
+    <RolePrivilege name="prvReadSharePointDocument" level="Global" />
+    <RolePrivilege name="prvReadUser" level="Global" />
+    <RolePrivilege name="prvWriterpo_PoutineSubmission" level="Basic" />
+    <RolePrivilege name="prvWriterpo_Restaurant" level="Basic" />
+    <RolePrivilege name="prvWriterpo_Review" level="Basic" />
+    <RolePrivilege name="prvWriterpo_Try" level="Basic" />
+    <RolePrivilege name="prvWriteSharePointData" level="Global" />
+  </RolePrivileges>
+</Role>
