@@ -1,0 +1,15 @@
+Continue the Poutine League employee-facing Power Apps code app build — this is Phase 1 of the agreed phased plan, stacked on top of the just-completed Phase 0 layer (PR #26, branch rpothin-literate-disco: scaffold, all 11 Dataverse data sources wired, nav shell, design tokens).
+
+Read first: code-apps/employee-app/memory-bank.md (Phase 0 state + known blocker), the session plan in this repo's plan.md if present, code-apps/employee-app/PRODUCT.md, root PRODUCT.md, root ARCHITECTURE.md (data model section 1 especially — Restaurant, PoutineSubmission, Tag tables and the Employee security role privilege matrix), and code-apps/DESIGN.md (design tokens already ported to code-apps/employee-app/src/styles/tokens.css — reuse them, don't redefine).
+
+Build Phase 1 — 'Submit a poutine':
+- Create-submission form: restaurant/place name + address (lookup existing Restaurant record or create a new one), poutine name/description, price, photo, tags (multi-select against the seeded Tag table).
+- Enforce the hard cap of 5 active submissions per employee (client-side check against PoutineSubmission count for the current SystemUser — the generated MicrosoftDataverseService/Model in src/generated/ already covers all needed tables including rpo_poutinesubmission, rpo_restaurant, rpo_tag, and systemuser).
+- A 'My submissions' list/management view (edit/withdraw own drafts).
+- No AI moderation integration — submissions are created directly (the moderation/review agent flow is explicitly out of scope for this app).
+- Use the existing NavShell/EmptyState components and design tokens; wire the Submit screen for real instead of the current placeholder.
+- Use the generated Dataverse service methods for all data access — never hand-edit src/generated/ or use fetch/axios directly.
+
+Gate: run `make app-gate` (lint + test) from the repo root before considering this done, and `npm run build` inside code-apps/employee-app. Known environment blocker: `pac code push` will still fail with CodeAppOperationNotAllowedInEnvironment (HTTP 403) until an environment admin enables 'Power Apps code apps' in the Power Platform Admin Center for the raphaelpothin-sandbox environment — this is expected and does not block this phase's local build/lint/dev work. Do not attempt to work around it.
+
+When done: commit to this branch, run the mandatory Entire traceability protocol (make entire-observe -> entire-link-dry -> entire-link-apply/entire-link-apply-unsafe -> entire-stack-finalize) before finalizing, push, and open a PR based on rpothin-literate-disco (this branch) — not main — since this is a stacked layer per the repo's gh-stack convention.
