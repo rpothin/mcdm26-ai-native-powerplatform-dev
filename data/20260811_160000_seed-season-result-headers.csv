@@ -1,0 +1,5 @@
+season_name,category_name,category_computation_type,computedat_utc
+Winter 2025-2026,Best Seller,try_count_by_submitter,2026-03-19T23:59:00Z
+Winter 2025-2026,Top Poutine,weighted_rating,2026-03-19T23:59:00Z
+Winter 2025-2026,Best Supporter,try_count_by_employee,2026-03-19T23:59:00Z
+Winter 2025-2026,Best Critic,review_helpfulness_score,2026-03-19T23:59:00Z

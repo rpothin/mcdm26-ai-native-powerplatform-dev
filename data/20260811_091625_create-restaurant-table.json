@@ -1,0 +1,62 @@
+{
+  "description": "Schema definition used to create the Restaurant table (layer 1/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md §1 (Data model).",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_Restaurant",
+    "logicalName": "rpo_restaurant",
+    "entitySetName": "rpo_restaurants",
+    "displayName": "Restaurant",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_restaurantid",
+    "purpose": "A Montreal restaurant/place where a poutine was found."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "notes": "Primary name column, auto-created with the table."
+    },
+    {
+      "logicalName": "rpo_address",
+      "schemaName": "rpo_Address",
+      "displayName": "Address",
+      "type": "String"
+    },
+    {
+      "logicalName": "rpo_latitude",
+      "schemaName": "rpo_Latitude",
+      "displayName": "Latitude",
+      "type": "Decimal",
+      "precision": 6,
+      "minValue": -90,
+      "maxValue": 90,
+      "notes": "Geocoded latitude. Precision bumped from SDK default (2) to 6 for geo accuracy; MinValue/MaxValue set to valid latitude bounds."
+    },
+    {
+      "logicalName": "rpo_longitude",
+      "schemaName": "rpo_Longitude",
+      "displayName": "Longitude",
+      "type": "Decimal",
+      "precision": 6,
+      "minValue": -180,
+      "maxValue": 180,
+      "notes": "Geocoded longitude. Precision bumped from SDK default (2) to 6 for geo accuracy; MinValue/MaxValue set to valid longitude bounds."
+    },
+    {
+      "logicalName": "rpo_neighborhood",
+      "schemaName": "rpo_Neighborhood",
+      "displayName": "Neighborhood",
+      "type": "String",
+      "notes": "City area / neighborhood (e.g., Plateau-Mont-Royal, Mile End)."
+    }
+  ],
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK)",
+    "tableCreation": "client.tables.create(\"rpo_Restaurant\", {...}, solution=\"poutineleaguecore\", primary_column=\"rpo_Name\", display_name=\"Restaurant\")",
+    "precisionFixup": "Web API PUT on EntityDefinitions(...)/Attributes(...)/Microsoft.Dynamics.CRM.DecimalAttributeMetadata (SDK does not expose Precision/MinValue/MaxValue control at creation time)"
+  }
+}

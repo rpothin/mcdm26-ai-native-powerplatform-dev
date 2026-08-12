@@ -6,7 +6,7 @@
       <LocalizedName description="Poutine League Core" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0</Version>
+    <Version>1.9.0</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>RaphaelPothin</UniqueName>
@@ -77,7 +77,24 @@
         </Address>
       </Addresses>
     </Publisher>
-    <RootComponents />
-    <MissingDependencies />
+    <RootComponents>
+      <RootComponent type="1" schemaName="rpo_category" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_halloffameentry" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_poutinesubmission" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_restaurant" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_review" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_season" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_seasonresult" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_seasonresultentry" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_tag" behavior="0" />
+      <RootComponent type="1" schemaName="rpo_try" behavior="0" />
+      <RootComponent type="1" schemaName="systemuser" behavior="1" />
+    </RootComponents>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="1" schemaName="systemuser" displayName="SystemUser" parentSchemaName="" solution="msdyn_UserShareSecuredFields (1.0.0.0)" />
+        <Dependent type="1" schemaName="systemuser" displayName="SystemUser" />
+      </MissingDependency>
+    </MissingDependencies>
   </SolutionManifest>
 </ImportExportXml>

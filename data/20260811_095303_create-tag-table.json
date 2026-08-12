@@ -1,0 +1,34 @@
+{
+  "description": "Schema definition used to create the Tag table (layer 2/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md \u00a71 (Data model).",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_Tag",
+    "logicalName": "rpo_tag",
+    "entitySetName": "rpo_tags",
+    "displayName": "Tag",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_tagid",
+    "purpose": "Descriptive tag (classic, smoked meat, vegan, spicy, ...). Many-to-many with Poutine Submission (relationship deferred to layer 3, once Poutine Submission exists)."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "notes": "Primary name column, auto-created with the table."
+    }
+  ],
+  "solutionAttachment": {
+    "issue": "client.tables.create(..., solution=\"poutineleaguecore\") did not auto-attach the table to the solutioncomponent list (same finding as layer 1).",
+    "remediation": "pac solution add-solution-component --solutionUniqueName poutineleaguecore --component <EntityMetadataId GUID> --componentType 1 --environment <env>. Note: passing the SchemaName ('rpo_Tag') failed with 'Failed to resolve entity metadata' \u2014 the table's EntityMetadataId GUID (from client.tables.get) had to be used instead.",
+    "verified": true
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK)",
+    "tableCreation": "client.tables.create(\"rpo_Tag\", {}, solution=\"poutineleaguecore\", primary_column=\"rpo_Name\", display_name=\"Tag\")",
+    "notes": "No additional columns beyond the auto-created primary Name column were required per ARCHITECTURE.md \u00a71 (Tag key field: Name only)."
+  }
+}

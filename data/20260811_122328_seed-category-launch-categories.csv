@@ -1,0 +1,5 @@
+name,description,computationtype
+Best Seller,"The employee whose submitted poutine(s) got the most colleagues to try them. Recognizes people who are good at ""selling"" their picks to others.",try_count_by_submitter
+Top Poutine,"The highest-rated poutine for the period. Uses a confidence-weighted rating (a dynamic average that accounts for both the average score and the number of reviews, similar in spirit to a Bayesian/weighted average) so a poutine with a very high rating but very few reviews doesn't automatically outrank one with a strong rating backed by many reviews. Borderline cases should be flagged for review rather than resolved purely automatically.",weighted_rating
+Best Supporter,"The employee who tried the most poutines. The ""poutine lover""/most supportive taste-tester of the community.",try_count_by_employee
+Best Critic,"The employee whose written reviews are considered the most helpful/insightful (exact evaluation approach to be refined, potentially AI-assisted).",review_helpfulness_score

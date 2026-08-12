@@ -1,0 +1,5 @@
+season_name,category_name,category_computation_type,employee_email,poutine_submission_name,badge_title
+Winter 2025-2026,Best Seller,try_count_by_submitter,raphael@rpothinmvp.onmicrosoft.com,,Season Winter 2025-2026 - Best Seller Champion
+Winter 2025-2026,Top Poutine,weighted_rating,,Montreal Smoked Meat Deluxe Poutine,Season Winter 2025-2026 - Top Poutine Champion
+Winter 2025-2026,Best Supporter,try_count_by_employee,maverick@rpothinmvp.onmicrosoft.com,,Season Winter 2025-2026 - Best Supporter Champion
+Winter 2025-2026,Best Critic,review_helpfulness_score,maya@rpothinmvp.onmicrosoft.com,,Season Winter 2025-2026 - Best Critic Champion

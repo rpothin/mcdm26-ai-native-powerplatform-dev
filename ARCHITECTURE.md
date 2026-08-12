@@ -139,6 +139,10 @@ erDiagram
 
 - **Restaurant stays normalized as its own table** (as modeled above) — gives a cleaner data model, clear separation of concerns per table, and enables future capabilities like tracking which restaurants keep appearing across seasons.
 - **`Season Result` stores a full ranked-list snapshot per season/category**, not just the top-1 winner — even though only the top-1 is announced/crowned at season close, the fuller snapshot supports richer leaderboard history and analytics later.
+- **The ranked-entries list is implemented as a child table, `Season Result Entry`** (lookup to Season Result, rank, score, and *either* an employee lookup *or* a Poutine Submission lookup depending on the category's computation type) — since Dataverse cannot store an array inside a single row. This is a relational-decomposition implementation detail of the `Season Result` row above, not new business scope.
+
+> [!NOTE]
+> The `Season Result Entry` child table was introduced autonomously by an agent session in the human's absence, to make the "ranked entries" concept concrete in Dataverse. Flagged here for human review — a different representation (e.g. JSON blob, fixed top-N columns) can still be adopted if preferred.
 
 ## 2. AI agentic experiences (Copilot Studio, GitHub Copilot harness)
 

@@ -1,0 +1,70 @@
+{
+  "description": "Schema definition used to create the Season table (layer 6/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md \u00a71 (Data model), SEASON entity block and ER diagram (SEASON ||--o{ SEASON_RESULT : \"scoped to\", SEASON ||--o{ HALL_OF_FAME_ENTRY : \"archives into\"). Season = a seasonal contest period (winter/spring/summer/autumn) with a start/end date and Active/Closed status. Standalone table -- no FK to other tables in this layer (Season Result and Hall of Fame Entry, which reference Season, are out of scope -- future layers 8-9).",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_Season",
+    "logicalName": "rpo_season",
+    "entitySetName": "rpo_seasons",
+    "metadataId": "06b0926e-4025-4075-baf9-d5445fa9b075",
+    "displayName": "Season",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_seasonid",
+    "purpose": "A seasonal contest period (winter/spring/summer/autumn). Employees compete within a season; at season close the top-1 winner per category is crowned and archived to Hall of Fame Entry (future layer). This layer only creates the standalone Season table -- Season Result and Hall of Fame Entry (which will hold lookups to Season) are out of scope here."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "requiredLevel": "None",
+      "notes": "Primary name column, auto-created with the table. Seed data uses a human-friendly season label, e.g. 'Winter 2026'."
+    },
+    {
+      "logicalName": "rpo_startdate",
+      "schemaName": "rpo_StartDate",
+      "displayName": "Start Date",
+      "type": "DateTime",
+      "requiredLevel": "ApplicationRequired",
+      "format": "DateOnly",
+      "dateTimeBehavior": "DateOnly",
+      "notes": "Per the ARCHITECTURE.md ERD, Season.startdate is a pure 'date' (no time-of-day component). Created via raw Web API PUT with explicit Format='DateOnly' and DateTimeBehavior.Value='DateOnly' set from the start -- see NEW GOTCHA note below, this avoids the DateTimeBehavior-left-unset issue documented by prior layers."
+    },
+    {
+      "logicalName": "rpo_enddate",
+      "schemaName": "rpo_EndDate",
+      "displayName": "End Date",
+      "type": "DateTime",
+      "requiredLevel": "ApplicationRequired",
+      "format": "DateOnly",
+      "dateTimeBehavior": "DateOnly",
+      "notes": "Same pattern as rpo_StartDate -- pure date, DateOnly format/behavior set at creation time via raw Web API."
+    },
+    {
+      "logicalName": "rpo_status",
+      "schemaName": "rpo_Status",
+      "displayName": "Status",
+      "type": "Picklist (local choice)",
+      "requiredLevel": "None",
+      "options": {
+        "100000000": "Active",
+        "100000001": "Closed"
+      },
+      "notes": "Created via client.tables.add_columns() with a Python IntEnum (SeasonStatus.ACTIVE=100000000, SeasonStatus.CLOSED=100000001) -- no known SDK gotcha for local choice columns, matches the pattern used for rpo_poutinesubmission.rpo_status in layer 2. RequiredLevel left as 'None' to match the existing convention observed on Poutine Submission's status column (optional at the platform level; enforced by app/business logic instead). NEW GOTCHA (see creationMethod.optionLabelCasingGotcha below): the SDK's IntEnum-driven choice creation auto-generates option labels from the enum member NAME in ALL CAPS ('ACTIVE'/'CLOSED'), not the exact display text ARCHITECTURE.md specifies ('Active'/'Closed') -- had to be fixed with a follow-up UpdateOptionValue call."
+    }
+  ],
+  "lookups": [],
+  "solutionAttachment": {
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 (Entity) filtered to the poutineleaguecore solutionid and confirmed the rpo_season table (metadata GUID 06b0926e-4025-4075-baf9-d5445fa9b075) is present -- attached automatically via the solution= parameter on client.tables.create() (no pac solution add-solution-component call was needed, consistent with the layer 5 Review table experience)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) for table + choice column; raw Web API for the two DateOnly date columns.",
+    "phasedCreation": "1) client.tables.create('rpo_Season', {}, solution='poutineleaguecore', primary_column='rpo_Name') to create the table with only the auto-generated primary name column. 2) Waited ~20s for metadata propagation. 3) client.tables.add_columns('rpo_Season', {'rpo_Status': SeasonStatus}) via IntEnum for the local choice column. 4) Waited ~15s. 5) Raw Web API POST to EntityDefinitions(LogicalName='rpo_season')/Attributes for rpo_StartDate and rpo_EndDate, each a DateTimeAttributeMetadata with Format='DateOnly' and DateTimeBehavior.Value='DateOnly' set explicitly in the initial payload (not as a follow-up fix), RequiredLevel='ApplicationRequired'. Both returned HTTP 204. 6) Waited ~15s, then verified all rpo_ columns via client.tables.list_columns('rpo_season').",
+    "confirmedNoNewGotcha": "Setting Format and DateTimeBehavior explicitly in the SAME initial Web API payload (rather than as a follow-up PATCH after SDK-created columns) avoided the DateTimeBehavior-left-unset issue documented by prior layers entirely -- no fixup pass was needed for the two date columns on this table.",
+    "requiredLevelOnDateColumns": "RequiredLevel was included directly in the raw Web API payload for both DateOnly columns (ApplicationRequired) since raw Web API attribute creation exposes this property natively -- no separate PUT was needed, unlike the Integer RequiredLevel/MinValue gotcha documented for the Review table's rpo_starrating column in layer 5 (that gotcha was specific to the SDK's generic add_columns()/create() type-string path, not raw Web API attribute creation).",
+    "newGotcha_optionLabelCasing": "client.tables.add_columns() with a Python IntEnum auto-generates local choice option labels from the Python enum MEMBER NAME verbatim (e.g. SeasonStatus.ACTIVE -> label 'ACTIVE', all caps), not a human-friendly casing. ARCHITECTURE.md specifies 'Active'/'Closed' (title case) for Season.status. Fixed with two raw Web API POSTs to the root-level unbound action 'UpdateOptionValue' (NOT scoped under EntityDefinitions(...) -- that returns a 404; it must be called at /api/data/v9.2/UpdateOptionValue) with body {EntityLogicalName, AttributeLogicalName, Value, Label, MergeLabels: true}. Recommendation for future layers: when creating a local choice column via an IntEnum whose member names don't already match the desired display casing, either name the enum members in the desired casing (Python enum members are conventionally UPPER_CASE, which conflicts with typical Title Case business labels) or immediately follow up with UpdateOptionValue calls to correct the labels before seeding data."
+  }
+}

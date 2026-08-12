@@ -1,0 +1,88 @@
+{
+  "description": "Schema definition used to create the Hall of Fame Entry table (layer 9/9, FINAL layer of the Poutine League Dataverse data model build-out): rpo_HallOfFameEntry. Source of truth: ARCHITECTURE.md Sec 1 (Data model), HALL_OF_FAME_ENTRY entity block: 'All-time winners, archived at season close... Lookup to Season, lookup to Category, winner (employee or poutine), badge/title text.'",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "designDecision": {
+    "problem": "ARCHITECTURE.md describes the winner as polymorphic ('employee or poutine'), depending on the crowned Category's computation type.",
+    "chosenApproach": "Unlike Season Result (which stores a FULL ranked list and needed a child table, rpo_SeasonResultEntry), Hall of Fame Entry stores exactly ONE winner (top-1) per season+category. Modeled directly on rpo_HallOfFameEntry as two nullable lookups -- rpo_EmployeeId (systemuser) and rpo_PoutineSubmissionId (rpo_PoutineSubmission) -- exactly one populated per row depending on the Category's computationtype. No child table needed; this is simpler than layer 8's decomposition, per the coordinator's design note.",
+    "invitesHumanReview": false
+  },
+  "tables": [
+    {
+      "schemaName": "rpo_HallOfFameEntry",
+      "logicalName": "rpo_halloffameentry",
+      "entitySetName": "rpo_halloffameentries",
+      "displayName": "Hall of Fame Entry",
+      "primaryNameAttribute": "rpo_name",
+      "primaryIdAttribute": "rpo_halloffameentryid",
+      "purpose": "All-time winner record, archived at season close: one row per season+category combination representing the crowned top-1 winner.",
+      "columns": [
+        {
+          "logicalName": "rpo_name",
+          "schemaName": "rpo_Name",
+          "displayName": "Name",
+          "type": "String",
+          "notes": "Primary name column, auto-created with the table. Seed data composes '<Season name> - <Category name> Champion'."
+        },
+        {
+          "logicalName": "rpo_badgetitle",
+          "schemaName": "rpo_BadgeTitle",
+          "displayName": "Badge Title",
+          "type": "String",
+          "notes": "Human-readable badge/title text, e.g. 'Season Winter 2025-2026 -- Best Critic Champion'."
+        }
+      ],
+      "lookups": [
+        {
+          "logicalName": "rpo_seasonid",
+          "schemaName": "rpo_SeasonId",
+          "displayName": "Season",
+          "referencedTable": "rpo_season",
+          "required": true,
+          "relationshipSchemaName": "rpo_season_rpo_halloffameentry_rpo_SeasonId",
+          "creationMethod": "client.tables.create_lookup_field() -- created with default RequiredLevel=None, then patched to ApplicationRequired via raw Web API PUT on the LookupAttributeMetadata resource (matches layer 8's Season lookup requiredness on rpo_SeasonResult)."
+        },
+        {
+          "logicalName": "rpo_categoryid",
+          "schemaName": "rpo_CategoryId",
+          "displayName": "Category",
+          "referencedTable": "rpo_category",
+          "required": true,
+          "relationshipSchemaName": "rpo_category_rpo_halloffameentry_rpo_CategoryId",
+          "creationMethod": "client.tables.create_lookup_field() -- same RequiredLevel patch as rpo_SeasonId above."
+        },
+        {
+          "logicalName": "rpo_employeeid",
+          "schemaName": "rpo_EmployeeId",
+          "displayName": "Employee",
+          "referencedTable": "systemuser",
+          "referencedAttribute": "systemuserid",
+          "required": false,
+          "relationshipSchemaName": "rpo_HallOfFameEntry_Employee",
+          "creationMethod": "client.tables.create_lookup_field() FAILS for lookups to systemuser (documented gotcha: auto-generated relationship schema name lacks a customization prefix). Worked around by calling client.tables.create_one_to_many_relationship() directly with LookupAttributeMetadata + OneToManyRelationshipMetadata, supplying an explicit rpo_-prefixed relationship schema name ('rpo_HallOfFameEntry_Employee').",
+          "notes": "Nullable. Populated only when the crowned Category's computationtype is employee-based (try_count_by_submitter, try_count_by_employee, review_helpfulness_score). Exactly one of rpo_EmployeeId / rpo_PoutineSubmissionId is populated per row -- never both, never neither."
+        },
+        {
+          "logicalName": "rpo_poutinesubmissionid",
+          "schemaName": "rpo_PoutineSubmissionId",
+          "displayName": "Poutine Submission",
+          "referencedTable": "rpo_poutinesubmission",
+          "required": false,
+          "relationshipSchemaName": "rpo_poutinesubmission_rpo_halloffameentry_rpo_PoutineSubmissionId",
+          "creationMethod": "client.tables.create_lookup_field() -- worked as-is (referenced table already carries the rpo prefix).",
+          "notes": "Nullable. Populated only when the crowned Category's computationtype is poutine-based (weighted_rating)."
+        }
+      ]
+    }
+  ],
+  "solutionAttachment": {
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 filtered to solutionid=poutineleaguecore and confirmed rpo_halloffameentry (MetadataId a7a23e4b-1c31-45dd-a883-dbffc5eee0b7) is present, attached automatically via the solution= parameter on client.tables.create() (no pac solution add-solution-component call was needed, consistent with layers 4 and 8)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) with raw Web API for the RequiredLevel patch on the two required lookups.",
+    "phasedCreation": "Table created first (with rpo_BadgeTitle column inline), waited ~45s for metadata propagation, then all 4 lookups created sequentially (Season, Category, PoutineSubmission, Employee) with pauses between each, using a retry_metadata wrapper (per dv-metadata's metadata-propagation.md) to absorb transient 'entity not found in MetadataCache' lock-contention errors on the Category and Employee lookups.",
+    "gotchasEncountered": "Transient 'EntityId not found in MetadataCache.LazyDynamicMetadataCache' errors recurred on 2-3 of the lookup creations despite 20-45s waits after table creation -- resolved with a retry-with-backoff wrapper (20s, 40s, 60s...) rather than a single fixed wait. This is a slightly worse propagation delay than layer 8 saw, but no delete+recreate cycles were needed."
+  }
+}
