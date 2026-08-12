@@ -108,17 +108,16 @@ export function MapScreen() {
   }
 
   if (isLoading) {
-    return <EmptyState eyebrow="Phase 4" title="Map view" description="Loading the map…" />;
+    return <EmptyState title="Map view" description="Loading the map…" />;
   }
 
   if (loadError) {
-    return <EmptyState eyebrow="Phase 4" title="Map view" description={loadError} />;
+    return <EmptyState title="Map view" description={loadError} />;
   }
 
   if (pins.length === 0) {
     return (
       <EmptyState
-        eyebrow="Phase 4"
         title="Map view"
         description={
           ungeocodedCount > 0
@@ -134,7 +133,6 @@ export function MapScreen() {
   return (
     <div className="map-screen">
       <header className="map-screen__header">
-        <p className="map-screen__eyebrow">Phase 4</p>
         <h1 className="map-screen__title">Map view</h1>
         <p className="map-screen__count">
           {totalPoutines} approved poutine{totalPoutines === 1 ? '' : 's'} across {pins.length} restaurant

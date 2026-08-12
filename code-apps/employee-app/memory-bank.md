@@ -471,6 +471,23 @@ Built on branch `rpothin-employee-app-map-view`, stacked on the Phase 3 branch
       `leaflet`/`react-leaflet` imports cleanly; a full data-rendering check
       against live pins wasn't possible due to the known `pac code push`
       blocker (below) — same limitation as Phases 1–3.
+- [x] **Post-rebase fix** (after rebasing `--onto` the rewritten Phase 1–3
+      history, which already carried `9a2b0e8`/`d224c00`'s "Phase N" label
+      removal + lookup `$select` fixes): applied the same "Phase N" label
+      removal to this layer's own code. Removed the `eyebrow="Phase 4"` prop
+      from all three `EmptyState` calls and the `<p className=
+      "map-screen__eyebrow">Phase 4</p>` line from `MapScreen.tsx`'s header,
+      plus the now-unused `.map-screen__eyebrow` CSS rule from
+      `MapScreen.css` — build-phase labels are an internal sequencing concept
+      only and shouldn't leak into the product UI, matching Phases 1–3.
+      Double-checked `src/data/restaurants.ts` and `src/data/mapPins.ts` for
+      the lookup `$select` bug pattern found in Phases 1–3: `RESTAURANT_SELECT`
+      only references the Restaurant table's own primitive columns
+      (`rpo_restaurantid`, `rpo_name`, `rpo_address`, `rpo_latitude`,
+      `rpo_longitude`) — none of them are lookups to another table, so no
+      `_value`-suffixed form is needed here; no fix required in these two
+      files. Re-validated `npm run lint`, `npm run build`, `make app-gate` —
+      all pass.
 
 ### Autonomous decisions made this phase (no live user available, autopilot mode)
 
