@@ -70,12 +70,16 @@ Dataverse (`shared_commondataserviceforapps`, connection
 - `src/components/RestaurantPicker/`, `src/components/TagMultiSelect/`,
   `src/components/StatusBadge/`, `src/components/SubmissionForm/`,
   `src/components/MySubmissionsList/` — Phase 1 "Submit a poutine" components.
+- `src/components/PoutineCard/`, `src/components/BrowseFilters/`,
+  `src/components/SubmissionDetail/` — Phase 2 "Browse/List" components.
 - `src/lib/dataverseClient.ts` — generic Dataverse access wrapper (Phase 1).
 - `src/data/{constants,currentUser,restaurants,tags,submissions}.ts` — Phase 1
-  domain/business logic.
-- `src/screens/SubmitScreen.tsx` — real Phase 1 implementation (was a placeholder
-  in Phase 0). `src/screens/{Browse,Map,Leaderboards,Chat}Screen.tsx` — still
-  Phase 0 placeholders, built in later phases.
+  domain/business logic. `src/data/{tries,reviews,feedback}.ts` — Phase 2 read-only
+  Try/Review/aggregate logic.
+- `src/screens/SubmitScreen.tsx` — real Phase 1 implementation.
+  `src/screens/BrowseScreen.tsx` — real Phase 2 implementation (was a placeholder
+  through Phase 1). `src/screens/{Map,Leaderboards,Chat}Screen.tsx` — still Phase 0
+  placeholders, built in later phases.
 - `src/App.tsx` — `HashRouter` + route table (HashRouter used because the Power
   Apps player does not support arbitrary server-side deep-link routing).
 
@@ -155,6 +159,94 @@ Built on branch `rpothin-redesigned-garbanzo`, stacked on the Phase 0 branch
   blocker as Phase 0 (feature flag not yet enabled for this environment). All
   validation this phase was via local build/lint/type-check only.
 
+## Completed steps (Phase 2 — Browse/List discovery view)
+
+Built on branch `rpothin-employee-app-browse-discovery`, stacked on the Phase 1
+branch (`rpothin-redesigned-garbanzo`, PR #27).
+
+- [x] `src/data/tries.ts` (new) — read-only `TryRow` + `listTriesForSubmissions()`,
+      filtered by `_rpo_poutinesubmissionid_value` (an OR-joined `eq` filter over the
+      given submission ids, following the same "IN via OR" pattern established in
+      Phase 1 for the active-status filter).
+- [x] `src/data/reviews.ts` (new) — read-only `ReviewRow` + `listReviewsForTries()`,
+      filtered by `_rpo_tryid_value`. **Schema note**: Review has no direct lookup to
+      PoutineSubmission — it only links to Try (`rpo_tryid`), which in turn links to
+      PoutineSubmission. Reviews are therefore always resolved via
+      "submission → its Tries → those Tries' Reviews", never a single filter.
+- [x] `src/data/feedback.ts` (new) — aggregation layer over Try+Review:
+      `getAggregatesForSubmissions()` (try count / review count / average star rating
+      per submission, computed client-side from just two Dataverse round-trips
+      regardless of submission count — all Tries for the set, then all Reviews for
+      those Tries) and `getFeedbackForSubmission()` (full Try/Review lists for the
+      detail view).
+- [x] `src/data/submissions.ts` extended: `photoDataUrl` field on
+      `PoutineSubmissionRow`, a `SUBMISSION_SELECT_WITH_PHOTO` select list (adds
+      `rpo_photo`), `listApprovedSubmissions()` (the public Browse feed query), and
+      `getSubmissionWithPhoto()` (detail-view fetch). The original `SUBMISSION_SELECT`/
+      `getSubmission()` are untouched so Phase 1's My Submissions view isn't forced to
+      pay for photo payload it doesn't render.
+- [x] `src/components/PoutineCard/` (new) — Browse feed list item: photo (or a 🍟
+      placeholder), poutine name, restaurant name, price, tag chips, and an
+      aggregate line ("Not tried yet" / "N tries · no reviews yet" /
+      "★ X.X (N reviews) · N tries").
+- [x] `src/components/BrowseFilters/` (new) — search box (poutine/restaurant name)
+      + tag chip filter, reusing Phase 1's `TagMultiSelect` component unmodified as
+      the filter control.
+- [x] `src/components/SubmissionDetail/` (new) — read-only detail view: photo, name,
+      restaurant name/address, price, tags, description, and full Tries/Reviews
+      lists (star rating, reviewer name, date, comment). A "← Back to Browse"
+      button returns to the list. Try/Review *creation* is explicitly out of scope
+      (Phase 3) — this view only displays existing data.
+- [x] `src/screens/BrowseScreen.tsx` rewritten from the Phase 0 `EmptyState`
+      placeholder: loads `listApprovedSubmissions()` + `listTags()` +
+      `getAggregatesForSubmissions()` on mount, applies search/tag filtering
+      client-side, renders `BrowseFilters` + a grid of `PoutineCard`s, and toggles to
+      `SubmissionDetail` via local `view` state (no new router routes — same pattern
+      `SubmitScreen.tsx` already uses for its tabs/edit view).
+- [x] No map integration this phase (Map is Phase 4, a separate screen).
+- [x] `npm run lint`, `npm run build` (`tsc -b && vite build`), and `make app-gate`
+      all pass. Impeccable's design hook found no issues on any new file.
+
+### Autonomous decisions made this phase (no live user available, autopilot mode)
+
+- **"Approved" is the only publicly-visible status.** The Browse feed queries
+  `rpo_status eq Approved` only — Draft/Submitted/In Review are still in the
+  submitter's/moderator's workflow and Rejected never becomes public. This mirrors
+  the status-lifecycle reasoning already recorded in Phase 1.
+- **Tag filtering uses OR logic** (a submission matches if it has *any* of the
+  selected tags), not AND (must have *all* selected tags). This is the more common
+  "browse by tag" UX pattern for a discovery feed; AND-logic was considered and
+  rejected as unexpectedly restrictive (e.g. selecting "Spicy" and "Vegetarian"
+  would hide poutines that are one or the other but not both).
+- **Filtering happens entirely client-side**, after a single fetch of all Approved
+  submissions (tags and photo already expanded/selected). At this app's demo scale,
+  this is far simpler and more robust than server-side OData filtering across an
+  N:N tag relationship or a joined restaurant-name search, both of which the
+  connector doesn't support cleanly via `$filter`.
+- **Photo strategy: thumbnail-only, no full-size download.** Dataverse image
+  columns return a base64 thumbnail directly on a normal `$select` retrieve; a
+  separate `?size=full` download action exists but needs a `Range` header and can
+  fail if `CanStoreFullImage` was false at upload time. Given the demo scale and to
+  avoid that extra error-handling surface, both the Browse card and the detail view
+  render only the inline thumbnail.
+- **No new router routes.** Following `SubmitScreen.tsx`'s existing precedent, the
+  list ↔ detail toggle uses local component state (`view: "list" | "detail"` +
+  `selectedSubmissionId`) inside `BrowseScreen.tsx` rather than adding
+  `HashRouter` routes like `/browse/:id` — keeps the pattern consistent with the
+  rest of the codebase.
+- **Rating aggregation is a simple unweighted mean** of `rpo_starrating` across all
+  Reviews for a submission (via its Tries), not a Bayesian/weighted average or one
+  that considers `rpo_helpfulnessscore`. Simpler and adequate for a v1 discovery
+  feed; a smarter ranking algorithm can be layered on later if needed (e.g. for
+  Leaderboards in Phase 5, which may want a different formula).
+- **No automated test suite added**, consistent with Phase 1 — the repo still has
+  no test runner installed. The new Try/Review/aggregate logic in `src/data/` was
+  validated via `tsc`/ESLint type-checking, `npm run build`, and manual code review
+  only.
+- **No live Dataverse smoke test was possible** — same known `pac code push`
+  blocker as Phases 0–1 (feature flag not yet enabled for this environment). All
+  validation this phase was via local build/lint/type-check only.
+
 ## Next steps (per the agreed phased plan)
 
 1. Get an environment admin to enable "Power Apps code apps" on
@@ -162,7 +254,9 @@ Built on branch `rpothin-redesigned-garbanzo`, stacked on the Phase 0 branch
 2. Export/unpack the `poutineleaguecore` solution to `solutions/poutineleaguecore/`
    to bring the new Employee role into source control.
 3. Open the Phase 0 PR (stacked via `gh-stack`), gated by `make app-gate` (passing).
-4. Once the environment blocker clears, do a live smoke test of Phase 1 (create,
-   edit, withdraw, cap enforcement) against real Dataverse data.
-5. Phase 2 — Browse/List. Phase 3 — Try + Review. Phase 4 — Map. Phase 5 —
-   Leaderboards/Hall of Fame (Top Poutine + Best Supporter only for v1).
+4. Once the environment blocker clears, do a live smoke test of Phases 1–2
+   (submission CRUD, cap enforcement, Browse feed, detail view) against real
+   Dataverse data.
+5. Phase 3 — Try + Review creation (the write side of the read-only data this
+   phase surfaces). Phase 4 — Map. Phase 5 — Leaderboards/Hall of Fame (Top
+   Poutine + Best Supporter only for v1).

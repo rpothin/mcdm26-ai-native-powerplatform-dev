@@ -1,0 +1,14 @@
+.browse-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sticker);
+  padding: var(--space-md);
+}
+
+.browse-filters .form-field {
+  margin-bottom: 0;
+}

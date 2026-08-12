@@ -10,6 +10,8 @@ export const ENTITY_SETS = {
   restaurants: 'rpo_restaurants',
   tags: 'rpo_tags',
   systemUsers: 'systemusers',
+  tries: 'rpo_tries',
+  reviews: 'rpo_reviews',
 } as const;
 
 /** Schema name of the PoutineSubmission <-> Tag many-to-many relationship. */

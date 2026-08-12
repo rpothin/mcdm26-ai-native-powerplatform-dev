@@ -1,0 +1,146 @@
+.submission-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 720px;
+}
+
+.submission-detail__back {
+  align-self: flex-start;
+}
+
+.submission-detail__card {
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sticker);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.submission-detail__photo {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-gravy-ink);
+  margin-bottom: var(--space-sm);
+}
+
+.submission-detail__title {
+  font-family: var(--font-display);
+  font-size: var(--text-headline-size);
+  font-weight: var(--text-headline-weight);
+  line-height: var(--text-headline-line-height);
+  color: var(--color-gravy-ink);
+}
+
+.submission-detail__restaurant {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  color: var(--color-gravy-text);
+}
+
+.submission-detail__address {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text-soft);
+}
+
+.submission-detail__meta {
+  font-family: var(--font-score);
+  font-size: var(--text-score-size);
+  font-weight: var(--text-score-weight);
+  color: var(--color-gravy-text);
+}
+
+.submission-detail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.submission-detail__description {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-line-height);
+  color: var(--color-gravy-text);
+}
+
+.submission-detail__feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.submission-detail__section-title {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  color: var(--color-gravy-ink);
+}
+
+.submission-detail__empty {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text-soft);
+}
+
+.submission-detail__try-list,
+.submission-detail__review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.submission-detail__try-item {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text);
+}
+
+.submission-detail__review-item {
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.submission-detail__review-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.submission-detail__review-rating {
+  color: var(--color-fry-gold-deep);
+  font-size: var(--text-title-size);
+}
+
+.submission-detail__review-author {
+  font-family: var(--font-body);
+  font-weight: var(--text-title-weight);
+  color: var(--color-gravy-text);
+}
+
+.submission-detail__review-date {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  color: var(--color-gravy-text-soft);
+}
+
+.submission-detail__review-comment {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text);
+}

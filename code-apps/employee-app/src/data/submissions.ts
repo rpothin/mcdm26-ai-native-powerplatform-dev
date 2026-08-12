@@ -34,9 +34,20 @@ export interface PoutineSubmissionRow {
   restaurantName: string | null;
   createdOn: string | null;
   tags: TagRow[];
+  /** Data-URL of the thumbnail-sized photo, when `rpo_photo` was selected and one exists. */
+  photoDataUrl: string | null;
 }
 
 const SUBMISSION_SELECT = ['rpo_poutinesubmissionid', 'rpo_name', 'rpo_description', 'rpo_price', 'rpo_status', '_rpo_restaurantid_value', 'createdon'];
+/**
+ * Same as {@link SUBMISSION_SELECT} plus the `rpo_photo` image column. Dataverse
+ * returns image columns as a base64-encoded thumbnail directly alongside other
+ * selected fields on a normal retrieve (no separate download call needed) — see
+ * "Use image column data in Microsoft Dataverse" in the Dataverse docs. Kept as a
+ * separate select list so Phase 1's My Submissions view (which doesn't render a
+ * photo) isn't forced to pay for the extra payload.
+ */
+const SUBMISSION_SELECT_WITH_PHOTO = [...SUBMISSION_SELECT, 'rpo_photo'];
 const TAG_EXPAND = `${SUBMISSION_TAG_RELATIONSHIP}($select=rpo_tagid,rpo_name)`;
 
 function escapeODataString(value: string): string {
@@ -48,6 +59,7 @@ function toSubmissionRow(row: DataverseRow): PoutineSubmissionRow {
     | string
     | undefined;
   const relatedTags = (row[SUBMISSION_TAG_RELATIONSHIP] as DataverseRow[] | undefined) ?? [];
+  const photo = row.rpo_photo as string | null | undefined;
   return {
     rpo_poutinesubmissionid: String(row.rpo_poutinesubmissionid),
     rpo_name: (row.rpo_name as string | undefined) ?? '',
@@ -58,6 +70,7 @@ function toSubmissionRow(row: DataverseRow): PoutineSubmissionRow {
     restaurantName: restaurantName ?? null,
     createdOn: (row.createdon as string | null | undefined) ?? null,
     tags: relatedTags.map((t) => ({ rpo_tagid: String(t.rpo_tagid), rpo_name: (t.rpo_name as string) ?? '' })),
+    photoDataUrl: photo ? `data:image;base64,${photo}` : null,
   };
 }
 
@@ -66,6 +79,22 @@ export async function listMySubmissions(submitterId: string): Promise<PoutineSub
   const rows = await listRows(ENTITY_SETS.poutineSubmissions, {
     select: SUBMISSION_SELECT,
     filter: `_rpo_submitterid_value eq '${escapeODataString(submitterId)}'`,
+    orderBy: ['createdon desc'],
+    expand: TAG_EXPAND,
+  });
+  return rows.map(toSubmissionRow);
+}
+
+/**
+ * List every submission visible in the public Browse feed — i.e. those that have
+ * cleared moderation. Only `Approved` is a publicly-visible status: Draft/Submitted/
+ * In Review are still going through the submitter's or moderator's workflow, and
+ * Rejected never becomes public. Includes tags and the photo thumbnail (if any).
+ */
+export async function listApprovedSubmissions(): Promise<PoutineSubmissionRow[]> {
+  const rows = await listRows(ENTITY_SETS.poutineSubmissions, {
+    select: SUBMISSION_SELECT_WITH_PHOTO,
+    filter: `rpo_status eq ${SubmissionStatus.Approved}`,
     orderBy: ['createdon desc'],
     expand: TAG_EXPAND,
   });
@@ -147,6 +176,13 @@ export async function getSubmission(submissionId: string): Promise<PoutineSubmis
   const row = await getRow(ENTITY_SETS.poutineSubmissions, submissionId, [...SUBMISSION_SELECT]);
   // GetItem doesn't accept $expand in this connector op the way List does for our purposes here,
   // so tags are fetched separately and merged in.
+  const tags = await getSubmissionTags(submissionId);
+  return { ...toSubmissionRow(row), tags };
+}
+
+/** Same as {@link getSubmission}, but also includes the `rpo_photo` thumbnail — used by the Browse detail view. */
+export async function getSubmissionWithPhoto(submissionId: string): Promise<PoutineSubmissionRow> {
+  const row = await getRow(ENTITY_SETS.poutineSubmissions, submissionId, [...SUBMISSION_SELECT_WITH_PHOTO]);
   const tags = await getSubmissionTags(submissionId);
   return { ...toSubmissionRow(row), tags };
 }
