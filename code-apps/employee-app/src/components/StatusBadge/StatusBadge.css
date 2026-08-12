@@ -33,3 +33,9 @@
   background-color: var(--color-ketchup-red);
   color: var(--color-paper-white);
 }
+
+/* Phase 3: reused for the "Tried" / "You reviewed this" indicators in SubmissionDetail. */
+.status-badge--tried {
+  background-color: var(--color-relish-green);
+  color: var(--color-paper-white);
+}

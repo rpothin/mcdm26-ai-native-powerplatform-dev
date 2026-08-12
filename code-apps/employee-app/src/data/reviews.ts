@@ -1,10 +1,10 @@
 /**
- * Review lookup helpers (Phase 2, read-only). A Review is a star rating +
- * comment left after a Try — see ARCHITECTURE.md's data model. Review
- * *creation* is out of scope for this phase (Phase 3); this module only reads
- * existing Review rows so the Browse/detail views can surface ratings.
+ * Review lookup + creation helpers. A Review is a star rating + comment left
+ * after a Try — see ARCHITECTURE.md's data model. Phase 2 added the read-only
+ * lookups below; Phase 3 adds `getReviewForTryAndReviewer` + `createReview` so
+ * the SubmissionDetail view can let an employee leave a review after a Try.
  */
-import { listRows, type DataverseRow } from '../lib/dataverseClient';
+import { createRow, listRows, type DataverseRow } from '../lib/dataverseClient';
 import { ENTITY_SETS } from './constants';
 
 export interface ReviewRow {
@@ -64,4 +64,64 @@ export async function listReviewsForTries(tryIds: string[]): Promise<ReviewRow[]
     orderBy: ['createdon desc'],
   });
   return rows.map(toReviewRow);
+}
+
+/**
+ * Finds an existing Review left by this reviewer on this Try, if any.
+ *
+ * See memory-bank.md's Phase 3 "one review per employee per poutine" decision:
+ * combined with "one Try per employee per submission" (see `./tries`), checking
+ * per-Try is equivalent to checking per-employee-per-submission, and avoids a
+ * second round-trip to re-resolve the submission id from the Try. The schema
+ * has no alternate key enforcing this, so this check-then-create pattern is the
+ * enforcement mechanism (same convention as the submission cap / Try dedup).
+ */
+export async function getReviewForTryAndReviewer(tryId: string, reviewerId: string): Promise<ReviewRow | null> {
+  const rows = await listRows(ENTITY_SETS.reviews, {
+    select: REVIEW_SELECT,
+    filter:
+      `_rpo_tryid_value eq '${escapeODataString(tryId)}' ` +
+      `and _rpo_reviewerid_value eq '${escapeODataString(reviewerId)}'`,
+    top: 1,
+  });
+  return rows.length > 0 ? toReviewRow(rows[0]) : null;
+}
+
+export interface CreateReviewInput {
+  tryId: string;
+  reviewerId: string;
+  /** 1-5, required (matches the `rpo_starrating` schema-required field). */
+  starRating: number;
+  /** Optional written comment (schema-optional, but product intent is a review = rating + comment). */
+  comment: string | null;
+}
+
+/**
+ * Creates a Review tied to a Try. Callers should check
+ * {@link getReviewForTryAndReviewer} first and refuse a second review instead
+ * of calling this again — it is not re-checked here, following the same
+ * "caller enforces, function stays a single atomic call" convention as
+ * `src/data/submissions.ts#createSubmission`.
+ */
+export async function createReview(input: CreateReviewInput): Promise<ReviewRow> {
+  if (!Number.isInteger(input.starRating) || input.starRating < 1 || input.starRating > 5) {
+    throw new Error('Star rating must be a whole number between 1 and 5.');
+  }
+  const comment = input.comment?.trim() || null;
+  const created = await createRow(ENTITY_SETS.reviews, {
+    'rpo_tryid@odata.bind': `/${ENTITY_SETS.tries}(${input.tryId})`,
+    'rpo_reviewerid@odata.bind': `/${ENTITY_SETS.systemUsers}(${input.reviewerId})`,
+    rpo_starrating: input.starRating,
+    rpo_comment: comment,
+  });
+  return {
+    rpo_reviewid: String(created.rpo_reviewid),
+    tryId: input.tryId,
+    reviewerId: input.reviewerId,
+    reviewerName: null,
+    starRating: input.starRating,
+    comment,
+    helpfulnessScore: null,
+    createdOn: new Date().toISOString(),
+  };
 }

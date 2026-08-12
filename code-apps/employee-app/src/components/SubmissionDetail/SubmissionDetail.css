@@ -144,3 +144,47 @@
   font-size: var(--text-body-size);
   color: var(--color-gravy-text);
 }
+
+/* Phase 3: "Log a try" / "Leave a review" action section. */
+.submission-detail__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.submission-detail__action-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.submission-detail__review-form {
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sticker);
+  padding: var(--space-lg);
+}
+
+.submission-detail__star-picker {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.submission-detail__star-btn {
+  font-size: var(--text-headline-size);
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-checker-light);
+}
+
+.submission-detail__star-btn--filled {
+  color: var(--color-fry-gold-deep);
+}

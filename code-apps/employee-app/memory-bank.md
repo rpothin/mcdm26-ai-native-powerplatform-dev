@@ -72,14 +72,19 @@ Dataverse (`shared_commondataserviceforapps`, connection
   `src/components/MySubmissionsList/` — Phase 1 "Submit a poutine" components.
 - `src/components/PoutineCard/`, `src/components/BrowseFilters/`,
   `src/components/SubmissionDetail/` — Phase 2 "Browse/List" components.
+  `SubmissionDetail` gained the Phase 3 Try/Review creation UI (still the same
+  component/file — no new component was introduced for this phase).
 - `src/lib/dataverseClient.ts` — generic Dataverse access wrapper (Phase 1).
 - `src/data/{constants,currentUser,restaurants,tags,submissions}.ts` — Phase 1
   domain/business logic. `src/data/{tries,reviews,feedback}.ts` — Phase 2 read-only
-  Try/Review/aggregate logic.
+  Try/Review/aggregate logic, extended in Phase 3 with `createTry`/
+  `getTryForEmployee`, `createReview`/`getReviewForTryAndReviewer`, and
+  `aggregateFromFeedback`.
 - `src/screens/SubmitScreen.tsx` — real Phase 1 implementation.
   `src/screens/BrowseScreen.tsx` — real Phase 2 implementation (was a placeholder
-  through Phase 1). `src/screens/{Map,Leaderboards,Chat}Screen.tsx` — still Phase 0
-  placeholders, built in later phases.
+  through Phase 1; extended in Phase 3 with an `onAggregateChange` handler).
+  `src/screens/{Map,Leaderboards,Chat}Screen.tsx` — still Phase 0 placeholders,
+  built in later phases.
 - `src/App.tsx` — `HashRouter` + route table (HashRouter used because the Power
   Apps player does not support arbitrary server-side deep-link routing).
 
@@ -258,6 +263,129 @@ branch (`rpothin-redesigned-garbanzo`, PR #27).
   blocker as Phases 0–1 (feature flag not yet enabled for this environment). All
   validation this phase was via local build/lint/type-check only.
 
+## Completed steps (Phase 3 — Try + Review flow)
+
+Built on branch `rpothin-improved-enigma`, stacked on the Phase 2 branch
+(`rpothin-employee-app-browse-discovery`, PR #28).
+
+- [x] `src/data/tries.ts` extended: `getTryForEmployee(submissionId, employeeId)`
+      (existing-Try lookup) and `createTry({ submissionId, employeeId })` (creates a
+      `rpo_try` row via `rpo_poutinesubmissionid@odata.bind` +
+      `rpo_employeeid@odata.bind` + `rpo_triedon = new Date().toISOString()`).
+- [x] `src/data/reviews.ts` extended: `getReviewForTryAndReviewer(tryId, reviewerId)`
+      (existing-Review lookup) and `createReview({ tryId, reviewerId, starRating,
+      comment })` (creates a `rpo_review` row via `rpo_tryid@odata.bind` +
+      `rpo_reviewerid@odata.bind`; validates `starRating` is an integer 1–5 client-side,
+      matching the schema-required `rpo_starrating` field; `comment` is optional,
+      matching the schema).
+- [x] `src/data/feedback.ts` extended: `aggregateFromFeedback(feedback)` — derives the
+      same `{ tryCount, reviewCount, averageRating }` shape as
+      `getAggregatesForSubmissions`, but from an already-fetched
+      `SubmissionFeedback` for one submission (no extra round-trip). Used to refresh
+      the aggregate immediately after a Try/Review is created.
+- [x] `src/components/SubmissionDetail/SubmissionDetail.tsx` extended with the write
+      flow: resolves the signed-in employee (`getCurrentUser`) alongside the existing
+      submission/restaurant/feedback fetch; derives `myTry`/`myReview` from the
+      already-fetched `feedback` (no extra queries) by matching
+      `employeeId`/`reviewerId` against the current user; renders:
+      - an **"I've tried this!"** button when the employee has no Try yet;
+      - a **"Tried on {date}"** badge + **"Leave a review"** button once they have a
+        Try but no Review;
+      - a **"You reviewed this ★★★★★"** badge once they have both;
+      - an inline star-rating (1–5 buttons) + optional comment textarea form for
+        submitting the review.
+      After a successful create, it re-fetches this submission's feedback
+      (`getFeedbackForSubmission`) and calls the new `onAggregateChange` prop with the
+      recomputed aggregate.
+- [x] `src/screens/BrowseScreen.tsx`: passes a new `onAggregateChange` handler to
+      `SubmissionDetail` that patches just the changed submission's entry in the
+      existing `aggregates` Map (via `setAggregates` + a new `Map` copy) — so
+      navigating back to the list shows the updated try count / average rating on
+      that poutine's `PoutineCard` without refetching every submission or reloading
+      the screen.
+- [x] `src/components/StatusBadge/StatusBadge.css`: added a `.status-badge--tried`
+      modifier (reusing the existing pill/tokens pattern) for the "Tried" / "You
+      reviewed this" indicators in `SubmissionDetail` — `StatusBadge.tsx` itself stays
+      submission-status-specific, so the CSS class is applied directly rather than
+      through the typed component.
+- [x] `npm run lint`, `npm run build` (`tsc -b && vite build`), and `make app-gate`
+      all pass. Impeccable's design hook found no issues on any changed file.
+
+### Autonomous decisions made this phase (no live user available, autopilot mode)
+
+- **One Try per employee per submission (app-enforced, idempotent "log a try").**
+  The `rpo_Try` schema has no alternate key/unique constraint preventing an
+  employee from trying the same poutine multiple times, and PRODUCT.md doesn't
+  explicitly rule on it. However, "Best Seller" (the employee whose poutine got
+  the most colleagues to try it) and "Top Poutine" try/review counts would be
+  gameable if one employee could inflate the count by repeatedly "trying" the
+  same poutine. `getTryForEmployee` is checked before `createTry` (both to gate
+  the UI — showing "Tried on {date}" instead of the button once one exists —
+  and again immediately before the create call as a race guard), so a second
+  "I've tried this!" click reuses the existing Try instead of creating a
+  duplicate. Documented here per the task's request to record this kind of
+  ambiguous-rule call.
+- **One Review per employee per Try (== per submission, given the above).**
+  PRODUCT.md doesn't explicitly forbid multiple reviews from the same employee
+  on the same poutine, but "a review consists of a star rating plus a comment"
+  reads as a single verdict per person, and the ERD's `TRY ||--o| REVIEW`
+  cardinality (zero-or-one Review per Try) supports one review per Try.
+  Combined with the one-Try-per-employee decision above, checking
+  `getReviewForTryAndReviewer(tryId, reviewerId)` before `createReview` is
+  therefore equivalent to "one review per employee per poutine" and avoids a
+  second round-trip to re-resolve the submission id from the Try. Enforced the
+  same way as the Try dedup: gates the UI (no "Leave a review" button/form once
+  a review exists — replaced by a "You reviewed this ★★★★★" badge) and is
+  re-checked immediately before the create call.
+- **Inline form, not a modal.** "Log a try" is a single button (no form needed —
+  a Try has no employee-entered fields beyond the timestamp, which is set
+  server-side-equivalent via `new Date().toISOString()`). "Leave a review"
+  reveals an inline form within `SubmissionDetail` (star picker + optional
+  comment + Submit/Cancel), toggled by local `showReviewForm` state — the same
+  "local component state, no new router route" pattern `SubmitScreen.tsx` and
+  `BrowseScreen.tsx` already use for their list/detail and tab toggles. No modal
+  component exists anywhere in the codebase yet, and introducing one (with its
+  own overlay/focus-trap/dismiss semantics) for a single small form felt like
+  unnecessary new UI infrastructure for this phase's scope.
+- **Refetch-after-create, not optimistic update, for both the detail view's
+  Tries/Reviews lists and the propagated aggregate.** After a successful
+  `createTry`/`createReview`, the component calls `getFeedbackForSubmission`
+  again rather than hand-splicing the new row into local state. This guarantees
+  the freshly created Try/Review displays with the same fully-annotated shape
+  (formatted lookup display names, `createdon`, etc.) as everything else in the
+  list, at the cost of one extra network round-trip per action — an acceptable
+  trade at this app's demo scale, and consistent with Phase 1/2's general bias
+  toward straightforward correctness over premature optimization.
+- **Aggregate propagation via a new `onAggregateChange` callback prop**, not a
+  full Browse-feed reload. `BrowseScreen` already holds an `aggregates: Map`
+  keyed by submission id; `SubmissionDetail` now reports just the one
+  submission's recomputed aggregate back up after a change, and `BrowseScreen`
+  patches that one Map entry. This satisfies "update the aggregate display
+  without a full page reload" without re-fetching *all* approved submissions'
+  Tries/Reviews (which `getAggregatesForSubmissions` would require) just because
+  one poutine changed.
+- **Star rating input is 1–5 clickable star buttons** (not a numeric input or
+  slider), matching the ★ rendering already used for existing reviews and
+  `PoutineCard`'s aggregate line — keeps the "look" of a rating consistent
+  whether it's being read or written.
+- **`status-badge--tried` reuses `StatusBadge`'s CSS pattern, not the
+  component.** `StatusBadge.tsx` is typed specifically around
+  `SubmissionStatusValue` or `SUBMISSION_STATUS_LABELS`; Try/Review states
+  aren't submission statuses, so a new modifier class was added to the shared
+  `StatusBadge.css` (imported directly into `SubmissionDetail.tsx`) instead of
+  extending the component's prop type with an unrelated concept.
+- **No automated test suite added**, consistent with Phases 1–2 — the repo
+  still has no test runner installed. The new Try/Review create/dedup logic in
+  `src/data/tries.ts` and `src/data/reviews.ts` was validated via
+  `tsc`/ESLint type-checking, `npm run build`, and manual code review only.
+- **No live Dataverse smoke test was possible** — same known `pac code push`
+  blocker as Phases 0–2 (feature flag not yet enabled for this environment).
+  All validation this phase was via local build/lint/type-check only; the
+  create/dedup logic (odata.bind lookup targets, required-field validation)
+  was cross-checked directly against `solutions/poutineleaguecore/Entities/
+  rpo_Try/Entity.xml` and `.../rpo_Review/Entity.xml` for exact field logical
+  names, types, and `RequiredLevel`.
+
 ## Next steps (per the agreed phased plan)
 
 1. Get an environment admin to enable "Power Apps code apps" on
@@ -265,9 +393,8 @@ branch (`rpothin-redesigned-garbanzo`, PR #27).
 2. Export/unpack the `poutineleaguecore` solution to `solutions/poutineleaguecore/`
    to bring the new Employee role into source control.
 3. Open the Phase 0 PR (stacked via `gh-stack`), gated by `make app-gate` (passing).
-4. Once the environment blocker clears, do a live smoke test of Phases 1–2
-   (submission CRUD, cap enforcement, Browse feed, detail view) against real
-   Dataverse data.
-5. Phase 3 — Try + Review creation (the write side of the read-only data this
-   phase surfaces). Phase 4 — Map. Phase 5 — Leaderboards/Hall of Fame (Top
-   Poutine + Best Supporter only for v1).
+4. Once the environment blocker clears, do a live smoke test of Phases 1–3
+   (submission CRUD, cap enforcement, Browse feed, detail view, Try/Review
+   creation + dedup) against real Dataverse data.
+5. Phase 4 — Map. Phase 5 — Leaderboards/Hall of Fame (Top Poutine + Best
+   Supporter only for v1).

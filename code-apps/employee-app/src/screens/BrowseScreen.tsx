@@ -86,8 +86,24 @@ export function BrowseScreen() {
     setView('list');
   }
 
+  /**
+   * Applies a single submission's freshly recomputed aggregate (from Phase 3's
+   * Try/Review creation in SubmissionDetail) to the local aggregates map, so
+   * the Browse feed reflects new tries/reviews without refetching every
+   * submission or reloading the page.
+   */
+  function handleAggregateChange(changedSubmissionId: string, aggregate: SubmissionAggregate) {
+    setAggregates((prev) => {
+      const next = new Map(prev);
+      next.set(changedSubmissionId, aggregate);
+      return next;
+    });
+  }
+
   if (view === 'detail' && selectedSubmissionId) {
-    return <SubmissionDetail submissionId={selectedSubmissionId} onBack={handleBack} />;
+    return (
+      <SubmissionDetail submissionId={selectedSubmissionId} onBack={handleBack} onAggregateChange={handleAggregateChange} />
+    );
   }
 
   if (isLoading) {

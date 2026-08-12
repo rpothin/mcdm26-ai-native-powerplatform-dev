@@ -71,3 +71,20 @@ export async function getFeedbackForSubmission(submissionId: string): Promise<Su
   const reviews = await listReviewsForTries(tryIds);
   return { tries, reviews };
 }
+
+/**
+ * Derives the same {@link SubmissionAggregate} shape as
+ * {@link getAggregatesForSubmissions}, but from an already-fetched
+ * {@link SubmissionFeedback} for a single submission (no extra Dataverse
+ * round-trip). Used by the SubmissionDetail view (Phase 3) to refresh its own
+ * try count / review count / average rating right after logging a Try or
+ * submitting a Review, and to propagate that update back up to the Browse
+ * feed's aggregate map without refetching every submission.
+ */
+export function aggregateFromFeedback(feedback: SubmissionFeedback): SubmissionAggregate {
+  const tryCount = feedback.tries.length;
+  const reviewCount = feedback.reviews.length;
+  const averageRating =
+    reviewCount > 0 ? feedback.reviews.reduce((sum, r) => sum + r.starRating, 0) / reviewCount : null;
+  return { tryCount, reviewCount, averageRating };
+}

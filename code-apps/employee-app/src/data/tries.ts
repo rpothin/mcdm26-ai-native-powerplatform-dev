@@ -1,10 +1,10 @@
 /**
- * Try lookup helpers (Phase 2, read-only). A Try is an employee's honor-system
+ * Try lookup + creation helpers. A Try is an employee's honor-system
  * self-declaration that they tried a poutine — see ARCHITECTURE.md's data model.
- * Try *creation* is out of scope for this phase (Phase 3); this module only
- * reads existing Try rows so the Browse/detail views can surface try counts.
+ * Phase 2 added the read-only lookups below; Phase 3 adds `getTryForEmployee` +
+ * `createTry` so the SubmissionDetail view can let an employee log a Try.
  */
-import { listRows, type DataverseRow } from '../lib/dataverseClient';
+import { createRow, listRows, type DataverseRow } from '../lib/dataverseClient';
 import { ENTITY_SETS } from './constants';
 
 export interface TryRow {
@@ -52,4 +52,52 @@ export async function listTriesForSubmissions(submissionIds: string[]): Promise<
     orderBy: ['rpo_triedon desc'],
   });
   return rows.map(toTryRow);
+}
+
+/**
+ * Finds the given employee's existing Try for a submission, if any.
+ *
+ * See memory-bank.md's Phase 3 "one Try per employee per submission" decision:
+ * the schema doesn't enforce this (no alternate key), but callers use this
+ * check-then-create pattern (mirroring the submission-cap guard in
+ * `src/data/submissions.ts`) to keep "logging a try" idempotent per employee,
+ * so leaderboard/aggregate counts stay honest.
+ */
+export async function getTryForEmployee(submissionId: string, employeeId: string): Promise<TryRow | null> {
+  const rows = await listRows(ENTITY_SETS.tries, {
+    select: TRY_SELECT,
+    filter:
+      `_rpo_poutinesubmissionid_value eq '${escapeODataString(submissionId)}' ` +
+      `and _rpo_employeeid_value eq '${escapeODataString(employeeId)}'`,
+    top: 1,
+  });
+  return rows.length > 0 ? toTryRow(rows[0]) : null;
+}
+
+export interface CreateTryInput {
+  submissionId: string;
+  employeeId: string;
+}
+
+/**
+ * Logs a Try for the given employee/submission. Callers should check
+ * {@link getTryForEmployee} first and reuse the existing row instead of calling
+ * this again — it is not re-checked here, following the same "caller enforces,
+ * function stays a single atomic call" convention as
+ * `src/data/submissions.ts#createSubmission`.
+ */
+export async function createTry(input: CreateTryInput): Promise<TryRow> {
+  const triedOn = new Date().toISOString();
+  const created = await createRow(ENTITY_SETS.tries, {
+    'rpo_poutinesubmissionid@odata.bind': `/${ENTITY_SETS.poutineSubmissions}(${input.submissionId})`,
+    'rpo_employeeid@odata.bind': `/${ENTITY_SETS.systemUsers}(${input.employeeId})`,
+    rpo_triedon: triedOn,
+  });
+  return {
+    rpo_tryid: String(created.rpo_tryid),
+    poutineSubmissionId: input.submissionId,
+    employeeId: input.employeeId,
+    employeeName: null,
+    triedOn,
+  };
 }
