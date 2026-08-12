@@ -531,34 +531,80 @@ could be exported independently of it:
       `pa`/`power-apps` binaries) as a second path — `pa auth login` succeeded
       (correct account), but `pa app push --solution-id <solutionId>
       --non-interactive` hit the **identical** `CodeAppOperationNotAllowedInEnvironment`
-      403. This is decisive: the block is environment-side, not CLI-side. No
-      further CLI/API workaround was attempted, per this agent's constraint not
-      to work around access-control blockers — it requires a human admin action
-      in the Admin Center UI (link above).
+      403. This is decisive: the block is environment-side, not CLI-side.
 - [x] Independent of the push blocker: exported + unpacked the current
       `poutineleaguecore` Dev solution state into `solutions/poutineleaguecore/`
       (`pac solution export` → `pac solution unpack`). This picked up the
       Phase 0 **Employee security role** (`Roles/Employee.xml`,
       `RootComponent type="20"` added to `Other/Solution.xml`), which existed in
-      Dataverse since Phase 0 but had never been synced to source control. No
-      code-app component exists to export yet, since the app was never
-      successfully pushed (`appId` in `power.config.json` is still `null`).
-- [x] `make solution-gate` (pack + solution checker) passed clean — 0
-      Critical/High/Medium/Low findings.
+      Dataverse since Phase 0 but had never been synced to source control.
+- [x] `make solution-gate` passed clean at that point — 0 findings.
+
+**The user then enabled "Power Apps code apps" on `raphaelpothin-sandbox`.**
+Retrying the push still failed at first (stale cached auth token from before
+the toggle flip). Re-authenticating fixed it:
+
+- [x] `pa auth logout` then `pa auth login --account
+      raphael@rpothinmvp.onmicrosoft.com` — fresh login, confirmed via
+      `pa auth status`.
+- [x] `pa app push --solution-id c08f9f79-2c95-f111-b8dc-000d3a340fc1
+      --non-interactive` **succeeded.** Live app:
+      `https://apps.powerapps.com/play/e/36f603f9-0af2-e33d-98a5-64b02c1bac19/app/1caf2f0c-988f-4aa3-b914-f60143e69dee?tenantId=7e7df62f-7cc4-4e63-a250-a277063e1be7`.
+      `power.config.json`'s `appId` is now populated
+      (`1caf2f0c-988f-4aa3-b914-f60143e69dee`).
+- [x] Re-exported/unpacked the solution to capture the new code app as a
+      Dataverse `CanvasApps` component — `rpo_poutineleagueemployee_e772c`
+      (`solutions/poutineleaguecore/CanvasApps/`), plus a new
+      `RootComponent type="300"` in `Other/Solution.xml` and a `<CanvasApps />`
+      element in `Other/Customizations.xml`. Diff is minimal/clean.
+- [x] `make solution-gate` initially **failed** on this new component:
+      `pac solution pack --processCanvasApps` errored with *"Missing or more
+      than 1 composite reference 'BackgroundImageUri' ... cannot resolve
+      composite files"*. Root-caused via GitHub issue search to
+      `microsoft/PowerAppsCodeApps#361` (open/acknowledged) — Code Apps always
+      get an empty `backgroundImageUri` in their app metadata, a gap in
+      `@microsoft/power-apps-cli`'s `createAppMetadata`. Related closed issue
+      `#369` covers a `pac solution unpack` composite-reference bug, fixed in
+      pac CLI ≥ ~2.10.
+- [x] **Local-machine root cause, not a repo/tooling bug**: this repo's dev
+      machine had two `pac` installs — the correct/current one
+      (`C:\...\AppData\Local\Microsoft\PowerAppsCLI`, 2.10.1, which does **not**
+      have the `--processCanvasApps` bug) and a stale `dotnet tool install -g
+      microsoft.powerapps.cli.tool` (1.32.8, which does). `make`'s underlying
+      Git Bash subshell resolved the stale 1.32.8 `pac` first, silently masking
+      the fix already present in 2.10.1. Fixed by `dotnet tool uninstall -g
+      microsoft.powerapps.cli.tool`. A second wrinkle: Git Bash doesn't resolve
+      a bare `pac` to the `pac.cmd` batch shim the way `cmd.exe`/PowerShell do
+      (PATHEXT-style resolution), so after removing the dotnet-tool shim, `pac`
+      was briefly unresolvable from `make` at all. Fixed with a one-line
+      wrapper script at `~/.local/bin/pac` (already on PATH) that `exec`s the
+      real `pac.cmd` with full path/extension — a local dev-environment fix,
+      not a repo change. **No Makefile change was needed** — a
+      `--processCanvasApps` fallback was drafted mid-investigation but fully
+      reverted once the real root cause (duplicate/stale local `pac` installs)
+      was found; the plain, original Makefile packs and checks cleanly with a
+      correctly-resolved 2.10.1 `pac`.
+- [x] `make solution-gate` now passes clean (0 findings) with the plain
+      Makefile and the new `CanvasApps` component included.
+
+**Lesson for future sessions/machines**: if `make solution-gate` (or any
+`make`-invoked `pac` command) behaves differently than a directly-invoked `pac`
+in the same shell, suspect a duplicate/stale `pac` install shadowing the
+current one on PATH inside whatever subshell `make` uses (`where.exe pac` /
+`pac --version` fingerprint the active binary). `dotnet tool install -g
+microsoft.powerapps.cli.tool` is no longer a reliable way to install/update
+`pac` — the current NuGet package fails dotnet-tool validation (`missing
+DotnetToolSettings.xml`) for both fresh installs and updates.
 
 ## Next steps (per the agreed phased plan)
 
-1. Get an environment admin to enable "Power Apps code apps" on
-   `raphaelpothin-sandbox` (direct link in "Known blocker" above), then retry
-   either `pac code push` or `pa app push --solution-id
-   c08f9f79-2c95-f111-b8dc-000d3a340fc1 --non-interactive` for the first real
-   deploy.
+1. ~~Get an environment admin to enable "Power Apps code apps"~~ — done, code
+   app pushed and live (see above).
 2. ~~Export/unpack the `poutineleaguecore` solution to bring the new Employee
-   role into source control.~~ Done (this session) — see above.
-3. After a successful push, re-export/unpack the solution again to capture the
-   new code app component (e.g. under a `Canvas Apps`/code-app equivalent
-   solution folder) and record the live app URL here.
-4. Once the environment blocker clears, do a live smoke test of Phases 1–5
-   (submission CRUD, cap enforcement, Browse feed, detail view, Try/Review
-   creation + dedup, Map pins/popups/ungeocoded notice, Leaderboards) against
-   real Dataverse data.
+   role into source control.~~ Done — see above.
+3. ~~Re-export/unpack the solution to capture the new code app component and
+   record the live app URL.~~ Done — see above.
+4. Do a live smoke test of Phases 1–5 (submission CRUD, cap enforcement,
+   Browse feed, detail view, Try/Review creation + dedup, Map pins/popups/
+   ungeocoded notice, Leaderboards) against real Dataverse data, now that the
+   app is deployed and reachable at the URL above.
