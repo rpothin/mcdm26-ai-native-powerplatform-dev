@@ -67,9 +67,93 @@ Dataverse (`shared_commondataserviceforapps`, connection
 
 - `src/components/NavShell/NavShell.tsx` — responsive app shell (sidebar + bottom bar).
 - `src/components/EmptyState/EmptyState.tsx` — shared placeholder card.
-- `src/screens/{Submit,Browse,Map,Leaderboards,Chat}Screen.tsx` — placeholders.
+- `src/components/RestaurantPicker/`, `src/components/TagMultiSelect/`,
+  `src/components/StatusBadge/`, `src/components/SubmissionForm/`,
+  `src/components/MySubmissionsList/` — Phase 1 "Submit a poutine" components.
+- `src/lib/dataverseClient.ts` — generic Dataverse access wrapper (Phase 1).
+- `src/data/{constants,currentUser,restaurants,tags,submissions}.ts` — Phase 1
+  domain/business logic.
+- `src/screens/SubmitScreen.tsx` — real Phase 1 implementation (was a placeholder
+  in Phase 0). `src/screens/{Browse,Map,Leaderboards,Chat}Screen.tsx` — still
+  Phase 0 placeholders, built in later phases.
 - `src/App.tsx` — `HashRouter` + route table (HashRouter used because the Power
   Apps player does not support arbitrary server-side deep-link routing).
+
+## Completed steps (Phase 1 — Submit a poutine)
+
+Built on branch `rpothin-redesigned-garbanzo`, stacked on the Phase 0 branch
+(`rpothin-literate-disco`, PR #26).
+
+- [x] `src/lib/dataverseClient.ts` — a thin, generic wrapper around the generated
+      `MicrosoftDataverseService` (list/get/create/update/delete row, associate/
+      disassociate N:N, base64 file upload). All domain modules go through this;
+      nothing hand-edits `src/generated/` or calls `fetch`/`axios` directly.
+- [x] `src/data/{constants,currentUser,restaurants,tags,submissions}.ts` — the
+      domain/business layer: entity-set names, the `SubmissionStatus` enum, current
+      SystemUser resolution (by Azure AD object ID, falling back to email),
+      restaurant search-or-create, tag listing, and full submission CRUD including
+      tag-diffing on update.
+- [x] Create-submission form (`SubmissionForm`) — restaurant lookup-or-create
+      (`RestaurantPicker`, debounced search), poutine name/description/price, optional
+      photo upload, multi-select tags (`TagMultiSelect`) against the seeded Tag
+      table, Save Draft / Submit actions.
+- [x] **5-active-submission cap** enforced client-side: counts the signed-in
+      employee's submissions in any status *except* Rejected (Draft, Submitted, In
+      Review, Approved all count against the cap; Rejected frees a slot). Checked
+      both to gate/disable the "new submission" UI and again immediately before the
+      create call (race-condition guard).
+- [x] "My submissions" view (`MySubmissionsList` + `StatusBadge`) — lists all of the
+      employee's own submissions with a status chip color-mapped per DESIGN.md
+      (Draft=checker-light, Submitted=fry-gold, In Review=mustard-amber,
+      Approved=relish-green, Rejected=ketchup-red). Edit/Withdraw actions are shown
+      **only** for Draft-status submissions; everything else is read-only once it
+      has left the employee's hands.
+- [x] `SubmitScreen.tsx` rewritten from the Phase 0 `EmptyState` placeholder into a
+      real tabbed "New submission" / "My submissions" experience with an inline edit
+      view, reusing `NavShell` and the existing design tokens (`styles/tokens.css`,
+      new shared `styles/forms.css` primitives).
+- [x] No AI moderation/review-agent integration — submissions are created directly,
+      per this phase's explicit scope.
+- [x] `npm run lint`, `npm run build` (`tsc -b && vite build`), and `make app-gate`
+      all pass.
+- [x] Impeccable's mechanical detector (`detect.mjs`) run once against all new
+      Phase 1 UI files — zero findings.
+
+### Autonomous decisions made this phase (no live user available, autopilot mode)
+
+- **Active-cap definition**: Draft/Submitted/In Review/Approved count against the
+  cap of 5; Rejected does not (a rejected submission frees up a slot for a new
+  attempt). No explicit product spec covered this edge case, so the more
+  conservative (cap-inclusive) reading was chosen for every non-terminal-negative
+  status.
+- **Edit/Withdraw restricted to Draft only**: once a submission is Submitted (or
+  later), the employee can view it but not edit or withdraw it, since it may
+  already be in front of a moderator. This wasn't explicitly specified but follows
+  naturally from having a review pipeline at all.
+- **Withdraw = hard delete**: there is no "Withdrawn" status value in the seeded
+  `rpo_status` picklist and adding one is a schema change out of scope for this
+  phase, so "withdraw" calls `DeleteRecordWithOrganization` on the Draft record.
+  If a future phase wants withdrawn submissions to remain visible/auditable, this
+  should become a soft-delete (a new status value) instead.
+- **Photo is optional** on create/edit, with a form hint that it can be added
+  later — the schema doesn't mark `rpo_photo` as required and blocking submission
+  on a photo felt like unnecessary friction for a v1.
+- **Restaurant Latitude/Longitude are left unset** when creating a new restaurant
+  from the picker — geocoding an address is out of scope for this phase and is
+  expected to be handled by a separate flow/agent in a later phase (see
+  `ARCHITECTURE.md`).
+- **No automated test suite was added.** The repo template ships an `echo`
+  placeholder for `npm test` and no test runner (Vitest, Jest, etc.) is installed
+  anywhere in the monorepo yet. Given the "don't add new tooling unless necessary"
+  guidance, the cap-counting and tag-diffing logic in `src/data/submissions.ts`
+  were validated via `tsc`/ESLint type-checking and manual code review only, not
+  via unit tests. The placeholder message was updated to reflect this honestly
+  (previously said "no business logic to test," which is no longer true). If a
+  test runner is introduced in a later phase, `src/data/submissions.ts` (cap
+  counting, active-status set, tag diffing) is the highest-value place to start.
+- **No live Dataverse smoke test was possible** — same known `pac code push`
+  blocker as Phase 0 (feature flag not yet enabled for this environment). All
+  validation this phase was via local build/lint/type-check only.
 
 ## Next steps (per the agreed phased plan)
 
@@ -78,7 +162,7 @@ Dataverse (`shared_commondataserviceforapps`, connection
 2. Export/unpack the `poutineleaguecore` solution to `solutions/poutineleaguecore/`
    to bring the new Employee role into source control.
 3. Open the Phase 0 PR (stacked via `gh-stack`), gated by `make app-gate` (passing).
-4. Phase 1 — Submit a poutine (create-submission form, 5-active-submission cap,
-   "my submissions" view).
+4. Once the environment blocker clears, do a live smoke test of Phase 1 (create,
+   edit, withdraw, cap enforcement) against real Dataverse data.
 5. Phase 2 — Browse/List. Phase 3 — Try + Review. Phase 4 — Map. Phase 5 —
    Leaderboards/Hall of Fame (Top Poutine + Best Supporter only for v1).

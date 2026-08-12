@@ -1,0 +1,28 @@
+.tag-multi-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.tag-chip {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-letter-spacing);
+  background-color: var(--color-checker-light);
+  color: var(--color-gravy-text);
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+}
+
+.tag-chip--selected {
+  background-color: var(--color-fry-gold);
+  border-color: var(--color-gravy-ink);
+  color: var(--color-gravy-ink);
+}
+
+.tag-chip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "echo \"No automated tests yet for code-apps/employee-app (Phase 0 scaffold has no business logic to test)\""
+    "test": "echo \"No automated test runner configured yet for code-apps/employee-app; the 5-active-submission cap and status logic in src/data/ are currently covered by manual/build-time verification only (see memory-bank.md).\""
   },
   "dependencies": {
     "@microsoft/power-apps": "^1.2.5",
