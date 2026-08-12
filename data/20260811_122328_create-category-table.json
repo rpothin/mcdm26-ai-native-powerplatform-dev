@@ -1,0 +1,54 @@
+{
+  "description": "Schema definition used to create the Category table (layer 7/9 of the Poutine League Dataverse data model build-out). Source of truth: ARCHITECTURE.md \u00a71 (Data model), CATEGORY entity block. Category = a leaderboard/gamification category (e.g. Best Seller, Top Poutine) used to compute rankings from underlying activity (tries, reviews, submissions). Standalone table -- no FK to any other table in this layer.",
+  "environment": "https://raphaelpothin-sandbox.crm.dynamics.com/",
+  "solution": "poutineleaguecore",
+  "publisherPrefix": "rpo",
+  "table": {
+    "schemaName": "rpo_Category",
+    "logicalName": "rpo_category",
+    "entitySetName": "rpo_categories",
+    "metadataId": "04c061fe-426b-4d6a-8d6e-58f8bb2ff876",
+    "displayName": "Category",
+    "primaryNameAttribute": "rpo_name",
+    "primaryIdAttribute": "rpo_categoryid",
+    "purpose": "A named leaderboard/gamification category (e.g. Best Seller, Top Poutine, Best Supporter, Best Critic) that defines how per-employee rankings are computed from underlying activity data. This layer only creates the standalone Category table and seeds it with the 4 launch categories from PRODUCT.md -- computing/storing actual leaderboard results is out of scope here (future layers)."
+  },
+  "columns": [
+    {
+      "logicalName": "rpo_name",
+      "schemaName": "rpo_Name",
+      "displayName": "Name",
+      "type": "String",
+      "requiredLevel": "None",
+      "notes": "Primary name column, auto-created with the table. Seed data uses the exact launch category name from PRODUCT.md, e.g. 'Best Seller'."
+    },
+    {
+      "logicalName": "rpo_description",
+      "schemaName": "rpo_Description",
+      "displayName": "Description",
+      "type": "Memo",
+      "requiredLevel": "None",
+      "notes": "ARCHITECTURE.md's Category ER diagram (mermaid) omits 'description', but the prose 'Key fields (indicative)' column for Category explicitly lists 'Name, description, computation type'. Resolved via precedent from the Restaurant table (layer 1), which likewise has a field (rpo_neighborhood) absent from its ERD entry but present in prose + on the built table -- confirming the ERD is indicative/simplified, not exhaustive. Built per the prose + precedent rather than treating this as a documentation divergence. Type is Memo (not String) to match the established convention for description/comment-style text fields, confirmed via rpo_poutinesubmission.rpo_description and rpo_review.rpo_comment (both Memo)."
+    },
+    {
+      "logicalName": "rpo_computationtype",
+      "schemaName": "rpo_ComputationType",
+      "displayName": "Computation Type",
+      "type": "String",
+      "requiredLevel": "None",
+      "notes": "Short machine-readable code identifying the leaderboard computation approach for this category (e.g. 'weighted_rating', 'try_count_by_submitter'). ARCHITECTURE.md describes this field only at a conceptual level (no enumerated value list), so a plain String was used rather than a choice/picklist -- each of the 4 launch categories gets its own distinct code as free text. Left as String (not Memo) since values are expected to remain short identifier-like strings, consistent with other short-code String columns elsewhere in the schema."
+    }
+  ],
+  "lookups": [],
+  "solutionAttachment": {
+    "verified": true,
+    "verificationMethod": "Queried solutioncomponent for componenttype=1 (Entity) filtered to the poutineleaguecore solutionid and confirmed the rpo_category table (metadata GUID 04c061fe-426b-4d6a-8d6e-58f8bb2ff876) is present -- attached automatically via the solution= parameter on client.tables.create() (no pac solution add-solution-component call was needed, consistent with the layer 5/6 experience)."
+  },
+  "creationMethod": {
+    "tool": "PowerPlatform-Dataverse-Client (Python SDK) for the table and all columns.",
+    "phasedCreation": "1) client.tables.create('rpo_Category', {'rpo_Description': 'string', 'rpo_ComputationType': 'string'}, solution='poutineleaguecore', primary_column='rpo_Name') to create the table with the primary name column plus rpo_Description and rpo_ComputationType, both initially typed as plain 'string'. 2) Verified columns via client.tables.list_columns('rpo_category') and found rpo_Description had landed as String instead of the intended Memo type (the generic 'string' type map does not distinguish single-line vs multi-line text at table-create time). 3) client.tables.remove_columns('rpo_category', ['rpo_Description']) to delete the wrongly-typed column. 4) Waited ~15s for metadata propagation. 5) client.tables.add_columns('rpo_category', {'rpo_Description': 'memo'}) to recreate it as Memo. 6) Waited ~15s, then re-verified all rpo_ columns via client.tables.list_columns('rpo_category') to confirm final types: rpo_categoryid (Uniqueidentifier), rpo_name (String), rpo_description (Memo), rpo_computationtype (String).",
+    "newGotcha_stringVsMemoAtTableCreate": "client.tables.create()'s columns dict, when given a plain 'string' type for a column intended to be a longer description field, creates it as single-line String -- it does NOT infer Memo from context or max-length hints. Unlike add_columns() (called standalone), which does support an explicit 'memo' type string, the type map behaves the same in both APIs, so the fix is simply to pass 'memo' explicitly for any multi-line/description-style column, whether at initial table creation or via a follow-up add_columns() call. No SDK limitation here beyond needing to specify the exact intended type up front -- recommend future layers pass 'memo' explicitly in the initial create() columns dict for any description/comment-style field rather than defaulting to 'string' and fixing up afterward.",
+    "confirmedNoDateTimeGotcha": "Category has no date/time columns, so the DateTimeBehavior-left-unset issue documented by prior layers (Season, etc.) does not apply to this table.",
+    "confirmedNoChoiceGotcha": "Category has no choice/picklist columns (rpo_ComputationType is a plain free-text String, not an enumerated choice), so the local-choice option-label-casing gotcha documented for Season's rpo_Status does not apply to this table."
+  }
+}
