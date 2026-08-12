@@ -18,10 +18,13 @@ export interface ReviewRow {
   createdOn: string | null;
 }
 
+// Lookups must use their `_value`-suffixed logical name in $select — the plain
+// schema name (e.g. `rpo_tryid`) throws "Could not find a property" at runtime
+// (same bug fixed in Phase 1's submissions.ts, commit 9a2b0e8).
 const REVIEW_SELECT = [
   'rpo_reviewid',
-  'rpo_tryid',
-  'rpo_reviewerid',
+  '_rpo_tryid_value',
+  '_rpo_reviewerid_value',
   'rpo_starrating',
   'rpo_comment',
   'rpo_helpfulnessscore',

@@ -91,17 +91,16 @@ export function BrowseScreen() {
   }
 
   if (isLoading) {
-    return <EmptyState eyebrow="Phase 2" title="Browse poutines" description="Loading approved poutines…" />;
+    return <EmptyState title="Browse poutines" description="Loading approved poutines…" />;
   }
 
   if (loadError) {
-    return <EmptyState eyebrow="Phase 2" title="Browse poutines" description={loadError} />;
+    return <EmptyState title="Browse poutines" description={loadError} />;
   }
 
   return (
     <div className="browse-screen">
       <header className="browse-screen__header">
-        <p className="browse-screen__eyebrow">Phase 2</p>
         <h1 className="browse-screen__title">Browse poutines</h1>
         <p className="browse-screen__count">
           {filteredSubmissions.length} of {submissions.length} approved poutines

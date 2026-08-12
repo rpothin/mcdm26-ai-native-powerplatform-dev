@@ -15,7 +15,10 @@ export interface TryRow {
   triedOn: string | null;
 }
 
-const TRY_SELECT = ['rpo_tryid', 'rpo_poutinesubmissionid', 'rpo_employeeid', 'rpo_triedon'];
+// Lookups must use their `_value`-suffixed logical name in $select — the plain
+// schema name (e.g. `rpo_poutinesubmissionid`) throws "Could not find a property"
+// at runtime (same bug fixed in Phase 1's submissions.ts, commit 9a2b0e8).
+const TRY_SELECT = ['rpo_tryid', '_rpo_poutinesubmissionid_value', '_rpo_employeeid_value', 'rpo_triedon'];
 
 function escapeODataString(value: string): string {
   return value.replace(/'/g, "''");

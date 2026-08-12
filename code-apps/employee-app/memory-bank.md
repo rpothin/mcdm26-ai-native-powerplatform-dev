@@ -206,6 +206,17 @@ branch (`rpothin-redesigned-garbanzo`, PR #27).
 - [x] No map integration this phase (Map is Phase 4, a separate screen).
 - [x] `npm run lint`, `npm run build` (`tsc -b && vite build`), and `make app-gate`
       all pass. Impeccable's design hook found no issues on any new file.
+- [x] **Post-merge live-testing fix** (after rebasing onto Phase 1's
+      `9a2b0e8`): applied the same two fixes Phase 1 needed to `tries.ts` and
+      `reviews.ts` — `TRY_SELECT`/`REVIEW_SELECT` used plain schema names for
+      lookup columns (`rpo_poutinesubmissionid`, `rpo_employeeid`, `rpo_tryid`,
+      `rpo_reviewerid`), which Dataverse rejects at runtime with "Could not
+      find a property named ...". Changed to the `_value`-suffixed logical
+      names (`_rpo_poutinesubmissionid_value`, etc.), matching what
+      `toTryRow()`/`toReviewRow()` already read. Also removed the "Phase 2"
+      eyebrow label from `BrowseScreen.tsx` (and its now-unused
+      `.browse-screen__eyebrow` CSS rule) — build-phase labels are an internal
+      sequencing concept only and shouldn't leak into the product UI.
 
 ### Autonomous decisions made this phase (no live user available, autopilot mode)
 
