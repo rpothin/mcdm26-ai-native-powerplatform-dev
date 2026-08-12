@@ -1,0 +1,92 @@
+.leaderboards-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.leaderboards-screen__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.leaderboards-screen__eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-gravy-text-soft);
+}
+
+.leaderboards-screen__title {
+  font-family: var(--font-display);
+  font-size: var(--text-headline-size);
+  font-weight: var(--text-headline-weight);
+  line-height: var(--text-headline-line-height);
+  color: var(--color-gravy-ink);
+}
+
+.leaderboards-screen__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.leaderboards-screen__section-title {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  color: var(--color-gravy-ink);
+}
+
+.leaderboards-screen__season-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.leaderboards-screen__season-label {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-gravy-text-soft);
+}
+
+.leaderboards-screen__season-select {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text);
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+}
+
+.leaderboards-screen__tabs {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--color-gravy-ink);
+  padding-bottom: var(--space-sm);
+}
+
+.leaderboards-screen__tab {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: 700;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 8px 20px;
+  color: var(--color-gravy-text-soft);
+}
+
+.leaderboards-screen__tab--active {
+  background-color: var(--color-fry-gold);
+  border-color: var(--color-gravy-ink);
+  color: var(--color-gravy-ink);
+}

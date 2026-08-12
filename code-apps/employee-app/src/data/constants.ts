@@ -12,6 +12,11 @@ export const ENTITY_SETS = {
   systemUsers: 'systemusers',
   tries: 'rpo_tries',
   reviews: 'rpo_reviews',
+  seasons: 'rpo_seasons',
+  categories: 'rpo_categories',
+  seasonResults: 'rpo_seasonresults',
+  seasonResultEntries: 'rpo_seasonresultentries',
+  hallOfFameEntries: 'rpo_halloffameentries',
 } as const;
 
 /** Schema name of the PoutineSubmission <-> Tag many-to-many relationship. */
@@ -48,3 +53,16 @@ export const ACTIVE_SUBMISSION_STATUSES: SubmissionStatusValue[] = [
 ];
 
 export const MAX_ACTIVE_SUBMISSIONS = 5;
+
+/** rpo_status option-set values for Season (see solutions/poutineleaguecore Entities/rpo_Season). */
+export const SeasonStatus = {
+  Active: 100000000,
+  Closed: 100000001,
+} as const;
+
+export type SeasonStatusValue = (typeof SeasonStatus)[keyof typeof SeasonStatus];
+
+export const SEASON_STATUS_LABELS: Record<SeasonStatusValue, string> = {
+  [SeasonStatus.Active]: 'Active',
+  [SeasonStatus.Closed]: 'Closed',
+};

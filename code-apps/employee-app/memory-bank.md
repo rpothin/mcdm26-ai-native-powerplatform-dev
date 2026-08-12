@@ -613,15 +613,186 @@ microsoft.powerapps.cli.tool` is no longer a reliable way to install/update
 `pac` — the current NuGet package fails dotnet-tool validation (`missing
 DotnetToolSettings.xml`) for both fresh installs and updates.
 
-## Next steps (per the agreed phased plan)
+## Completed steps (Phase 5 — Leaderboards / Hall of Fame, v1 scope)
 
-1. ~~Get an environment admin to enable "Power Apps code apps"~~ — done, code
-   app pushed and live (see above).
-2. ~~Export/unpack the `poutineleaguecore` solution to bring the new Employee
-   role into source control.~~ Done — see above.
-3. ~~Re-export/unpack the solution to capture the new code app component and
-   record the live app URL.~~ Done — see above.
-4. Do a live smoke test of Phases 1–5 (submission CRUD, cap enforcement,
+Built on branch `rpothin-super-garbanzo`, stacked on the Phase 4 branch
+(`rpothin-employee-app-map-view`, PR #30). **This is the last phase of the
+currently-agreed phased plan** — see "Deferred / out of scope" below.
+
+- [x] `src/data/constants.ts` extended: five new `ENTITY_SETS` entries
+      (`seasons`, `categories`, `seasonResults`, `seasonResultEntries`,
+      `hallOfFameEntries`) and a new `SeasonStatus`/`SeasonStatusValue`/
+      `SEASON_STATUS_LABELS` enum (`Active = 100000000`, `Closed = 100000001`,
+      cross-checked against `solutions/poutineleaguecore/Entities/rpo_Season/
+      Entity.xml`).
+- [x] `src/data/leaderboards.ts` (new) — the Phase 5 read-only data-access
+      layer: `listSeasons`, `pickDefaultSeason` (Active season, else the most
+      recently started), `listCategories` (ordered per
+      `LEADERBOARD_CATEGORY_ORDER`), `listSeasonResultEntries(seasonId,
+      categoryId)` (resolves the `SeasonResult` row for that season/category
+      pair first, then its ranked `SeasonResultEntry` children — returns `[]`,
+      never throws, when no `SeasonResult` exists yet), and
+      `listHallOfFameEntries()`. All lookup display names (employee, poutine
+      submission, season, category) are resolved via the
+      `@OData.Community.Display.V1.FormattedValue` annotation already
+      returned by `listRows`, matching the exact pattern in `tries.ts` —
+      no extra `$expand` round-trips.
+- [x] `src/components/StatusBadge/StatusBadge.tsx` extended with a new,
+      generic exported `Badge({ label, variant })`, reusing the existing
+      `status-badge`/`status-badge--{variant}` CSS classes rather than adding
+      a parallel badge component — used here for the Season Active/Closed
+      chip (`approved` = green / `draft` = neutral).
+- [x] `src/components/LeaderboardTable/` (new) — renders the full ranked
+      `SeasonResultEntry` list for one Category/Season, with the top 3 rows
+      visually emphasized (gold/silver/bronze). Score display is formatted
+      per the category's `rpo_computationtype` (try counts, `★`-prefixed
+      weighted rating, or a `%` for the AI-assisted helpfulness score).
+      Renders the shared `EmptyState` component instead of a table when
+      `entries` is empty (no computed `SeasonResult` yet).
+- [x] `src/components/HallOfFame/` (new) — renders all-time
+      `HallOfFameEntry` rows grouped by season (most recently archived
+      first), one card per category winner. Renders `EmptyState` when no
+      season has closed yet.
+- [x] `src/screens/LeaderboardsScreen.tsx` rewritten from the Phase 0
+      `EmptyState` placeholder: a season `<select>` (defaulting to the Active
+      season) with a Season status `Badge`, category tabs (reusing the same
+      tab visual pattern as `SubmitScreen`), the selected category's
+      `LeaderboardTable`, and a Hall of Fame section below. Uses two
+      `useEffect`s: one to load seasons/categories/Hall of Fame once on
+      mount, one that re-fetches `SeasonResultEntry` rows whenever the
+      selected season or category changes (inlined as a cancellable async
+      function directly in the effect body, not via a `useCallback` called
+      from the effect — the latter tripped `react-hooks/set-state-in-effect`
+      during `npm run lint`).
+- [x] `npm run lint`, `npm run build` (`tsc -b && vite build`), and
+      `make app-gate` all pass clean. Impeccable's design hook found no
+      issues on any new/changed file.
+- [x] Verified against seed data (`data/*.csv`) that the **Active** season
+      (Summer 2026) and the Spring 2026 (Closed) season both have **zero**
+      seeded `SeasonResult`/`SeasonResultEntry` rows — only Winter 2025-2026
+      (Closed) has full seeded results + Hall of Fame data for all four
+      categories. This means the empty-state path is exercised by default
+      when the app loads (Active season selected, nightly computation
+      hasn't run for it) — confirmed by code review, not a live smoke test
+      (still blocked; see "Known blocker").
+
+### v1 scope decisions (flagged for human product-owner revisit)
+
+PRODUCT.md explicitly leaves "final category list" and "winner rewards"
+undecided. The following v1 decisions were made autonomously to unblock this
+phase and should be revisited by the human product owner:
+
+1. **Category list: all four launch categories, not a subset.**
+   PRODUCT.md's Capabilities line is explicit: *"Four launch leaderboard
+   categories — Best Seller, Top Poutine (confidence-weighted rating), Best
+   Supporter, Best Critic."* This supersedes a stale note in this file's
+   prior "Next steps" section that said "Top Poutine + Best Supporter only
+   for v1" — that note predates PRODUCT.md's four-category commitment and
+   was not carried forward. Display order is fixed via
+   `LEADERBOARD_CATEGORY_ORDER` in `src/data/leaderboards.ts`; any category
+   added later that isn't in that list is appended alphabetically rather
+   than hidden.
+2. **Display depth: full ranked list per category/season, not top-3-only.**
+   ARCHITECTURE.md's data model explicitly states `SeasonResult` stores "a
+   full ranked-list snapshot... not just top-1/top-3," so showing the full
+   list is the more faithful reading of the already-agreed data model. The
+   top 3 rows get gold/silver/bronze visual emphasis so the "podium" is
+   still immediately scannable — this balances "full list" with the
+   gamification intent (root `PRODUCT.md`'s leaderboard/badge framing) of
+   making the top ranks feel special.
+3. **⚠️ Read path for the current season: persisted `SeasonResultEntry`
+   snapshot, not live on-demand computation — a deliberate departure from
+   ARCHITECTURE.md's "on-demand" note.** ARCHITECTURE.md's flows/agents
+   section says live leaderboard *views* should ideally be "computed on
+   demand by the code app from raw Dataverse data... for responsiveness,"
+   reserving the `SeasonResult` snapshot for "history, badges, and
+   season-close/Hall of Fame purposes." This phase reads the snapshot for
+   **every** category, including the current/active season, for one
+   concrete reason: **Best Critic's score is the nightly flow's AI-assisted
+   review-helpfulness score** (produced by the Review Quality agent), which
+   cannot be reproduced client-side without duplicating an AI call into the
+   code app. Rather than splitting the read path per category (live compute
+   for the three deterministic categories, snapshot-only for Best Critic),
+   v1 uses one consistent snapshot-based read for all four — simpler and
+   more correct, at the cost of showing slightly stale data for the current
+   season between nightly flow runs (visible today as "no standings yet"
+   for the Active season, since seed data has no computed results for it).
+   **This should be revisited** if same-day-fresh live standings for the
+   three non-AI categories become a product priority — that would need a
+   split read path (on-demand compute for `try_count_by_submitter` /
+   `try_count_by_employee` / `weighted_rating`, snapshot-only for
+   `review_helpfulness_score`).
+4. **Season selector defaults to the Active season**, falling back to the
+   most-recently-started season if none is Active (e.g. briefly between a
+   season close and the next one opening), with a dropdown to browse any
+   season — this also surfaces the seeded Winter 2025-2026 historical data,
+   useful for demoing since the Active season currently has no computed
+   entries yet.
+5. **Winner rewards remain unimplemented, per PRODUCT.md's explicit "do not
+   assume or invent a reward" instruction.** The Hall of Fame shows a
+   `rpo_badgetitle` string (e.g. a season/category title) where present, but
+   no tangible reward mechanic of any kind was added.
+
+### Deferred / out of scope (last phase of the current plan)
+
+Phase 5 is the last phase of the currently-agreed phased plan. **Embedded
+conversational agent wiring is explicitly out of scope for this phase and
+the plan as a whole so far** — the `NavShell`'s "Chat" nav entry remains the
+disabled "Coming soon" placeholder added in Phase 0. That work is deferred
+to a future session, once the corresponding Copilot Studio agent itself
+exists (to be picked up via the `agent-implementation` skill at that time).
+
+## Next steps (beyond the current phased plan)
+
+1. ~~Get an environment admin to enable "Power Apps code apps"~~ — done; the
+   Phase 4 layer's session pushed the app live (see "Post-Phase-4 push/export
+   follow-up" above). This Phase 5 layer's corrected build (lookup `$select`
+   fix + "Phase 5" label removal, below) still needs its own redeploy pass so
+   the live app reflects the Leaderboards screen too.
+2. ~~Export/unpack the `poutineleaguecore` solution~~ — done; the Employee
+   role and the code app's `CanvasApps` component are both in source control
+   (see above). Re-export/unpack again after this layer's redeploy to capture
+   the updated `CanvasApps` asset.
+3. Do a live smoke test of all five phases (submission CRUD, cap enforcement,
    Browse feed, detail view, Try/Review creation + dedup, Map pins/popups/
-   ungeocoded notice, Leaderboards) against real Dataverse data, now that the
-   app is deployed and reachable at the URL above.
+   ungeocoded notice, Leaderboards/Hall of Fame incl. the empty-state path)
+   against real Dataverse data now that the app is deployed and reachable —
+   including confirming the nightly leaderboard computation flow actually
+   populates `SeasonResult`/`SeasonResultEntry` for the Active season so the
+   non-empty-state path can be verified too.
+4. Wire the embedded conversational agent into the "Chat" nav entry, once
+   the corresponding Copilot Studio agent exists (new session, via
+   `agent-implementation`).
+
+## Post-rebase fix pass (this layer, top of stack)
+
+After Phases 1–4 were each rebased/fixed layer-by-layer (removing "Phase N"
+UI labels and fixing a Dataverse lookup `$select` bug — selecting a lookup
+field by its bare schema name instead of the `_logicalname_value` form the
+platform actually returns), this Phase 5 layer picked up the same two fixes
+so the whole stack is consistent:
+
+- [x] Removed the `Phase 5` eyebrow label from `LeaderboardsScreen.tsx` (and
+      its now-unused `.leaderboards-screen__eyebrow` CSS rule), matching the
+      label removal already done on every other layer.
+- [x] Fixed the same lookup `$select` bug in `src/data/leaderboards.ts`: the
+      `SeasonResultEntry` select now uses `_rpo_employeeid_value` /
+      `_rpo_poutinesubmissionid_value` instead of the bare schema names, and
+      the `HallOfFameEntry` select now uses `_rpo_seasonid_value` /
+      `_rpo_categoryid_value` / `_rpo_employeeid_value` /
+      `_rpo_poutinesubmissionid_value`. The row-mapping code already read
+      `row._..._value` for these fields, so this was a real bug — without it
+      the annotated lookup values would never have actually been returned by
+      Dataverse, silently breaking employee/poutine name resolution on both
+      the leaderboard table and the Hall of Fame list.
+- [x] Rebased onto the corrected `rpothin-employee-app-map-view` tip (which
+      itself already had the label/`$select` fixes for Phases 1–4) via
+      `git rebase --onto`, since this layer's local history still had the
+      old, now-superseded Phase 1–4 commits.
+- [x] `npm run lint`, `npm run build`, and `make app-gate` re-verified passing
+      after the fix.
+- [x] As the current top of stack, this layer also performed the final
+      redeploy: `pa app push --solution-id
+      c08f9f79-2c95-f111-b8dc-000d3a340fc1 --non-interactive`, followed by
+      `pac solution export`/`pac solution unpack` to capture the updated
+      `CanvasApps` component, and `make solution-gate` (0 findings).
