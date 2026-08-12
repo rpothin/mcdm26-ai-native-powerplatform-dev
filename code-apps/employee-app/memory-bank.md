@@ -73,18 +73,23 @@ Dataverse (`shared_commondataserviceforapps`, connection
 - `src/components/PoutineCard/`, `src/components/BrowseFilters/`,
   `src/components/SubmissionDetail/` — Phase 2 "Browse/List" components.
   `SubmissionDetail` gained the Phase 3 Try/Review creation UI (still the same
-  component/file — no new component was introduced for this phase).
+  component/file — no new component was introduced for this phase). Phase 4's
+  Map view reuses `SubmissionDetail` unmodified for its "View details" flow.
 - `src/lib/dataverseClient.ts` — generic Dataverse access wrapper (Phase 1).
 - `src/data/{constants,currentUser,restaurants,tags,submissions}.ts` — Phase 1
   domain/business logic. `src/data/{tries,reviews,feedback}.ts` — Phase 2 read-only
   Try/Review/aggregate logic, extended in Phase 3 with `createTry`/
   `getTryForEmployee`, `createReview`/`getReviewForTryAndReviewer`, and
-  `aggregateFromFeedback`.
+  `aggregateFromFeedback`. `src/data/restaurants.ts` extended in Phase 4 with
+  geocoded `rpo_latitude`/`rpo_longitude` fields and
+  `listAllRestaurantsWithCoordinates()`. `src/data/mapPins.ts` (new, Phase 4) —
+  groups approved submissions by restaurant and splits geocoded vs. ungeocoded.
 - `src/screens/SubmitScreen.tsx` — real Phase 1 implementation.
   `src/screens/BrowseScreen.tsx` — real Phase 2 implementation (was a placeholder
   through Phase 1; extended in Phase 3 with an `onAggregateChange` handler).
-  `src/screens/{Map,Leaderboards,Chat}Screen.tsx` — still Phase 0 placeholders,
-  built in later phases.
+  `src/screens/MapScreen.tsx` — real Phase 4 implementation (Leaflet map, was a
+  placeholder through Phase 3). `src/screens/{Leaderboards,Chat}Screen.tsx` —
+  still Phase 0 placeholders, built in later phases.
 - `src/App.tsx` — `HashRouter` + route table (HashRouter used because the Power
   Apps player does not support arbitrary server-side deep-link routing).
 
@@ -386,6 +391,118 @@ Built on branch `rpothin-improved-enigma`, stacked on the Phase 2 branch
   rpo_Try/Entity.xml` and `.../rpo_Review/Entity.xml` for exact field logical
   names, types, and `RequiredLevel`.
 
+## Completed steps (Phase 4 — Map view)
+
+Built on branch `rpothin-employee-app-map-view`, stacked on the Phase 3 branch
+(`rpothin-improved-enigma`, PR #29).
+
+- [x] **Map library: `leaflet` + `react-leaflet`** (OpenStreetMap tile layer,
+      no API key). Confirmed via `package.json` that no map library was already
+      a dependency; installed `leaflet@^1.9.4`, `react-leaflet@^5.0.0`, and
+      `@types/leaflet` as the minimal necessary packages. `react-leaflet@5` is
+      compatible with the app's React 19. Matches ARCHITECTURE.md's explicit
+      guidance ("open-source JS map library (e.g. Leaflet)") and avoids any
+      paid/API-key-gated provider, per this phase's constraint.
+- [x] `src/data/restaurants.ts` extended: `RestaurantRow` gained
+      `rpo_latitude`/`rpo_longitude` (nullable — populated asynchronously by the
+      geocoding flow per ARCHITECTURE.md); added
+      `RESTAURANT_SELECT_WITH_COORDINATES` (kept separate from the existing
+      `RESTAURANT_SELECT` so `searchRestaurants`/`getRestaurantById`, used by
+      the submission form, don't pay for fields they don't need) and a new
+      `listAllRestaurantsWithCoordinates()` for the Map view.
+- [x] `src/data/mapPins.ts` (new) — the Map view's data/aggregation layer:
+      loads `listApprovedSubmissions()` (same "Approved-only visibility" query
+      as Phase 2's Browse feed) and `listAllRestaurantsWithCoordinates()`,
+      groups submissions by `restaurantId`, and splits the result into
+      plottable `pins: RestaurantPin[]` (restaurant has both coordinates) and
+      `ungeocoded: UngeocodedRestaurant[]` (restaurant is missing one/both).
+      One restaurant can have multiple approved poutines, so each pin carries
+      the full list of submissions at that location.
+- [x] `src/screens/MapScreen.tsx` rewritten from the Phase 0 `EmptyState`
+      placeholder into a real `MapContainer` (react-leaflet) centered on
+      Montreal, with a `FitBounds` helper (a small internal component using
+      `useMap`) that recenters/zooms to fit all current pins whenever the pin
+      set changes (falls back to a single-pin `setView` when there's exactly
+      one). Each restaurant renders one `Marker`; clicking it opens a `Popup`
+      listing that restaurant's name/address and every approved poutine there
+      (name + price), each with a **"View details"** button.
+- [x] **"View details" reuses `SubmissionDetail` directly** (the same Phase 2/3
+      component used by Browse) — no duplicated detail UI. `MapScreen` toggles
+      between the map and `SubmissionDetail` via local `selectedSubmissionId`
+      state (same "local component state, no new router route" pattern already
+      established in `SubmitScreen`/`BrowseScreen`), passing a no-op
+      `onAggregateChange` since the map doesn't render try/review aggregates on
+      pins or popups.
+- [x] Custom marker + popup styling per DESIGN.md: markers are a Leaflet
+      `divIcon` (not an image asset) styled as a circular fry-gold dot with a
+      2px gravy-ink border — matching the "Map pins: circular fry-gold-filled
+      pins with gravy-ink border matching the rank-badge shape language" rule
+      verbatim. Popups are re-themed via global overrides on Leaflet's own
+      generated classes (`.leaflet-popup-content-wrapper`, `.leaflet-popup-tip`,
+      `.leaflet-popup-close-button`) to use `paper-white`/`gravy-ink`/sticker-
+      shadow tokens instead of Leaflet's default white-box-with-soft-shadow
+      look, so the popup reads as one more "sticker" card in the same system as
+      every other card in the app.
+- [x] **Ungeocoded restaurants are surfaced, not hidden or crashed on.** If a
+      restaurant with an approved poutine has no `rpo_latitude`/`rpo_longitude`
+      yet, it's excluded from the pin set and instead counted in a small
+      non-blocking notice below the map ("N restaurants awaiting geocoding, not
+      shown on the map yet: <names>"). If *every* approved poutine's restaurant
+      is ungeocoded, the screen falls back to an `EmptyState` explaining that
+      instead of rendering an empty map.
+- [x] `npm run lint`, `npm run build` (`tsc -b && vite build`), and
+      `make app-gate` all pass. Impeccable's design hook found no issues on any
+      new/changed file. A local `npm run dev` smoke test confirmed the app
+      still serves (HTTP 200) and Vite/TypeScript compile the new
+      `leaflet`/`react-leaflet` imports cleanly; a full data-rendering check
+      against live pins wasn't possible due to the known `pac code push`
+      blocker (below) — same limitation as Phases 1–3.
+
+### Autonomous decisions made this phase (no live user available, autopilot mode)
+
+- **Ungeocoded handling: a small notice below the map, not a separate list
+  view or a hard error.** The task explicitly left this call open ("your
+  call"). A notice keeps the primary map experience uncluttered while still
+  being honest that some approved poutines exist but aren't shown yet — an
+  employee isn't left wondering why a restaurant they know is approved is
+  "missing" from the map. A full ungeocoded-restaurants list/tab was
+  considered and rejected as unnecessary UI surface for a demo-scale app (in
+  practice, the async geocoding flow should catch up quickly after
+  submission).
+- **Grouping pins by restaurant, not by submission.** A restaurant can have
+  multiple approved poutines; one pin per restaurant (with a popup listing
+  all of that restaurant's poutines) avoids overlapping/duplicate pins at the
+  same coordinates, which is both a real Leaflet UX problem (stacked pins are
+  hard to click individually) and closer to how an employee thinks about the
+  map ("what's good at this restaurant?").
+- **No re-theming of the Leaflet zoom control or attribution strip.** DESIGN.md
+  doesn't specify a treatment for third-party map chrome, and Leaflet's zoom
+  buttons/attribution are functional, low-visual-weight UI elements that
+  don't carry brand meaning the way cards/buttons/badges do. Fighting
+  Leaflet's internal DOM structure to reskin them (beyond the popup, which
+  *is* a card-like surface deserving the design system) was judged not worth
+  the fragility it would introduce by pinning styling to Leaflet's internal
+  CSS structure across future version upgrades — noted here as the one
+  DESIGN.md re-theming limitation for this phase.
+- **Popup re-theming targets Leaflet's global CSS classes**, not a React-level
+  custom popup component. `react-leaflet`'s `Popup` renders Leaflet's own
+  positioned DOM (arrow/tip, close button, content wrapper) outside normal
+  React layout, so overriding Leaflet's built-in class names in `MapScreen.css`
+  is the supported approach — matches how `leaflet/dist/leaflet.css`'s own
+  classes are meant to be extended, per Leaflet's docs.
+- **No new router route for the map/detail toggle**, matching the same
+  precedent as `SubmitScreen`/`BrowseScreen`.
+- **No automated test suite added**, consistent with Phases 1–3 — the repo
+  still has no test runner installed. The new grouping/split logic in
+  `src/data/mapPins.ts` was validated via `tsc`/ESLint type-checking,
+  `npm run build`, and manual code review only.
+- **No live Dataverse smoke test was possible** — same known `pac code push`
+  blocker as Phases 0–3. All validation this phase was via local build/lint/
+  type-check plus a `npm run dev` server-starts check; the new
+  `rpo_latitude`/`rpo_longitude` field names and nullability were cross-checked
+  directly against `solutions/poutineleaguecore/Entities/rpo_Restaurant/
+  Entity.xml`.
+
 ## Next steps (per the agreed phased plan)
 
 1. Get an environment admin to enable "Power Apps code apps" on
@@ -393,8 +510,9 @@ Built on branch `rpothin-improved-enigma`, stacked on the Phase 2 branch
 2. Export/unpack the `poutineleaguecore` solution to `solutions/poutineleaguecore/`
    to bring the new Employee role into source control.
 3. Open the Phase 0 PR (stacked via `gh-stack`), gated by `make app-gate` (passing).
-4. Once the environment blocker clears, do a live smoke test of Phases 1–3
+4. Once the environment blocker clears, do a live smoke test of Phases 1–4
    (submission CRUD, cap enforcement, Browse feed, detail view, Try/Review
-   creation + dedup) against real Dataverse data.
-5. Phase 4 — Map. Phase 5 — Leaderboards/Hall of Fame (Top Poutine + Best
-   Supporter only for v1).
+   creation + dedup, Map pins/popups/ungeocoded notice) against real Dataverse
+   data.
+5. Phase 5 — Leaderboards/Hall of Fame (Top Poutine + Best Supporter only for
+   v1).
