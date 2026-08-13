@@ -1,0 +1,67 @@
+.hall-of-fame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.hall-of-fame__season-title {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  color: var(--color-gravy-ink);
+  margin-bottom: var(--space-sm);
+}
+
+.hall-of-fame__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+
+.hall-of-fame__card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sticker);
+  padding: var(--space-md);
+}
+
+.hall-of-fame__medal {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.hall-of-fame__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.hall-of-fame__category {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-letter-spacing);
+  text-transform: uppercase;
+  color: var(--color-gravy-text-soft);
+}
+
+.hall-of-fame__winner {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  color: var(--color-gravy-text);
+}
+
+.hall-of-fame__badge {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text-soft);
+}

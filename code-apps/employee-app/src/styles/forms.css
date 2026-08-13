@@ -1,0 +1,121 @@
+/*
+ * Shared form primitives (fields, buttons) reused across the Submit + My Submissions
+ * screens (RestaurantPicker, TagMultiSelect, SubmissionForm, MySubmissionsList).
+ * Component-specific layout stays in each component's own .css file; only the
+ * cross-cutting field/button vocabulary lives here, mirroring how tokens.css is
+ * the single shared source for design tokens.
+ */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.form-field__label {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-letter-spacing);
+  color: var(--color-gravy-text-soft);
+  text-transform: uppercase;
+}
+
+.form-field__input,
+.form-field__textarea,
+.form-field__select {
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  color: var(--color-gravy-text);
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.form-field__textarea {
+  resize: vertical;
+  min-height: 96px;
+  font-family: var(--font-body);
+}
+
+.form-field__input:disabled,
+.form-field__textarea:disabled,
+.form-field__select:disabled {
+  background-color: var(--color-checker-light);
+  color: var(--color-gravy-text-soft);
+}
+
+.form-field__hint {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  color: var(--color-gravy-text-soft);
+}
+
+.form-field__error {
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  color: var(--color-ketchup-red);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-top: var(--space-lg);
+}
+
+.btn {
+  font-family: var(--font-body);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-gravy-ink);
+  padding: 12px 28px;
+  box-shadow: var(--shadow-sticker);
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.btn:hover:not(:disabled) {
+  box-shadow: var(--shadow-sticker-lifted);
+}
+
+.btn:active:not(:disabled) {
+  box-shadow: var(--shadow-sticker-pressed);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background-color: var(--color-fry-gold);
+  color: var(--color-gravy-ink);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--color-fry-gold-deep);
+}
+
+.btn--secondary {
+  background-color: var(--color-paper-white);
+  color: var(--color-gravy-ink);
+}
+
+.btn--destructive {
+  background-color: var(--color-ketchup-red);
+  color: var(--color-paper-white);
+}
+
+.btn--destructive:hover:not(:disabled) {
+  background-color: var(--color-ketchup-red-deep);
+}
+
+.btn--small {
+  font-size: var(--text-body-size);
+  padding: 8px 20px;
+}

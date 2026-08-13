@@ -1,0 +1,41 @@
+.status-badge {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  font-weight: var(--text-label-weight);
+  letter-spacing: var(--text-label-letter-spacing);
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+}
+
+.status-badge--draft {
+  background-color: var(--color-checker-light);
+  color: var(--color-gravy-text);
+}
+
+.status-badge--submitted {
+  background-color: var(--color-fry-gold);
+  color: var(--color-gravy-ink);
+}
+
+.status-badge--in-review {
+  background-color: var(--color-mustard-amber);
+  color: var(--color-gravy-ink);
+}
+
+.status-badge--approved {
+  background-color: var(--color-relish-green);
+  color: var(--color-paper-white);
+}
+
+.status-badge--rejected {
+  background-color: var(--color-ketchup-red);
+  color: var(--color-paper-white);
+}
+
+/* Phase 3: reused for the "Tried" / "You reviewed this" indicators in SubmissionDetail. */
+.status-badge--tried {
+  background-color: var(--color-relish-green);
+  color: var(--color-paper-white);
+}

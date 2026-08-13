@@ -9,8 +9,10 @@ SOLUTION ?=
 CHECKER_GEO ?= UnitedStates
 
 # Discover all first-level subdirectories and sort for deterministic output/order.
-CODE_APPS := $(shell find code-apps -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort)
-SOLUTIONS := $(shell find solutions -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort)
+# Exclude dotdirs (e.g. code-apps/.impeccable, the shared design-hook config) — they
+# are not code apps and have no package.json to lint/test/build.
+CODE_APPS := $(shell find code-apps -maxdepth 1 -mindepth 1 -type d ! -name '.*' 2>/dev/null | sort)
+SOLUTIONS := $(shell find solutions -maxdepth 1 -mindepth 1 -type d ! -name '.*' 2>/dev/null | sort)
 
 .PHONY: help \
 	app-lint app-test app-build app-gate \
