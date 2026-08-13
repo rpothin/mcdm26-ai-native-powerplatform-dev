@@ -1,0 +1,187 @@
+{
+  "role_name": "Employee",
+  "role_id": "75c18758-5e96-f111-b8db-000d3a3409ce",
+  "solution": "poutineleaguecore",
+  "business_unit_id": "a06aaaaa-150f-f011-998a-6045bd00fb3f",
+  "privilege_depth_by_name": {
+    "prvReadrpo_Season": 3,
+    "prvReadrpo_Category": 3,
+    "prvReadrpo_SeasonResult": 3,
+    "prvReadrpo_SeasonResultEntry": 3,
+    "prvReadrpo_HallOfFameEntry": 3,
+    "prvReadrpo_Tag": 3,
+    "prvAppendrpo_Tag": 0,
+    "prvAppendTorpo_Tag": 0,
+    "prvReadrpo_Restaurant": 3,
+    "prvCreaterpo_Restaurant": 0,
+    "prvWriterpo_Restaurant": 0,
+    "prvAppendrpo_Restaurant": 0,
+    "prvAppendTorpo_Restaurant": 0,
+    "prvReadrpo_PoutineSubmission": 3,
+    "prvCreaterpo_PoutineSubmission": 0,
+    "prvWriterpo_PoutineSubmission": 0,
+    "prvAppendrpo_PoutineSubmission": 0,
+    "prvAppendTorpo_PoutineSubmission": 0,
+    "prvReadrpo_Try": 3,
+    "prvCreaterpo_Try": 0,
+    "prvWriterpo_Try": 0,
+    "prvAppendrpo_Try": 0,
+    "prvAppendTorpo_Try": 0,
+    "prvReadrpo_Review": 3,
+    "prvCreaterpo_Review": 0,
+    "prvWriterpo_Review": 0,
+    "prvAppendrpo_Review": 0,
+    "prvAppendTorpo_Review": 0,
+    "prvReadUser": 3
+  },
+  "resolved_privilege_ids": {
+    "prvAppendTorpo_Restaurant": "726a82ae-e5d9-41f3-9e1a-0d6c614d966f",
+    "prvAppendrpo_Tag": "3dc27ce9-d4f4-4d5b-b36d-3a47bfef8ae9",
+    "prvReadrpo_Season": "ed772c19-01d5-4787-9c3e-436498cd40c4",
+    "prvCreaterpo_PoutineSubmission": "92051ffc-73ea-44f7-99fd-44e6ebed0bb4",
+    "prvReadrpo_Tag": "b3411b01-af1d-411a-bf32-5161f81e21d3",
+    "prvAppendrpo_Restaurant": "5e048f52-8a31-4365-90fb-578298564e79",
+    "prvReadrpo_Restaurant": "ef02bb3f-560e-472c-a839-596b019217a0",
+    "prvReadrpo_PoutineSubmission": "e2d8342d-d69f-4315-bd59-5de89d69bad9",
+    "prvReadrpo_Category": "e3569416-02cd-421b-9e9e-855d5e203faa",
+    "prvCreaterpo_Restaurant": "bfcf0c85-0934-41de-9a16-8d223c18cc16",
+    "prvReadrpo_SeasonResultEntry": "3df298e2-65e1-4000-bc35-8d2e5afab5e9",
+    "prvWriterpo_Restaurant": "ffd82319-eb6d-44e2-bd7e-ab268af63005",
+    "prvReadrpo_HallOfFameEntry": "8b091d18-8cc0-4285-93ab-be9b99420b92",
+    "prvReadrpo_SeasonResult": "039347c4-bef8-40ce-8e36-c99982cb7416",
+    "prvAppendTorpo_Tag": "cf5a680e-a007-4c96-8cc7-e9246d90e4b1",
+    "prvAppendTorpo_PoutineSubmission": "c5d49a86-c6c8-4235-9e0b-2a58dfc56f53",
+    "prvReadrpo_Review": "43cff885-cc5c-4e41-9632-4ca46564e401",
+    "prvCreaterpo_Review": "781469ac-cc52-477e-a349-94161d240e88",
+    "prvReadrpo_Try": "8670d233-1ce2-4093-8ddb-a45ca82a77f0",
+    "prvWriterpo_PoutineSubmission": "ec5856b9-27a1-4bd3-ae41-badc94ec78b3",
+    "prvAppendrpo_Review": "746d5cfc-160e-4c24-81f6-d5f867671b0a",
+    "prvWriterpo_Try": "b20788c9-6356-4328-b7ff-d7a0d8001a15",
+    "prvCreaterpo_Try": "57bd5b3e-12bc-4b8c-a112-db796e763df0",
+    "prvReadUser": "76faad15-bc44-4f4d-84dc-dd1e1dda74d9",
+    "prvWriterpo_Review": "46d537b3-7462-4849-b6e6-dde6024d025c",
+    "prvAppendrpo_PoutineSubmission": "7dced8cb-ad37-472e-8cd1-e93fb3fc2efa",
+    "prvAppendTorpo_Try": "3816cb21-de7d-40d9-894e-edc865f20afc",
+    "prvAppendrpo_Try": "c4bce4c8-519a-4b9b-87e9-ef118b47c0ae",
+    "prvAppendTorpo_Review": "5fa2ff0a-ae6e-4e97-a02c-f709048c7ed8"
+  },
+  "missing_privileges": [],
+  "role_privileges_payload": [
+    {
+      "PrivilegeId": "ed772c19-01d5-4787-9c3e-436498cd40c4",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "e3569416-02cd-421b-9e9e-855d5e203faa",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "039347c4-bef8-40ce-8e36-c99982cb7416",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "3df298e2-65e1-4000-bc35-8d2e5afab5e9",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "8b091d18-8cc0-4285-93ab-be9b99420b92",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "b3411b01-af1d-411a-bf32-5161f81e21d3",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "3dc27ce9-d4f4-4d5b-b36d-3a47bfef8ae9",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "cf5a680e-a007-4c96-8cc7-e9246d90e4b1",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "ef02bb3f-560e-472c-a839-596b019217a0",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "bfcf0c85-0934-41de-9a16-8d223c18cc16",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "ffd82319-eb6d-44e2-bd7e-ab268af63005",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "5e048f52-8a31-4365-90fb-578298564e79",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "726a82ae-e5d9-41f3-9e1a-0d6c614d966f",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "e2d8342d-d69f-4315-bd59-5de89d69bad9",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "92051ffc-73ea-44f7-99fd-44e6ebed0bb4",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "ec5856b9-27a1-4bd3-ae41-badc94ec78b3",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "7dced8cb-ad37-472e-8cd1-e93fb3fc2efa",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "c5d49a86-c6c8-4235-9e0b-2a58dfc56f53",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "8670d233-1ce2-4093-8ddb-a45ca82a77f0",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "57bd5b3e-12bc-4b8c-a112-db796e763df0",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "b20788c9-6356-4328-b7ff-d7a0d8001a15",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "c4bce4c8-519a-4b9b-87e9-ef118b47c0ae",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "3816cb21-de7d-40d9-894e-edc865f20afc",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "43cff885-cc5c-4e41-9632-4ca46564e401",
+      "Depth": 3
+    },
+    {
+      "PrivilegeId": "781469ac-cc52-477e-a349-94161d240e88",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "46d537b3-7462-4849-b6e6-dde6024d025c",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "746d5cfc-160e-4c24-81f6-d5f867671b0a",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "5fa2ff0a-ae6e-4e97-a02c-f709048c7ed8",
+      "Depth": 0
+    },
+    {
+      "PrivilegeId": "76faad15-bc44-4f4d-84dc-dd1e1dda74d9",
+      "Depth": 3
+    }
+  ]
+}

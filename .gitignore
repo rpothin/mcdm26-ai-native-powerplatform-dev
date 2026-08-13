@@ -58,3 +58,13 @@ solutions/*.zip
 plugins/**/bin/
 plugins/**/obj/
 
+# -------------------------------
+# Impeccable design hook — machine-local overrides and dedup cache
+# (config.json is shared/committed; config.local.json and the hook cache
+# are per-developer, per skills-authoring/impeccable/reference/hooks.md)
+# -------------------------------
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+code-apps/*/.impeccable/config.local.json
+code-apps/*/.impeccable/hook.cache.json
+

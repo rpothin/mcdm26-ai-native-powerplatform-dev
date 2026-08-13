@@ -1,0 +1,75 @@
+/*
+ * Design tokens for the Poutine League "Comptoir Championship" system.
+ * Source of truth: code-apps/DESIGN.md (shared across employee + admin apps).
+ * Do not hand-roll one-off colors/spacing in components — reference these
+ * custom properties so both apps stay visually consistent.
+ */
+:root {
+  /* Colors */
+  --color-fry-gold: #d99a2b;
+  --color-fry-gold-deep: #b87a1c;
+  --color-ketchup-red: #c23b2e;
+  --color-ketchup-red-deep: #9c2b21;
+  --color-relish-green: #5c7a3a;
+  --color-mustard-amber: #e0a419;
+  --color-cream-counter: #fbf3e6;
+  --color-paper-white: #fffdf8;
+  --color-checker-light: #edd9b8;
+  --color-gravy-ink: #2a1d14;
+  --color-gravy-text: #3a2a1e;
+  --color-gravy-text-soft: #6b5644;
+
+  /* Typography */
+  --font-display: "Alfa Slab One", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-score: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-display-size: clamp(2.25rem, 5vw, 3.75rem);
+  --text-display-weight: 400;
+  --text-display-line-height: 1.05;
+  --text-display-letter-spacing: -0.01em;
+
+  --text-headline-size: clamp(1.5rem, 3vw, 2.25rem);
+  --text-headline-weight: 400;
+  --text-headline-line-height: 1.1;
+
+  --text-title-size: 1.25rem;
+  --text-title-weight: 700;
+  --text-title-line-height: 1.3;
+
+  --text-body-size: 1rem;
+  --text-body-weight: 400;
+  --text-body-line-height: 1.5;
+
+  --text-label-size: 0.8125rem;
+  --text-label-weight: 600;
+  --text-label-line-height: 1.2;
+  --text-label-letter-spacing: 0.02em;
+
+  --text-score-size: 1.125rem;
+  --text-score-weight: 700;
+  --text-score-line-height: 1;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  /* Shadows ("sticker" — hard offset, zero blur) */
+  --shadow-sticker: 3px 3px 0 var(--color-gravy-ink);
+  --shadow-sticker-pressed: 1px 1px 0 var(--color-gravy-ink);
+  --shadow-sticker-lifted: 5px 5px 0 var(--color-gravy-ink);
+
+  /* Layout */
+  --layout-max-width: 1200px;
+  --nav-sidebar-width: 240px;
+  --nav-bottom-height: 64px;
+}

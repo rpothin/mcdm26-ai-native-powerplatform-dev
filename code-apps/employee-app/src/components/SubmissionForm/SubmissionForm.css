@@ -1,0 +1,8 @@
+.submission-form {
+  background-color: var(--color-paper-white);
+  border: 2px solid var(--color-gravy-ink);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sticker);
+  padding: var(--space-lg);
+  max-width: 560px;
+}
