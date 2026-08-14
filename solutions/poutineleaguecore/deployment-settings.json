@@ -1,5 +1,11 @@
 {
   "EnvironmentVariables": [],
-  "ConnectionReferences": [],
+  "ConnectionReferences": [
+    {
+      "LogicalName": "rpo_MicrosoftDataversePoutineLeagueCore",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+    }
+  ],
   "CopilotAgents": []
 }
