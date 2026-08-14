@@ -1,0 +1,833 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "impersonation": {},
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "rpo_MicrosoftDataversePoutineLeagueCore"
+        },
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "recurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "startTime": "2026-08-13T06:00:00Z",
+            "timeZone": "Eastern Standard Time"
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Day",
+            "interval": 1,
+            "startTime": "2026-08-13T06:00:00Z",
+            "timeZone": "Eastern Standard Time"
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "List_active_seasons": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasons",
+              "$select": "rpo_seasonid,rpo_name,rpo_status,rpo_startdate,rpo_enddate",
+              "$filter": "rpo_status eq 100000000",
+              "$orderby": "rpo_startdate desc",
+              "$top": 1
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Compose_run_timestamp": {
+          "runAfter": {
+            "List_active_seasons": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@utcNow()"
+        },
+        "List_categories": {
+          "runAfter": {
+            "Compose_run_timestamp": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_categories",
+              "$select": "rpo_categoryid,rpo_name,rpo_computationtype",
+              "$filter": "statecode eq 0"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Filter_best_seller": {
+          "runAfter": {
+            "List_categories": [
+              "Succeeded"
+            ]
+          },
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_categories')?['body/value']",
+            "where": "@equals(item()?['rpo_name'], 'Best Seller')"
+          }
+        },
+        "Filter_top_poutine": {
+          "runAfter": {
+            "List_categories": [
+              "Succeeded"
+            ]
+          },
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_categories')?['body/value']",
+            "where": "@equals(item()?['rpo_name'], 'Top Poutine')"
+          }
+        },
+        "Filter_best_supporter": {
+          "runAfter": {
+            "List_categories": [
+              "Succeeded"
+            ]
+          },
+          "type": "Query",
+          "inputs": {
+            "from": "@outputs('List_categories')?['body/value']",
+            "where": "@equals(item()?['rpo_name'], 'Best Supporter')"
+          }
+        },
+        "Compose_active_season": {
+          "runAfter": {
+            "List_active_seasons": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@first(outputs('List_active_seasons')?['body/value'])"
+        },
+        "Compose_best_seller_category_id": {
+          "runAfter": {
+            "Filter_best_seller": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@first(body('Filter_best_seller'))?['rpo_categoryid']"
+        },
+        "Compose_top_poutine_category_id": {
+          "runAfter": {
+            "Filter_top_poutine": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@first(body('Filter_top_poutine'))?['rpo_categoryid']"
+        },
+        "Compose_best_supporter_category_id": {
+          "runAfter": {
+            "Filter_best_supporter": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@first(body('Filter_best_supporter'))?['rpo_categoryid']"
+        },
+        "List_best_seller_aggregates": {
+          "runAfter": {
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_tries",
+              "fetchXml": "@concat('<fetch aggregate=\"true\"><entity name=\"rpo_try\"><attribute name=\"rpo_tryid\" alias=\"try_count\" aggregate=\"count\"/><link-entity name=\"rpo_poutinesubmission\" from=\"rpo_poutinesubmissionid\" to=\"rpo_poutinesubmissionid\" alias=\"submission\"><attribute name=\"rpo_submitterid\" alias=\"submitterid\" groupby=\"true\"/></link-entity><filter type=\"and\"><condition attribute=\"rpo_triedon\" operator=\"on-or-after\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_startdate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/><condition attribute=\"rpo_triedon\" operator=\"on-or-before\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_enddate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/></filter><order alias=\"try_count\" descending=\"true\"/></entity></fetch>')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "List_best_supporter_aggregates": {
+          "runAfter": {
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_tries",
+              "fetchXml": "@concat('<fetch aggregate=\"true\"><entity name=\"rpo_try\"><attribute name=\"rpo_tryid\" alias=\"try_count\" aggregate=\"count\"/><attribute name=\"rpo_employeeid\" alias=\"employeeid\" groupby=\"true\"/><filter type=\"and\"><condition attribute=\"rpo_triedon\" operator=\"on-or-after\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_startdate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/><condition attribute=\"rpo_triedon\" operator=\"on-or-before\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_enddate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/></filter><order alias=\"try_count\" descending=\"true\"/></entity></fetch>')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "List_top_poutine_aggregates": {
+          "runAfter": {
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_reviews",
+              "fetchXml": "@concat('<fetch aggregate=\"true\"><entity name=\"rpo_review\"><attribute name=\"rpo_starrating\" alias=\"avg_rating\" aggregate=\"avg\"/><attribute name=\"rpo_reviewid\" alias=\"review_count\" aggregate=\"count\"/><link-entity name=\"rpo_try\" from=\"rpo_tryid\" to=\"rpo_tryid\" alias=\"try\"><filter type=\"and\"><condition attribute=\"rpo_triedon\" operator=\"on-or-after\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_startdate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/><condition attribute=\"rpo_triedon\" operator=\"on-or-before\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_enddate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/></filter><link-entity name=\"rpo_poutinesubmission\" from=\"rpo_poutinesubmissionid\" to=\"rpo_poutinesubmissionid\" alias=\"submission\"><attribute name=\"rpo_poutinesubmissionid\" alias=\"submissionid\" groupby=\"true\"/></link-entity></link-entity><order alias=\"avg_rating\" descending=\"true\"/></entity></fetch>')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "List_global_rating_average": {
+          "runAfter": {
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_reviews",
+              "fetchXml": "@concat('<fetch aggregate=\"true\"><entity name=\"rpo_review\"><attribute name=\"rpo_starrating\" alias=\"global_average\" aggregate=\"avg\"/><link-entity name=\"rpo_try\" from=\"rpo_tryid\" to=\"rpo_tryid\" alias=\"try\"><filter type=\"and\"><condition attribute=\"rpo_triedon\" operator=\"on-or-after\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_startdate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/><condition attribute=\"rpo_triedon\" operator=\"on-or-before\" value=\"', formatDateTime(outputs('Compose_active_season')?['rpo_enddate'], 'yyyy-MM-ddTHH:mm:ssZ'), '\"/></filter></link-entity></entity></fetch>')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "List_existing_best_seller_result": {
+          "runAfter": {
+            "Compose_best_seller_category_id": [
+              "Succeeded"
+            ],
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresults",
+              "$select": "rpo_seasonresultid",
+              "$filter": "@concat('_rpo_seasonid_value eq ''', outputs('Compose_active_season')?['rpo_seasonid'], ''' and _rpo_categoryid_value eq ''', outputs('Compose_best_seller_category_id'), '''')",
+              "$top": 1
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Upsert_best_seller_result": {
+          "runAfter": {
+            "List_existing_best_seller_result": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresults",
+              "recordId": "@if(empty(body('List_existing_best_seller_result')?['value']), guid(), first(body('List_existing_best_seller_result')?['value'])?['rpo_seasonresultid'])",
+              "item/rpo_name": "@concat(outputs('Compose_active_season')?['rpo_name'], ' - Best Seller')",
+              "item/rpo_computedat": "@utcNow()",
+              "item/rpo_SeasonId@odata.bind": "/rpo_seasons(@{outputs('Compose_active_season')?['rpo_seasonid']})",
+              "item/rpo_CategoryId@odata.bind": "/rpo_categories(@{outputs('Compose_best_seller_category_id')})"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "UpdateRecord"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Compose_best_seller_result_id": {
+          "runAfter": {
+            "Upsert_best_seller_result": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@outputs('Upsert_best_seller_result')?['body/rpo_seasonresultid']"
+        },
+        "List_existing_best_seller_entries": {
+          "runAfter": {
+            "Compose_best_seller_result_id": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresultentries",
+              "$select": "rpo_seasonresultentryid",
+              "$filter": "@concat('_rpo_seasonresultid_value eq ''', outputs('Compose_best_seller_result_id'), '''')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Delete_existing_best_seller_entries": {
+          "foreach": "@outputs('List_existing_best_seller_entries')?['body/value']",
+          "actions": {
+            "Delete_best_seller_entry": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "rpo_seasonresultentries",
+                  "recordId": "@items('Delete_existing_best_seller_entries')?['rpo_seasonresultentryid']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "DeleteRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "List_existing_best_seller_entries": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach"
+        },
+        "Create_best_seller_entries": {
+          "foreach": "@outputs('Sort_best_seller_entries')",
+          "actions": {
+            "Create_best_seller_entry": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "rpo_seasonresultentries",
+                  "item/rpo_name": "@concat(outputs('Compose_active_season')?['rpo_name'], ' - Best Seller #', string(add(variables('BestSellerRank'), 1)))",
+                  "item/rpo_rank": "@add(variables('BestSellerRank'), 1)",
+                  "item/rpo_score": "@float(item()?['try_count'])",
+                  "item/rpo_SeasonResultId@odata.bind": "/rpo_seasonresults(@{outputs('Compose_best_seller_result_id')})",
+                  "item/rpo_EmployeeId@odata.bind": "/systemusers(@{item()?['submitterid']})"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "CreateRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Increment_best_seller_rank": {
+              "runAfter": {
+                "Create_best_seller_entry": [
+                  "Succeeded"
+                ]
+              },
+              "type": "IncrementVariable",
+              "inputs": {
+                "name": "BestSellerRank",
+                "value": 1
+              }
+            }
+          },
+          "runAfter": {
+            "Delete_existing_best_seller_entries": [
+              "Succeeded"
+            ],
+            "Sort_best_seller_entries": [
+              "Succeeded"
+            ],
+            "Initialize_best_seller_rank": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 1
+            }
+          }
+        },
+        "List_existing_best_supporter_result": {
+          "runAfter": {
+            "Compose_best_supporter_category_id": [
+              "Succeeded"
+            ],
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresults",
+              "$select": "rpo_seasonresultid",
+              "$filter": "@concat('_rpo_seasonid_value eq ''', outputs('Compose_active_season')?['rpo_seasonid'], ''' and _rpo_categoryid_value eq ''', outputs('Compose_best_supporter_category_id'), '''')",
+              "$top": 1
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Upsert_best_supporter_result": {
+          "runAfter": {
+            "List_existing_best_supporter_result": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresults",
+              "recordId": "@if(empty(body('List_existing_best_supporter_result')?['value']), guid(), first(body('List_existing_best_supporter_result')?['value'])?['rpo_seasonresultid'])",
+              "item/rpo_name": "@concat(outputs('Compose_active_season')?['rpo_name'], ' - Best Supporter')",
+              "item/rpo_computedat": "@utcNow()",
+              "item/rpo_SeasonId@odata.bind": "/rpo_seasons(@{outputs('Compose_active_season')?['rpo_seasonid']})",
+              "item/rpo_CategoryId@odata.bind": "/rpo_categories(@{outputs('Compose_best_supporter_category_id')})"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "UpdateRecord"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Compose_best_supporter_result_id": {
+          "runAfter": {
+            "Upsert_best_supporter_result": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@outputs('Upsert_best_supporter_result')?['body/rpo_seasonresultid']"
+        },
+        "List_existing_best_supporter_entries": {
+          "runAfter": {
+            "Compose_best_supporter_result_id": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresultentries",
+              "$select": "rpo_seasonresultentryid",
+              "$filter": "@concat('_rpo_seasonresultid_value eq ''', outputs('Compose_best_supporter_result_id'), '''')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Delete_existing_best_supporter_entries": {
+          "foreach": "@outputs('List_existing_best_supporter_entries')?['body/value']",
+          "actions": {
+            "Delete_best_supporter_entry": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "rpo_seasonresultentries",
+                  "recordId": "@items('Delete_existing_best_supporter_entries')?['rpo_seasonresultentryid']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "DeleteRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "List_existing_best_supporter_entries": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach"
+        },
+        "Create_best_supporter_entries": {
+          "foreach": "@outputs('Sort_best_supporter_entries')",
+          "actions": {
+            "Create_best_supporter_entry": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "rpo_seasonresultentries",
+                  "item/rpo_name": "@concat(outputs('Compose_active_season')?['rpo_name'], ' - Best Supporter #', string(add(variables('BestSupporterRank'), 1)))",
+                  "item/rpo_rank": "@add(variables('BestSupporterRank'), 1)",
+                  "item/rpo_score": "@float(item()?['try_count'])",
+                  "item/rpo_SeasonResultId@odata.bind": "/rpo_seasonresults(@{outputs('Compose_best_supporter_result_id')})",
+                  "item/rpo_EmployeeId@odata.bind": "/systemusers(@{item()?['employeeid']})"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "CreateRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Increment_best_supporter_rank": {
+              "runAfter": {
+                "Create_best_supporter_entry": [
+                  "Succeeded"
+                ]
+              },
+              "type": "IncrementVariable",
+              "inputs": {
+                "name": "BestSupporterRank",
+                "value": 1
+              }
+            }
+          },
+          "runAfter": {
+            "Delete_existing_best_supporter_entries": [
+              "Succeeded"
+            ],
+            "Sort_best_supporter_entries": [
+              "Succeeded"
+            ],
+            "Initialize_best_supporter_rank": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 1
+            }
+          }
+        },
+        "Select_top_poutine_scores": {
+          "runAfter": {
+            "List_top_poutine_aggregates": [
+              "Succeeded"
+            ],
+            "List_global_rating_average": [
+              "Succeeded"
+            ]
+          },
+          "type": "Select",
+          "inputs": {
+            "from": "@outputs('List_top_poutine_aggregates')?['body/value']",
+            "select": {
+              "submissionid": "@item()?['submissionid']",
+              "review_count": "@int(item()?['review_count'])",
+              "avg_rating": "@float(item()?['avg_rating'])",
+              "score": "@add(mul(div(float(item()?['review_count']), add(float(item()?['review_count']), 3)), float(item()?['avg_rating'])), mul(div(3, add(float(item()?['review_count']), 3)), float(coalesce(first(body('List_global_rating_average')?['value'])?['global_average'], 0))))"
+            }
+          }
+        },
+        "List_existing_top_poutine_result": {
+          "runAfter": {
+            "Compose_top_poutine_category_id": [
+              "Succeeded"
+            ],
+            "Compose_active_season": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresults",
+              "$select": "rpo_seasonresultid",
+              "$filter": "@concat('_rpo_seasonid_value eq ''', outputs('Compose_active_season')?['rpo_seasonid'], ''' and _rpo_categoryid_value eq ''', outputs('Compose_top_poutine_category_id'), '''')",
+              "$top": 1
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Upsert_top_poutine_result": {
+          "runAfter": {
+            "List_existing_top_poutine_result": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresults",
+              "recordId": "@if(empty(body('List_existing_top_poutine_result')?['value']), guid(), first(body('List_existing_top_poutine_result')?['value'])?['rpo_seasonresultid'])",
+              "item/rpo_name": "@concat(outputs('Compose_active_season')?['rpo_name'], ' - Top Poutine')",
+              "item/rpo_computedat": "@utcNow()",
+              "item/rpo_SeasonId@odata.bind": "/rpo_seasons(@{outputs('Compose_active_season')?['rpo_seasonid']})",
+              "item/rpo_CategoryId@odata.bind": "/rpo_categories(@{outputs('Compose_top_poutine_category_id')})"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "UpdateRecord"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Compose_top_poutine_result_id": {
+          "runAfter": {
+            "Upsert_top_poutine_result": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@outputs('Upsert_top_poutine_result')?['body/rpo_seasonresultid']"
+        },
+        "List_existing_top_poutine_entries": {
+          "runAfter": {
+            "Compose_top_poutine_result_id": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "rpo_seasonresultentries",
+              "$select": "rpo_seasonresultentryid",
+              "$filter": "@concat('_rpo_seasonresultid_value eq ''', outputs('Compose_top_poutine_result_id'), '''')"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "connectionName": "shared_commondataserviceforapps",
+              "operationId": "ListRecords"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Delete_existing_top_poutine_entries": {
+          "foreach": "@outputs('List_existing_top_poutine_entries')?['body/value']",
+          "actions": {
+            "Delete_top_poutine_entry": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "rpo_seasonresultentries",
+                  "recordId": "@items('Delete_existing_top_poutine_entries')?['rpo_seasonresultentryid']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "DeleteRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {
+            "List_existing_top_poutine_entries": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach"
+        },
+        "Create_top_poutine_entries": {
+          "foreach": "@outputs('Sort_top_poutine_scores')",
+          "actions": {
+            "Create_top_poutine_entry": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "rpo_seasonresultentries",
+                  "item/rpo_name": "@concat(outputs('Compose_active_season')?['rpo_name'], ' - Top Poutine #', string(add(variables('TopPoutineRank'), 1)))",
+                  "item/rpo_rank": "@add(variables('TopPoutineRank'), 1)",
+                  "item/rpo_score": "@float(item()?['score'])",
+                  "item/rpo_SeasonResultId@odata.bind": "/rpo_seasonresults(@{outputs('Compose_top_poutine_result_id')})",
+                  "item/rpo_PoutineSubmissionId@odata.bind": "/rpo_poutinesubmissions(@{item()?['submissionid']})"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "connectionName": "shared_commondataserviceforapps",
+                  "operationId": "CreateRecord"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "Increment_top_poutine_rank": {
+              "runAfter": {
+                "Create_top_poutine_entry": [
+                  "Succeeded"
+                ]
+              },
+              "type": "IncrementVariable",
+              "inputs": {
+                "name": "TopPoutineRank",
+                "value": 1
+              }
+            }
+          },
+          "runAfter": {
+            "Delete_existing_top_poutine_entries": [
+              "Succeeded"
+            ],
+            "Sort_top_poutine_scores": [
+              "Succeeded"
+            ],
+            "Initialize_top_poutine_rank": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach",
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 1
+            }
+          }
+        },
+        "Initialize_best_seller_rank": {
+          "runAfter": {
+            "Delete_existing_best_seller_entries": [
+              "Succeeded"
+            ],
+            "Sort_best_seller_entries": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "BestSellerRank",
+                "type": "Integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Initialize_best_supporter_rank": {
+          "runAfter": {
+            "Delete_existing_best_supporter_entries": [
+              "Succeeded"
+            ],
+            "Sort_best_supporter_entries": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "BestSupporterRank",
+                "type": "Integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Initialize_top_poutine_rank": {
+          "runAfter": {
+            "Delete_existing_top_poutine_entries": [
+              "Succeeded"
+            ],
+            "Sort_top_poutine_scores": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "TopPoutineRank",
+                "type": "Integer",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "Sort_top_poutine_scores": {
+          "runAfter": {
+            "Select_top_poutine_scores": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@reverse(sort(reverse(sort(body('Select_top_poutine_scores'), 'submissionid')), 'score'))"
+        },
+        "Sort_best_seller_entries": {
+          "runAfter": {
+            "List_best_seller_aggregates": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@reverse(sort(reverse(sort(body('List_best_seller_aggregates')?['value'], 'submitterid')), 'try_count'))"
+        },
+        "Sort_best_supporter_entries": {
+          "runAfter": {
+            "List_best_supporter_aggregates": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@reverse(sort(reverse(sort(body('List_best_supporter_aggregates')?['value'], 'employeeid')), 'try_count'))"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
