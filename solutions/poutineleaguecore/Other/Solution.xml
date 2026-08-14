@@ -6,8 +6,8 @@
       <LocalizedName description="Poutine League Core" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.9.0</Version>
-    <Managed>0</Managed>
+    <Version>1.10.0</Version>
+    <Managed>2</Managed>
     <Publisher>
       <UniqueName>RaphaelPothin</UniqueName>
       <LocalizedNames>
@@ -90,13 +90,9 @@
       <RootComponent type="1" schemaName="rpo_try" behavior="0" />
       <RootComponent type="1" schemaName="systemuser" behavior="1" />
       <RootComponent type="20" id="{75c18758-5e96-f111-b8db-000d3a3409ce}" behavior="0" />
+      <RootComponent type="29" id="{0e70d148-8697-f111-b8db-000d3a3409ce}" behavior="0" />
       <RootComponent type="300" schemaName="rpo_poutineleagueemployee_e772c" behavior="0" />
     </RootComponents>
-    <MissingDependencies>
-      <MissingDependency>
-        <Required type="1" schemaName="systemuser" displayName="SystemUser" parentSchemaName="" solution="msdyn_UserShareSecuredFields (1.0.0.0)" />
-        <Dependent type="1" schemaName="systemuser" displayName="SystemUser" />
-      </MissingDependency>
-    </MissingDependencies>
+    <MissingDependencies />
   </SolutionManifest>
 </ImportExportXml>
