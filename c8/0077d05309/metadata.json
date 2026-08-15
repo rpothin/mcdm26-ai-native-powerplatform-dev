@@ -1,0 +1,54 @@
+{
+  "cli_version": "0.9.0",
+  "checkpoint_id": "c80077d05309",
+  "strategy": "manual-commit",
+  "branch": "rpothin-plan-fun-facts-agent",
+  "checkpoints_count": 52,
+  "files_touched": [
+    "ARCHITECTURE.md",
+    "agents/fun-facts/agent.sync.yaml",
+    "agents/fun-facts/behaviors/approved-submission-context_5yht79.mcs.yml",
+    "agents/fun-facts/behaviors/constrained-web-enrichment_zi5bg2.mcs.yml",
+    "agents/fun-facts/behaviors/fun-fact-synthesis_8hmeky.mcs.yml",
+    "agents/fun-facts/behaviors/sanitized-html-rendering_5z13om.mcs.yml",
+    "agents/fun-facts/capabilities/tools/MicrosoftDataverse-MicrosoftDataverseMCPServerPreview_G6j.mcs.yml",
+    "agents/fun-facts/infrastructure/connections/rpo_FunFacts.cr.shared_commondataserviceforapps.e28f2133a6564731929df4cbebe0128c.sync.yaml",
+    "agents/fun-facts/settings.mcs.yml",
+    "solutions/poutineleaguecore/Assets/botcomponent_connectionreferenceset.xml",
+    "solutions/poutineleaguecore/Other/Customizations.xml",
+    "solutions/poutineleaguecore/Other/Solution.xml",
+    "solutions/poutineleaguecore/allowedmcpclients/dataversemcpcli/allowedmcpclient.xml",
+    "solutions/poutineleaguecore/allowedmcpclients/enterprisecopilotplatform/allowedmcpclient.xml",
+    "solutions/poutineleaguecore/allowedmcpclients/microsoftcowork/allowedmcpclient.xml",
+    "solutions/poutineleaguecore/allowedmcpclients/microsoftgithubcopilot/allowedmcpclient.xml",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.approved-submission-context_5yht79/botcomponent.xml",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.approved-submission-context_5yht79/data",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.constrained-web-enrichment_zi5bg2/botcomponent.xml",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.constrained-web-enrichment_zi5bg2/data",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.fun-fact-synthesis_8hmeky/botcomponent.xml",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.fun-fact-synthesis_8hmeky/data",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.sanitized-html-rendering_5z13om/botcomponent.xml",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.skill.sanitized-html-rendering_5z13om/data",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.tool.MicrosoftDataverse-MicrosoftDataverseMCPServerPreview_G6j/botcomponent.xml",
+    "solutions/poutineleaguecore/botcomponents/rpo_FunFacts.tool.MicrosoftDataverse-MicrosoftDataverseMCPServerPreview_G6j/data",
+    "solutions/poutineleaguecore/bots/rpo_FunFacts/bot.xml",
+    "solutions/poutineleaguecore/bots/rpo_FunFacts/configuration.json",
+    "solutions/poutineleaguecore/deployment-settings.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c8/0077d05309/0/metadata.json",
+      "transcript": "/c8/0077d05309/0/full.jsonl",
+      "compact_transcript": "/c8/0077d05309/0/transcript.jsonl",
+      "content_hash": "/c8/0077d05309/0/content_hash.txt",
+      "prompt": "/c8/0077d05309/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 22635819,
+    "cache_creation_tokens": 1181555,
+    "cache_read_tokens": 21413044,
+    "output_tokens": 140772,
+    "api_call_count": 228
+  }
+}
