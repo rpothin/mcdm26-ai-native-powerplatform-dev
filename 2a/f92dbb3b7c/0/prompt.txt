@@ -1,0 +1,9 @@
+Considering 'PRODUCT.md', 'ARCHITECTURE.md' and what we have implemented so far in our Power Platform solution, please propose a plan to implement the "Fun Facts Agent" Copilot Studio agent using the recently introduced GitHub Copilot harness.
+
+I was thinking about using:
+- the Dataverse MCP server for the integration of the agent with Dataverse
+- skills for example to:
+ - search / fetch the data the agent will need (in Dataverse or on the web)
+ - generate html interactive experience (that would follow our code apps 'DESIGN.md') through a static file the user could download
+
+If possible I would like the agent to be initialized locally before being pushed to our solution in our dev environment.
