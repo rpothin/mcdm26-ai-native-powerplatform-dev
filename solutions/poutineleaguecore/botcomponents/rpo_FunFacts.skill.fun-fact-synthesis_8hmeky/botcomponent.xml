@@ -1,0 +1,11 @@
+<botcomponent schemaname="rpo_FunFacts.skill.fun-fact-synthesis_8hmeky">
+  <componenttype>9</componenttype>
+  <description>Turns verified Dataverse context and optional cited web evidence into a bounded list of uncertainty-aware fun facts. Use when exact approval is verified and approved context plus the optional web handoff are ready. Do NOT use for approval checks, fresh web retrieval, HTML construction, writes, or unsupported claims.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Fun Fact Synthesis</name>
+  <parentbotid>
+    <schemaname>rpo_FunFacts</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

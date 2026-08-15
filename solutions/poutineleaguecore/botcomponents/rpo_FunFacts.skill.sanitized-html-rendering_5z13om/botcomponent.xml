@@ -1,0 +1,11 @@
+<botcomponent schemaname="rpo_FunFacts.skill.sanitized-html-rendering_5z13om">
+  <componenttype>9</componenttype>
+  <description>Renders an optional ephemeral standalone HTML card from a succeeded fact response using the approved Poutine League design tokens and strict escaping. Use when `includeHtml` is true, exact approval is verified, and synthesized facts are present. Do NOT use for other statuses, web retrieval, Dataverse reads or writes, persistence, or raw untrusted payloads.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Sanitized HTML Rendering</name>
+  <parentbotid>
+    <schemaname>rpo_FunFacts</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,0 +1,8 @@
+mcs.metadata:
+  componentName: Microsoft Dataverse — Microsoft Dataverse MCP Server (Preview)
+  description: Provides Remote MCP Server access to Dataverse with preview tools
+kind: McpTool
+authMode: Invoker
+connectionReference: rpo_FunFacts.cr.shared_commondataserviceforapps.e28f2133a6564731929df4cbebe0128c
+connectorId: /providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps
+operationId: InvokeMCPPreview

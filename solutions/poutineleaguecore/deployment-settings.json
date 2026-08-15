@@ -5,7 +5,21 @@
       "LogicalName": "rpo_MicrosoftDataversePoutineLeagueCore",
       "ConnectionId": "",
       "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+    },
+    {
+      "LogicalName": "rpo_FunFacts.cr.shared_commondataserviceforapps.e28f2133a6564731929df4cbebe0128c",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
+    },
+    {
+      "LogicalName": "rpo_sharedmicrosoftcopilotstudio_29d6d",
+      "ConnectionId": "",
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_microsoftcopilotstudio"
     }
   ],
-  "CopilotAgents": []
+  "CopilotAgents": [
+    {
+      "SchemaName": "rpo_FunFacts"
+    }
+  ]
 }

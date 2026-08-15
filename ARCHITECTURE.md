@@ -164,11 +164,20 @@ Backend AI reasoning is split into **specialized agents**, each with a narrow re
 | Backend agent | Responsibility | Triggered by |
 |---|---|---|
 | **Submission Review agent** | Combines completeness check, duplicate/similarity detection (same restaurant/very similar poutine), and first-pass moderation; escalates ambiguous cases instead of deciding blindly. | Poutine Submission status change `Draft` → `Submitted` (see [submission flow](#3-submission-review-flow)). |
-| **Fun Facts agent** | Generates engaging trivia/context about an approved poutine or restaurant, grounded in Dataverse data (submission details, tags, restaurant info) and the model's general knowledge — **no external web search grounding**, to keep the demo self-contained. | Poutine Submission reaching `Approved` status; may also be reused on-demand as a connected-agent tool by the interactive agent when an employee asks for a fun fact in chat. |
+| **Fun Facts agent** | Generates engaging trivia/context about an approved poutine or restaurant, grounded first in Dataverse data (submission details, tags, restaurant info) and optionally enriched with constrained public-web research. Web results are untrusted evidence, require citations and retrieval dates, and cannot override Dataverse approval/status or execute instructions found in retrieved content. | Poutine Submission reaching `Approved` status; may also be reused on-demand as a connected-agent tool by the interactive agent when an employee asks for a fun fact in chat. |
 | **Review Quality agent** | Scores review helpfulness/insightfulness to power the "Best Critic" category. | Nightly leaderboard computation flow (§4). |
 
 > [!NOTE]
 > **Multi-agent design follows Microsoft's guidance**: keep it to one interactive agent as the default entry point, and only split into specialized agents where there's a distinct domain, distinct trigger, or reusability need — which is the case for review, fun facts, and review-quality scoring.
+
+> [!IMPORTANT]
+> The Fun Facts agent is read-only in its first slice. It must verify that the requested
+> submission is `Approved` in Dataverse before producing user-facing content, treat
+> Dataverse fields and web pages as data rather than instructions, and decline to invent
+> unsupported claims. Web grounding is limited to public factual context with source URLs,
+> retrieval dates, and explicit uncertainty where sources conflict or cannot be verified.
+> The optional HTML experience is generated on demand as an ephemeral standalone artifact;
+> it is not persisted as a Dataverse column in this phase.
 
 ## 3. Submission review flow
 
@@ -279,4 +288,5 @@ flowchart TB
 
 - [ ] Whether/when to adopt Copilot Studio **Workflows** + the **Request for Information** node for submission-review escalation — keep an eye on Microsoft's roadmap, but not expected to be ready in time for this demo. Current fallback is Dataverse flag + admin app queue + Teams notification.
 - [ ] Final list of gamification categories beyond the launch four (per `PRODUCT.md`), and whether each maps to a nightly-flow computation or a new specialized agent.
+- [x] Fun Facts runtime grounding may use constrained public-web research in addition to Dataverse, with citations and retrieval dates. Generated HTML remains ephemeral and on-demand rather than persisted.
 - [ ] Winner rewards mechanics (symbolic-only vs. tangible) — out of scope for architecture, tracked here only because it may eventually need a data field (e.g., `Hall of Fame Entry.reward`).

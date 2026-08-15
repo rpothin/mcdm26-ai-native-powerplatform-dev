@@ -1,0 +1,11 @@
+<botcomponent schemaname="rpo_FunFacts.tool.MicrosoftDataverse-MicrosoftDataverseMCPServerPreview_G6j">
+  <componenttype>9</componenttype>
+  <description>Provides Remote MCP Server access to Dataverse with preview tools</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Microsoft Dataverse — Microsoft Dataverse MCP Server (Preview)</name>
+  <parentbotid>
+    <schemaname>rpo_FunFacts</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>
