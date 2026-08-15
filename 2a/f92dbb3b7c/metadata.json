@@ -2,8 +2,13 @@
   "cli_version": "0.9.0",
   "checkpoint_id": "2af92dbb3b7c",
   "strategy": "manual-commit",
+  "branch": "rpothin-plan-fun-facts-agent",
   "checkpoints_count": 52,
-  "files_touched": null,
+  "files_touched": [
+    "solutions/poutineleaguecore/Other/Customizations.xml",
+    "solutions/poutineleaguecore/Other/Solution.xml",
+    "solutions/poutineleaguecore/deployment-settings.json"
+  ],
   "sessions": [
     {
       "metadata": "/2a/f92dbb3b7c/0/metadata.json",

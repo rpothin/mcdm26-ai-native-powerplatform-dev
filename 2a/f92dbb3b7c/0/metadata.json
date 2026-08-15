@@ -3,11 +3,18 @@
   "checkpoint_id": "2af92dbb3b7c",
   "session_id": "a6ca75c6-41a9-487a-a338-9c9fd4b17b93",
   "strategy": "manual-commit",
-  "created_at": "2026-08-15T04:13:41.4668348Z",
+  "created_at": "2026-08-15T04:13:57.2848831Z",
+  "branch": "rpothin-plan-fun-facts-agent",
   "checkpoints_count": 52,
-  "files_touched": null,
+  "save_step_count": 4,
+  "files_touched": [
+    "solutions/poutineleaguecore/Other/Customizations.xml",
+    "solutions/poutineleaguecore/Other/Solution.xml",
+    "solutions/poutineleaguecore/deployment-settings.json"
+  ],
   "agent": "Copilot CLI",
-  "model": "",
+  "model": "gpt-5.6-luna",
+  "turn_id": "a6fec9d8ba87",
   "compact_transcript_start": 0,
   "token_usage": {
     "input_tokens": 22635819,
@@ -15,5 +22,93 @@
     "cache_read_tokens": 21413044,
     "output_tokens": 140772,
     "api_call_count": 228
-  }
+  },
+  "session_metrics": {
+    "turn_count": 52
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-08-15T04:13:56.4142164Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 1457,
+    "human_modified": 197,
+    "human_removed": 0,
+    "total_committed": 1654,
+    "total_lines_changed": 1659,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 4,
+      "user_lines_removed": 0,
+      "agent_lines_added": 984,
+      "agent_lines_removed": 282,
+      "user_added_per_file": {
+        "agents/fun-facts/.mcs/.gitignore": 1,
+        "agents/fun-facts/.mcs/botdefinition.json": 1,
+        "agents/fun-facts/.mcs/changetoken.txt": 1,
+        "agents/fun-facts/.mcs/conn.json": 1
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 8,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1034,
+      "agent_lines_removed": 282,
+      "user_added_per_file": {
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/.gitignore": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/botdefinition.json": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/changetoken.txt": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/conn.json": 1,
+        "agents/fun-facts/.mcs/.gitignore": 1,
+        "agents/fun-facts/.mcs/botdefinition.json": 1,
+        "agents/fun-facts/.mcs/changetoken.txt": 1,
+        "agents/fun-facts/.mcs/conn.json": 1
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 8,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1034,
+      "agent_lines_removed": 282,
+      "user_added_per_file": {
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/.gitignore": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/botdefinition.json": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/changetoken.txt": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/conn.json": 1,
+        "agents/fun-facts/.mcs/.gitignore": 1,
+        "agents/fun-facts/.mcs/botdefinition.json": 1,
+        "agents/fun-facts/.mcs/changetoken.txt": 1,
+        "agents/fun-facts/.mcs/conn.json": 1
+      }
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 8,
+      "user_lines_removed": 0,
+      "agent_lines_added": 1880,
+      "agent_lines_removed": 416,
+      "user_added_per_file": {
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/.gitignore": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/botdefinition.json": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/changetoken.txt": 1,
+        "agents/dataverse-mcp-probe/Probe For Dataverse MCP server/.mcs/conn.json": 1,
+        "agents/fun-facts/.mcs/.gitignore": 1,
+        "agents/fun-facts/.mcs/botdefinition.json": 1,
+        "agents/fun-facts/.mcs/changetoken.txt": 1,
+        "agents/fun-facts/.mcs/conn.json": 1
+      }
+    }
+  ]
 }
