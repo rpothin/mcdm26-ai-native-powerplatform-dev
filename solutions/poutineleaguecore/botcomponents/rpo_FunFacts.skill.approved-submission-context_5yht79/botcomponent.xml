@@ -1,0 +1,11 @@
+<botcomponent schemaname="rpo_FunFacts.skill.approved-submission-context_5yht79">
+  <componenttype>9</componenttype>
+  <description>Retrieves one Poutine Submission with its Restaurant and Tags through the read-only Dataverse MCP tool and gates downstream work on an exact Approved status. Use when a validated fun_facts request needs approved context. Do NOT use for writes, status changes, employee lookups, web calls, synthesis, or HTML rendering.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Approved Submission Context</name>
+  <parentbotid>
+    <schemaname>rpo_FunFacts</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

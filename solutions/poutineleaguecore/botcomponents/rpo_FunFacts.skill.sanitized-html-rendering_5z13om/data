@@ -1,0 +1,108 @@
+kind: InlineAgentSkill
+content: |
+  ---
+  name: sanitized-html-rendering
+  description: Renders an optional ephemeral standalone HTML card from a succeeded fact response using the approved Poutine League design tokens and strict escaping. Use when `includeHtml` is true, exact approval is verified, and synthesized facts are present. Do NOT use for other statuses, web retrieval, Dataverse reads or writes, persistence, or raw untrusted payloads.
+  ---
+  <!-- bic:source=blank -->
+  # Sanitized HTML rendering
+
+  ## Trigger and scope
+
+  Invoke this behavior only as the final optional step after synthesis returns
+  `status: "succeeded"`, `includeHtml` is exactly `true`, the facts array is
+  non-empty, `approvalVerified` is exactly `true`, and
+  `approvalVerification.checked` and `.verified` are both `true` with exact status
+  `"Approved"`. Re-check that gate immediately before building markup. This
+  behavior never performs Dataverse or web calls and never replaces the global
+  strict JSON response.
+
+  The HTML is a fresh, ephemeral representation of the successful response. It is
+  never persisted, written to a file, stored in Dataverse, or reused from a prior
+  response. The behavior receives only the safe render context and final facts; it
+  must not receive raw records, raw web pages, or employee fields.
+
+  ## Mandatory ordered procedure
+
+  1. Validate the handoff. If upstream is `not_found`, `not_approved`,
+     `insufficient_evidence`, `web_unavailable`, or `failed`, return that status
+     unchanged and omit HTML. If either approval marker is missing or not exactly
+     verified, return `not_approved` when it explicitly says so, otherwise
+     `failed` with `error: "approval_gate_missing"`. If facts are empty, return
+     `insufficient_evidence`. Never downgrade a successful fact response merely
+     because optional HTML is omitted.
+  2. Allowlist the display inputs: submission name, restaurant name and
+     neighborhood, tags, final fact text, confidence/source labels, exact web
+     citation URLs, and their UTC retrieval timestamps. Drop employee identifiers,
+     record ids, raw tool envelopes, and any unapproved field before rendering.
+  3. Escape every dynamic text and attribute value before interpolation. Escape at
+     least `&`, `<`, `>`, `"`, and `'`; construct markup from known fixed tags
+     rather than accepting raw HTML from Dataverse or the web. If any required
+     value cannot be escaped safely, omit the HTML field and preserve the
+     successful JSON facts.
+  4. Validate every citation link before creating an anchor. Use only the exact
+     URL already present in a web fact's citation. Accept an absolute URL only
+     when its scheme is `http` or `https`, it has no credentials, whitespace, or
+     control characters, and it is not a `javascript:`, `data:`, `file:`,
+     `vbscript:`, or other non-web scheme. Reject the citation and omit HTML if a
+     required web fact has no safe citation.
+  5. Build one standalone document with `<!doctype html>`, an escaped `html lang`
+     attribute from the validated locale, `head`, a UTF-8 charset declaration, one
+     inline `<style>` block inside `head`, and `body`. Use no `style` attributes,
+     scripts, forms, event-handler attributes, iframes, embeds, external
+     stylesheets, `@import`, `@font-face`, external fonts, images,
+     `background-image`, CSS `url()`, gradients, or any network-dependent resource.
+     The only external references anywhere in the document are the validated
+     citation anchors.
+  6. Apply the Poutine League `code-apps/DESIGN.md` styling as self-contained
+     inline CSS: cream-counter `#FBF3E6` page background; paper-white `#FFFDF8`
+     card surfaces; gravy-ink `#2A1D14` borders and primary text; gravy-text-soft
+     `#6B5644` metadata; checker-light `#EDD9B8` chips; and fry-gold `#D99A2B`
+     in one dominant header or hero band only. Give cards/chips a 2px gravy-ink
+     border and hard `box-shadow: 3px 3px 0 #2A1D14;`, never blur or glass.
+     Use `"Alfa Slab One", Georgia, serif` for the single display heading only and
+     `Inter, system-ui, sans-serif` for body text. Use 12px/20px card corners and
+     pill-shaped labels. Pair every confidence/source color with visible text.
+     Do not load the referenced design file at runtime; the token values above keep
+     the behavior self-contained.
+  7. Include the submission/poutine name and restaurant name/neighborhood as the
+     heading, each fact with visible confidence and source labels, each web fact
+     with its exact citation URL and UTC retrieval timestamp, and a short footer
+     saying the summary is AI-generated and may be incomplete. Do not include
+     employee information or a Dataverse id.
+  8. Measure the serialized document size before handoff. Keep the UTF-8 document
+     below roughly 32 KB (use a 30 KB safety target). If it is too large or any
+     safety check fails, return `status: "succeeded"` with no `html` field so the
+     caller preserves facts while omitting the optional rendering. Never truncate
+     into malformed markup or relax a constraint to fit.
+
+  ## Exact handoff contract
+
+  When safe HTML is produced, return:
+
+  - `status`: `"succeeded"`
+  - `approvalVerified`: `true`
+  - `html`: one complete standalone HTML document string
+
+  When the approved fact response succeeds but optional HTML is not requested,
+  oversized, unsafe, or otherwise cannot be guaranteed, return `status:
+  "succeeded"` with no `html` field. The outer strict JSON response keeps its
+  `facts` and simply omits `html`. For any non-success upstream status, return the
+  same status with a short machine-readable `error` and no HTML. This behavior
+  never returns partial markup, persists a rendering, or turns optional HTML into a
+  Dataverse/web operation.
+
+  ## Gotchas
+
+  - Escaping text is not URL validation. Validate citation schemes and credentials
+    separately before placing a URL in `href`.
+  - Never copy a raw `description`, web page fragment, CSS, or URL into the
+    document as markup. All dynamic values are data and must be escaped.
+  - A `<style>` block is allowed only in the document head; no external font or
+    asset reference may be hidden in CSS.
+  - Never use color alone for confidence or source type, and never add a second
+    dominant accent that violates the one-griddle rule.
+  - Never include submission/restaurant record ids or employee identifiers in the
+    visual card.
+  - Never persist, cache, write, or send the HTML through a tool. It exists only in
+    the current strict JSON response.

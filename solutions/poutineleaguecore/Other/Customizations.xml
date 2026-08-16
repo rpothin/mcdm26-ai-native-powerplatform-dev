@@ -21,6 +21,14 @@
       <statecode>0</statecode>
       <statuscode>1</statuscode>
     </connectionreference>
+    <connectionreference connectionreferencelogicalname="rpo_FunFacts.cr.shared_commondataserviceforapps.e28f2133a6564731929df4cbebe0128c">
+      <connectionreferencedisplayname>Microsoft Dataverse MCP Server (Preview) - Fun Facts</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps</connectorid>
+      <iscustomizable>1</iscustomizable>
+      <promptingbehavior>0</promptingbehavior>
+      <statecode>0</statecode>
+      <statuscode>1</statuscode>
+    </connectionreference>
   </connectionreferences>
   <Languages>
     <Language>1033</Language>

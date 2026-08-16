@@ -1,0 +1,5 @@
+<botcomponent_connectionreferenceset>
+  <botcomponent_connectionreference botcomponentid.schemaname="rpo_FunFacts.tool.MicrosoftDataverse-MicrosoftDataverseMCPServerPreview_G6j" connectionreferenceid.connectionreferencelogicalname="rpo_FunFacts.cr.shared_commondataserviceforapps.e28f2133a6564731929df4cbebe0128c">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+</botcomponent_connectionreferenceset>

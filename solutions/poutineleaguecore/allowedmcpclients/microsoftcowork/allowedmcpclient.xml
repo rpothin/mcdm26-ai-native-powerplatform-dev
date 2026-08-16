@@ -1,0 +1,8 @@
+<allowedmcpclient uniquename="microsoftcowork">
+  <applicationid>6ab48b67-cd74-4ad4-81af-5932984589be</applicationid>
+  <iscustomizable>1</iscustomizable>
+  <isenabled>1</isenabled>
+  <name>Microsoft Cowork</name>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</allowedmcpclient>

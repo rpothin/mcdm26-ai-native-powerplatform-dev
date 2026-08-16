@@ -1,0 +1,11 @@
+<botcomponent schemaname="rpo_FunFacts.skill.constrained-web-enrichment_zi5bg2">
+  <componenttype>9</componenttype>
+  <description>Gathers a bounded set of public factual evidence for an already approved restaurant or poutine and preserves each exact citation URL with its UTC retrieval timestamp. Use when approved Dataverse context alone leaves a meaningful evidence gap. Do NOT use for approval checks, employee searches, private content, open-ended browsing, writes, or unapproved submissions.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Constrained Web Enrichment</name>
+  <parentbotid>
+    <schemaname>rpo_FunFacts</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

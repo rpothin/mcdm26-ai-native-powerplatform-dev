@@ -1,0 +1,8 @@
+<allowedmcpclient uniquename="dataversemcpcli">
+  <applicationid>0c412cc3-0dd6-449b-987f-05b053db9457</applicationid>
+  <iscustomizable>1</iscustomizable>
+  <isenabled>1</isenabled>
+  <name>Dataverse MCP CLI tool</name>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</allowedmcpclient>

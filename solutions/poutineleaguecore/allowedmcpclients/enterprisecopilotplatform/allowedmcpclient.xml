@@ -1,0 +1,8 @@
+<allowedmcpclient uniquename="enterprisecopilotplatform">
+  <applicationid>fb8d773d-7ef8-4ec0-a117-179f88add510</applicationid>
+  <iscustomizable>1</iscustomizable>
+  <isenabled>1</isenabled>
+  <name>Enterprise Copilot Platform</name>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</allowedmcpclient>
